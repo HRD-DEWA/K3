@@ -1,0 +1,17 @@
+{
+  "name": "K3 Dewasutratex",
+  "short_name": "K3 DST",
+  "description": "Program K3 PT. Dewasutratex: pemeriksaan Kotak P3K, HIRADC, Kartu APD, dan lainnya.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f7fb",
+  "theme_color": "#1c2559",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
