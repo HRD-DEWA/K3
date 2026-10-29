@@ -354,6 +354,58 @@ nav.side .foot{display:none!important}
 .pkompak.pktight .pinfo td{padding:1px 4px;font-size:7.2pt}.pkompak.pktight .pnote{font-size:6.8pt;margin:2px 0}
 .pkompak.pktight .pfill td{height:4.3mm}.pkompak.pktight .psign td{padding:2px 4px}.pkompak.pktight .phd{margin-bottom:3px}
 .pkompak.pktight2 .plist th,.pkompak.pktight2 .plist td{font-size:6.5pt!important;line-height:1.05}.pkompak.pktight2 .pfill td{height:3.8mm}.pkompak.pktight2 .pnote{display:none}
+/* peta & layout */
+.ptwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+.ptvp{position:relative;height:calc(100vh - 190px);min-height:420px;overflow:hidden;background:var(--gray-bg);border:1px solid var(--line);border-radius:10px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.ptvp:active{cursor:grabbing}.ptvp.editing{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:-2px}
+.ptin{position:absolute;left:0;top:0;transform-origin:0 0;--s:1}
+.ptin img{display:block;width:100%;height:100%;pointer-events:none;background:#fff}
+.ptm{position:absolute;padding:0;border:0;background:none;cursor:pointer;transform:translate(-50%,-50%) scale(var(--s));transform-origin:center;line-height:0;border-radius:50%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.ptm.on{outline:3px solid #fde047;outline-offset:2px}
+.ptm.wred::after,.ptm.wamber::after{content:"";position:absolute;right:-2px;top:-2px;width:10px;height:10px;border-radius:50%;border:2px solid #fff;background:#dc2626}
+.ptm.wamber::after{background:#f59e0b}
+.ptm.dragging{opacity:.75}
+.ptvp.editing .ptm{cursor:move}
+.ptzoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
+.ptzoom button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);font-size:18px;cursor:pointer}
+.pttip{position:absolute;z-index:5;pointer-events:none;background:#111827;color:#fff;padding:6px 9px;border-radius:7px;font-size:12.5px;display:flex;flex-direction:column;gap:1px;max-width:260px;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.pttip[hidden]{display:none}.pttip span{opacity:.8}.pttip em{font-style:normal;color:#fcd34d}
+.ptside{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 190px);overflow:auto}
+.ptside>section{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.ptdet{border-color:var(--accent)!important}
+.ptdl{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:13px}.ptdl span{color:var(--muted)}.ptdl b{font-weight:600;text-align:right}
+.ptflt{display:flex;flex-direction:column;gap:4px}
+.ptf{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer}.ptf span{flex:1}.ptf b{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.ptf input{width:16px;height:16px;accent-color:var(--accent)}
+.ptside input[type=search]{width:100%;margin-bottom:8px}
+.ptlist{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto}
+.ptlist button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:5px 6px;color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.ptlist button:hover,.ptlist button.on{background:var(--gray-bg)}
+.ptlist small{display:block;color:var(--muted);font-size:11.5px}.ptlist span{flex:1}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}.dot.red{background:#dc2626}.dot.amber{background:#f59e0b}
+.ptbanner{margin:0 0 10px}
+.pttypes{display:flex;flex-direction:column;gap:8px}.ptty{display:flex;gap:8px;align-items:center}.ptty input[type=text]{flex:1}.ptty input[type=color]{width:42px;height:34px;padding:2px}
+@media (max-width:1000px){.ptwrap{grid-template-columns:1fr}.ptvp{height:62vh}.ptside{max-height:none}}
+/* cetak peta */
+.ptdoc{font-family:Arial,sans-serif;color:#000}
+.ptph{display:flex;justify-content:space-between;border-bottom:1.5px solid #000;padding-bottom:3px;margin-bottom:6px;font-size:9pt}
+.ptpmap{position:relative;margin:0 auto;border:1px solid #000}
+.ptpmap img{width:100%;height:100%;display:block}
+.ptpm{position:absolute;transform:translate(-50%,-50%);line-height:0}
+.ptpm i{position:absolute;left:14px;top:-6px;font:700 7pt Arial;color:#000;background:#fff;border:1px solid #000;border-radius:3px;padding:0 2px;line-height:1.2;font-style:normal}
+.ptpleg{display:flex;flex-wrap:wrap;gap:12px;font-size:8pt;margin:6px 0}.ptpleg span{display:inline-flex;align-items:center;gap:4px}
+.ptpt{border-collapse:collapse;width:100%;font-size:7.5pt;break-before:auto}.ptpt th,.ptpt td{border:.5pt solid #000;padding:1px 3px;text-align:left;color:#000}
+#printArea .ptpt th{background:#d9e1f2!important}
+.ptdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+.scanbar{display:flex;gap:8px;margin-top:12px}.scanbar input{flex:1;font-size:15px}
+.scanres{margin-top:8px;padding:9px 12px;border-radius:8px;border-left:5px solid;display:flex;flex-direction:column;gap:2px;font-size:14px}
+.scanres b{font-size:15px}.scanres span{font-size:12.5px;color:var(--muted)}
+.scanres.good{background:var(--green-bg);border-color:var(--green)}.scanres.bad{background:var(--red-bg);border-color:var(--red)}.scanres.warn{background:var(--amber-bg);border-color:var(--amber)}
+.camres{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:12px 14px;border-radius:12px;color:#fff;display:flex;flex-direction:column;gap:3px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:2}
+.cambar .btn{background:#fff!important;color:#111!important;border-color:#fff!important;font-weight:700;min-width:84px}.cammsg{color:#fff}
+.camres[hidden]{display:none}.camres b{font-size:18px}.camres span{font-size:13px;opacity:.9}
+.camres.good{background:#15803d}.camres.bad{background:#b91c1c}.camres.warn{background:#b45309}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -561,6 +613,9 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
     <div class="navsub" id="ng-track" data-navgs="track" hidden>
      <a class="nsub" href="#track" data-nav="track">Input proses</a>
      <a class="nsub" href="#track-riwayat" data-nav="track-riwayat">Riwayat & rekap</a></div>
+    <button type="button" class="navgrp" data-navg="peta" aria-expanded="false" aria-controls="ng-peta">Peta K3</button>
+    <div class="navsub" id="ng-peta" data-navgs="peta" hidden>
+     <a class="nsub" href="#peta" data-nav="peta">Layout sarana K3</a></div>
     <button type="button" class="navgrp" data-navg="data" aria-expanded="false" aria-controls="ng-data">Data</button>
     <div class="navsub" id="ng-data" data-navgs="data" hidden>
      <a class="nsub" href="#backup" data-nav="backup">Backup data</a></div>
@@ -692,7 +747,7 @@ function writeErr(e){
 function readRoute(){
   const h=(location.hash||"").replace(/^#/,"");
   if(["k-","inv-","box-","itm-","cek-","prt-","lap-","hira-","bagi-"].some(p=>h.startsWith(p))) return h;
-  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi"].includes(h)?h:"ringkasan";
+  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi","peta"].includes(h)?h:"ringkasan";
 }
 window.addEventListener("hashchange",()=>{S.route=readRoute(); render(); window.scrollTo(0,0);});
 function go(r){ if(location.hash!=="#"+r) location.hash=r; else {S.route=r; render();} }
@@ -703,7 +758,7 @@ function render(){
     const on = a.dataset.nav===S.route || (a.dataset.nav==="karyawan" && S.route.startsWith("k-")) || (a.dataset.nav==="investigasi" && S.route.startsWith("inv-")) || (a.dataset.nav==="p3k" && /^(box|cek|prt)-/.test(S.route)) || (a.dataset.nav==="p3k-item" && S.route.startsWith("itm-"));
     if(on||(a.dataset.nav==="bagi"&&S.route.startsWith("bagi-"))||(a.dataset.nav==="lapangan"&&S.route.startsWith("lap-"))||(a.dataset.nav==="hira"&&S.route.startsWith("hira-")&&S.route!=="hira-rekap")) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
   });
-  navApply(); document.body.classList.toggle("laproute",S.route.startsWith("lap-"));
+  navApply(); document.body.classList.toggle("laproute",S.route.startsWith("lap-")); if(typeof ptAfterRender==="function") queueMicrotask(ptAfterRender);
   const m=$("#main");
   if(!S.db){ m.innerHTML = S.dbErr ? `<h1>K3 Dewasutratex</h1><div class="panel">${esc(S.dbErr)}</div>` : `<p class="muted">Memuat data…</p>`; return; }
   const ro = S.canWrite?"":`<div class="banner">Anda hanya memiliki akses lihat. Hubungi HRD untuk akses mengubah data.</div>`;
@@ -728,6 +783,7 @@ function render(){
   else if(S.route==="lapangan") m.innerHTML=ro+viewLapangan();
   else if(S.route==="p3k-riwayat") m.innerHTML=ro+viewP3kRiwayat();
   else if(S.route==="bagi") m.innerHTML=ro+viewBagiHome();
+  else if(S.route==="peta") m.innerHTML=ro+viewPeta();
   else if(S.route.startsWith("bagi-")) m.innerHTML=ro+viewBagi(S.route);
   else if(S.route==="hira") m.innerHTML=ro+viewHira();
   else if(S.route==="hira-rekap") m.innerHTML=viewHiraRekap();
@@ -1875,6 +1931,7 @@ function viewCek(route){
     <p class="hint" style="margin:24px 0 0">PIC tersimpan juga sebagai PIC kotak ini.</p></div>
     <p class="hint" style="margin:8px 0 0">Kondisi setiap item kosong sampai diperiksa. Centang ✓ untuk item yang ada, atau pilih Terpakai, Hilang, atau Ditarik untuk item yang tidak ada. Untuk Terpakai, data pengguna boleh dikosongkan.</p>
     <div class="ckprog"><div class="row" style="justify-content:space-between"><b>Diperiksa ${nDone} dari ${isi.length}</b><span class="muted">${nBelum?nBelum+" belum diperiksa":"Semua item sudah diperiksa"}${nOut?" · "+nOut+" dikeluarkan":""}</span></div><div class="life"><i style="width:${pct}%"></i></div></div>
+    ${ckScanBar()}
     <div class="row" style="margin-top:10px">
      <select id="ckShow" aria-label="Tampilkan" style="width:auto"><option value="semua" ${ck.show==="semua"?"selected":""}>Tampilkan semua (${isi.length})</option><option value="belum" ${ck.show==="belum"?"selected":""}>Belum diperiksa (${nBelum})</option><option value="keluar" ${ck.show==="keluar"?"selected":""}>Dikeluarkan (${nOut})</option></select>
      ${nExp?`<button class="btn small" data-act="ck-exp">Tarik ${nExp} item kadaluarsa / H-6 bulan</button>`:""}
@@ -2828,6 +2885,7 @@ function lapNowStamp(){ const d=new Date(); return todayISO()+"_"+pad(d.getHours
 async function lapPaket(){
   const data={}; Object.keys(STORE).forEach(k=>{ if(/^kotak\/[^/]+$/.test(k)) data[k]=clone(STORE[k]); });
   if(STORE["pengaturan/p3k"]) data["pengaturan/p3k"]=clone(STORE["pengaturan/p3k"]);
+  Object.keys(STORE).forEach(k=>{ if(/^peta\/[^/]+$/.test(k)||k==="pengaturan/peta") data[k]=clone(STORE[k]); });
   let nk=0; S.list.forEach(k=>{ if(k.aktif===false||!k.nrp) return; nk++; data["karyawan/"+k._id]={nama:k.nama||"",nrp:k.nrp,bagian:k.bagian||"",jabatan:k.jabatan||"",shift:k.shift||"",status:k.status||"",aktif:true}; });
   const nb=Object.keys(data).filter(k=>k.startsWith("kotak/")).length; if(!nb){ toast("Belum ada data kotak P3K untuk dikirim."); return; }
   const payload={aplikasi:"K3 Dewasutratex – PT. Dewasutratex",jenis:"paket-lapangan",versi:1,dibuat:new Date().toISOString(),dari:S.uid||"",ringkas:{kotak:nb,karyawan:nk},data};
@@ -2840,8 +2898,9 @@ function lapImportPaket(p){
   if(!kotak.length){ toast("File paket tidak berisi data kotak."); return; }
   openDlg(`<header><h2>Impor paket dari komputer?</h2></header><div class="body"><p style="margin:0 0 8px">Paket tanggal <b>${esc(fmt((p.dibuat||"").slice(0,10)))}</b> berisi ${kotak.length} kotak P3K dan ${kary.length.toLocaleString("id-ID")} karyawan (NRP & nama).</p>
     <p style="margin:0">Data kotak dan karyawan di perangkat ini akan diganti dengan isi paket.${belum.length?` <b>${belum.length} hasil pemeriksaan yang belum dikirim tetap disimpan</b> dan tetap bisa dikirim ke komputer.`:""}</p></div>${foot("Impor paket")}`, async ()=>{
-    Object.keys(STORE).forEach(k=>{ if(/^(kotak|karyawan)\/[^/]+$/.test(k)) delete STORE[k]; });
-    Object.keys(d).forEach(k=>{ if(/^(kotak|karyawan)\/[^/]+$/.test(k)||k==="pengaturan/p3k") STORE[k]=clone(d[k]); });
+    const hasPeta=Object.keys(d).some(k=>/^peta\//.test(k));
+    Object.keys(STORE).forEach(k=>{ if(/^(kotak|karyawan)\/[^/]+$/.test(k)||(hasPeta&&/^peta\/[^/]+$/.test(k))) delete STORE[k]; });
+    Object.keys(d).forEach(k=>{ if(/^(kotak|karyawan|peta)\/[^/]+$/.test(k)||k==="pengaturan/p3k"||k==="pengaturan/peta") STORE[k]=clone(d[k]); });
     belum.forEach(h=>{ const b=STORE["kotak/"+h.kode]; if(b) lapApplyRemove(b,h); });
     STORE["pengaturan/lapangan"]=Object.assign({},STORE["pengaturan/lapangan"]||{},{peran:"hp",paket:p.dibuat||"",paketDari:p.dari||"",diimpor:new Date().toISOString()});
     await persist(); notify(); toast("Paket diimpor: "+kotak.length+" kotak."); go("lapangan"); });
@@ -2915,6 +2974,7 @@ function viewLapBox(route){
     <p class="muted" style="margin:0 0 8px">${esc(b.bagian||"")}${b.penempatan?" · "+esc(b.penempatan):""}</p><div class="life lkprog"><i style="width:${pct}%"></i></div>
     <div class="lkscan">${lapCanScan()?`<button class="btn primary lkcam" data-act="lap-cam">Pindai dengan kamera</button>`:""}<form id="lkManual" class="lkman" autocomplete="off"><input type="text" id="lkBc" placeholder="Ketik barcode lalu Enter" aria-label="Ketik barcode" inputmode="text" autocapitalize="characters"><button class="btn" type="submit">OK</button></form>
     ${lapCanPhoto()?`<label class="btn lkfoto">Foto barcode<input type="file" accept="image/*" capture="environment" id="lkPhoto" hidden></label>`:""}</div>
+    ${scanResHtml(lk.lastScan)}
     <div class="lkchips">${[["semua","Semua "+isi.length],["belum","Belum diperiksa "+nBelum],["keluar","Dikeluarkan "+nOut]].map(([k,l])=>`<button class="lkchip" data-lkshow="${k}" aria-pressed="${lk.show===k}">${l}</button>`).join("")}</div></div>
    <p class="hint" style="margin:4px 0 8px">Kondisi semua item kosong sampai diperiksa. Ketuk kotak ✓ atau pindai barcode untuk item yang ada; pilih Terpakai, Hilang, atau Ditarik untuk yang tidak ada.${lapCanScan()?"":" Pemindaian kamera tidak tersedia di browser ini."}</p>
    ${nExp?`<button class="btn small" data-act="lk-exp" style="margin-bottom:10px">Tandai ${nExp} item kadaluarsa / H-6 bulan sebagai Ditarik</button>`:""}
@@ -2959,8 +3019,8 @@ function lkMsg(r,bc){ const [t,v]=r.split(":"); if(t==="ok") return {ok:true,txt
 let LAP_CAM=null;
 async function lapCamOpen(mode){
   const det=lapDet(); if(!det){ toast("Pemindaian kamera tidak tersedia."); return; }
-  const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="cambar"><span class="cammsg">${mode==="box"?"Arahkan kamera ke barcode kode kotak":"Arahkan kamera ke barcode item"}</span><span class="camcnt"></span><button class="btn" data-act="cam-close">Selesai</button></div>`;
-  document.body.appendChild(ov); const video=ov.querySelector("video"), msg=ov.querySelector(".cammsg"), cnt=ov.querySelector(".camcnt");
+  const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="camres" hidden></div><div class="cambar"><span class="cammsg">${mode==="box"?"Arahkan kamera ke barcode kode kotak":"Arahkan kamera ke barcode item"}</span><span class="camcnt"></span><button class="btn" data-act="cam-close">Selesai</button></div>`;
+  document.body.appendChild(ov); const video=ov.querySelector("video"), msg=ov.querySelector(".cammsg"), cnt=ov.querySelector(".camcnt"), card=ov.querySelector(".camres"); scanSound(true);
   let stream; try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false}); }
   catch(e){ ov.remove(); toast(e&&e.name==="NotAllowedError"?"Izin kamera ditolak. Gunakan Foto barcode atau ketik barcode.":"Kamera tidak bisa dibuka di tampilan ini. Gunakan Foto barcode atau ketik barcode."); return; }
   video.srcObject=stream; await video.play().catch(()=>{});
@@ -2969,13 +3029,14 @@ async function lapCamOpen(mode){
   const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=await det.detect(video); const now=Date.now();
         for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v||(v===st.last&&now-st.lastT<1800)) continue; st.last=v; st.lastT=now;
           if(mode==="box"){ const kb=v.toUpperCase(); if(S.kotak.has(kb)){ lapBeep(true); lapCamClose(); go("lap-"+kb); return; } lapBeep(false); msg.textContent=v+" bukan kode kotak"; msg.className="cammsg bad"; continue; }
-          const m=lkMsg(lkMark(v),v); lapBeep(m.ok); msg.textContent=m.txt; msg.className="cammsg "+(m.ok?"good":"bad"); upd(); } } }catch(e){}
+          const s=scanInfo(lkMark(v),v,S.lk&&S.lk.kode); if(S.lk) S.lk.lastScan=s; lapBeep(s.ok); scanSound(s.ok); card.className="camres "+s.cls; card.innerHTML=`<b>${s.ok?"✓ ":s.cls==="warn"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}`; card.hidden=false;
+          msg.textContent="Lanjutkan scan item berikutnya"; msg.className="cammsg"; upd(); } } }catch(e){}
     setTimeout(loop,220); };
   loop();
 }
 function lapCamClose(){ if(!LAP_CAM) return; LAP_CAM.st.on=false; try{ LAP_CAM.stream.getTracks().forEach(t=>t.stop()); }catch(e){} LAP_CAM.ov.remove(); LAP_CAM=null; if(S.route.startsWith("lap-")) render(); }
 async function lkPhoto(file){ const det=lapDet(); if(!det||!S.lk) return; try{ const bmp=await createImageBitmap(file); const res=await det.detect(bmp); if(!res.length){ toast("Barcode tidak terbaca. Coba foto lebih dekat dan tidak buram."); return; }
-    const out=res.map(r=>lkMsg(lkMark(r.rawValue),String(r.rawValue))); lapBeep(out.some(o=>o.ok)); render(); toast(out.map(o=>o.txt).join(" · ")); }catch(e){ toast("Foto tidak bisa dibaca."); } }
+    const out=res.map(r=>scanInfo(lkMark(r.rawValue),String(r.rawValue),S.lk.kode)); S.lk.lastScan=out[out.length-1]; lapBeep(out.some(o=>o.ok)); scanSound(out.some(o=>o.ok)); render(); toast(out.map(o=>o.title).join(" · ")); }catch(e){ toast("Foto tidak bisa dibaca."); } }
 
 document.addEventListener("click",ev=>{
   const g=ev.target.closest("[data-golap]"); if(g){ go("lap-"+g.dataset.golap); return; }
@@ -3001,7 +3062,7 @@ document.addEventListener("click",ev=>{
   }
 });
 document.addEventListener("submit",ev=>{ if(ev.target.id!=="lkManual") return; ev.preventDefault(); const inp=$("#lkBc"), v=inp.value.trim(); if(!v) return;
-  const m=lkMsg(lkMark(v),v); lapBeep(m.ok); render(); toast(m.txt); const n=$("#lkBc"); if(n) n.focus(); });
+  const s=scanInfo(lkMark(v),v,S.lk.kode); S.lk.lastScan=s; lapBeep(s.ok); scanSound(s.ok); lapDraftSave(); render(); const n=$("#lkBc"); if(n) n.focus(); });
 document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.id==="lapFile"&&el.files[0]){ const fr=new FileReader(); fr.onload=()=>{ let p; try{ p=JSON.parse(fr.result); }catch(x){ toast("File tidak dapat dibaca."); return; }
       if(p.jenis==="paket-lapangan") lapImportPaket(p); else if(p.jenis==="hasil-lapangan") lapImportHasil(p); else toast("Pilih file paket lapangan atau file hasil pemeriksaan dari HP."); }; fr.readAsText(el.files[0]); el.value=""; return; }
@@ -3758,6 +3819,181 @@ function itemBcSection(kode){ const it=itemOf(kode), rows=[]; boxList().forEach(
     ${S.canWrite?`<td><button class="btn small" data-act="isi-edit" data-box="${esc(b.kode)}" data-bc="${esc(x.bc)}">Ubah</button></td>`:""}</tr>`; }).join("")}</tbody></table></div></section>`; }
 S.isiOpen={}; document.addEventListener("toggle",ev=>{ const d=ev.target; if(d&&d.dataset&&d.dataset.isiopen) S.isiOpen[d.dataset.isiopen]=d.open; },true);
 
+// ---------- Peta / layout perusahaan: titik APAR, hydrant, kotak P3K, eyewash, dll ----------
+const PT_GLYPH={
+  apar:'<path d="M10 7h4v2h1.2a1 1 0 0 1 1 1v9.5a1.5 1.5 0 0 1-1.5 1.5h-5.4A1.5 1.5 0 0 1 7.8 19.5V10a1 1 0 0 1 1-1H10z" fill="#fff"/><path d="M11 4.5h3.5l2.5 1.5M14 7V4.5" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/>',
+  cross:'<path d="M10 5h4v5h5v4h-5v5h-4v-5H5v-4h5z" fill="#fff"/>',
+  eye:'<path d="M3.5 12s3-5.5 8.5-5.5S20.5 12 20.5 12s-3 5.5-8.5 5.5S3.5 12 3.5 12z" fill="#fff"/><circle cx="12" cy="12" r="2.6" fill="var(--c)"/>',
+  bell:'<path d="M12 4.5a5 5 0 0 1 5 5v3.2l1.6 2.6H5.4L7 12.7V9.5a5 5 0 0 1 5-5z" fill="#fff"/><circle cx="12" cy="17.8" r="1.7" fill="#fff"/>',
+  hydrant:'<path d="M9 8.5a3 3 0 0 1 6 0V9h1v2h-1v6h1.5v2.5h-9V17H9v-6H8V9h1z" fill="#fff"/><circle cx="12" cy="13" r="1.4" fill="var(--c)"/>',
+  run:'<circle cx="13.5" cy="5.6" r="1.8" fill="#fff"/><path d="M12.2 8.2l-2.6 1.3-1.4 3 1.4.6 1-2.1 1 .3-1.6 4.4-2.8 2.6 1.1 1.1 3.2-2.8 1.1-2.3 1.7 2v4h1.6v-4.6l-2-2.6.8-2.3 1 1.5h2.8v-1.5h-2l-1.8-2.6z" fill="#fff"/>',
+  people:'<circle cx="8.5" cy="8" r="2" fill="#fff"/><circle cx="15.5" cy="8" r="2" fill="#fff"/><path d="M5 18v-3.5a3.5 3.5 0 0 1 7 0V18zM12 18v-3.5a3.5 3.5 0 0 1 7 0V18z" fill="#fff"/>'};
+const PT_DEF=[
+  {key:"apar",nama:"APAR",warna:"#d92d20",ikon:"apar"},
+  {key:"hydrant",nama:"Hydrant",warna:"#9f1239",ikon:"hydrant"},
+  {key:"p3k",nama:"Kotak P3K",warna:"#15803d",ikon:"cross"},
+  {key:"eyewash",nama:"Eyewash / safety shower",warna:"#0284c7",ikon:"eye"},
+  {key:"alarm",nama:"Fire alarm / MCP",warna:"#ea580c",ikon:"bell"},
+  {key:"jalur",nama:"Pintu darurat / jalur evakuasi",warna:"#059669",ikon:"run"},
+  {key:"kumpul",nama:"Titik kumpul",warna:"#16a34a",ikon:"people"}];
+S.peta=new Map(); S.ptSet=null; S.pt={id:"",edit:false,hide:new Set(),q:"",sel:"",z:0,tx:0,ty:0};
+function ptTypes(){ const c=(S.ptSet&&S.ptSet.types)||[]; const m=new Map(PT_DEF.map(t=>[t.key,Object.assign({},t)])); c.forEach(t=>{ if(t&&t.key) m.set(t.key,Object.assign({},m.get(t.key)||{},t)); }); return [...m.values()].filter(t=>!t.hapus); }
+function ptType(k){ return ptTypes().find(t=>t.key===k)||{key:k,nama:k,warna:"#64748b",ikon:"",teks:"?"}; }
+function ptIcon(t,size){ const g=PT_GLYPH[t.ikon]; return `<svg viewBox="0 0 24 24" width="${size||26}" height="${size||26}" aria-hidden="true" style="--c:${t.warna}"><circle cx="12" cy="12" r="11" fill="${t.warna}" stroke="#fff" stroke-width="1.6"/>${g||`<text x="12" y="15.6" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="${String(t.teks||"?").length>2?7.5:9.5}" fill="#fff">${esc(String(t.teks||t.nama||"?").slice(0,3).toUpperCase())}</text>`}</svg>`; }
+function ptMaps(){ return [...S.peta.values()].sort((a,b)=>(a.urut||99)-(b.urut||99)||(a.nama||"").localeCompare(b.nama||"")); }
+function ptCur(){ const ms=ptMaps(); let m=S.peta.get(S.pt.id); if(!m&&ms.length){ m=ms[0]; S.pt.id=m._id; S.pt.z=0; } return m||null; }
+function ptWarn(mk){ const t=mk.type; if(mk.tglExp){ const d=daysBetween(todayISO(),mk.tglExp); if(d<0) return {c:"red",t:"Kedaluwarsa "+fmt(mk.tglExp)}; if(d<=30) return {c:"amber",t:"Kedaluwarsa "+fmt(mk.tglExp)+" ("+d+" hari lagi)"}; }
+  if(t==="p3k"&&mk.kotak){ const b=S.kotak.get(mk.kotak); if(b){ const s=boxStat(b); if(s.exp) return {c:"red",t:s.exp+" item kadaluarsa"}; if(s.kurangQty||s.soon) return {c:"amber",t:[s.kurangQty?"kurang "+s.kurangQty:"",s.soon?s.soon+" item H-6 bulan":""].filter(Boolean).join(", ")}; if(s.due) return {c:"amber",t:"Perlu diperiksa"}; } }
+  return null; }
+function ptVisible(m){ const q=S.pt.q.trim().toLowerCase(); return (m.markers||[]).filter(k=>!S.pt.hide.has(k.type)&&(!q||[k.nama,k.kode,k.area,k.spes,k.kotak,ptType(k.type).nama].join(" ").toLowerCase().includes(q))); }
+function ptTitle(k){ const t=ptType(k.type); return k.nama||(k.type==="p3k"&&k.kotak?"Kotak P3K "+k.kotak:t.nama+(k.kode?" "+k.kode:"")); }
+function viewPeta(){
+  if(!S.loaded) return `<h1>Peta & layout K3</h1><p class="muted">Memuat data…</p>`;
+  const m=ptCur(), ms=ptMaps(), P=S.pt;
+  if(!m) return `<h1>Peta & layout K3</h1><p class="sub">Unggah gambar layout perusahaan (PNG atau JPG), lalu tandai posisi APAR, hydrant, kotak P3K, eyewash, dan sarana K3 lainnya.</p>
+    <div class="panel empty">${S.canWrite?`<button class="btn primary" data-act="pt-new">Tambah layout</button><p class="hint" style="margin:10px 0 0">Bila layout masih berupa PDF atau gambar CAD, simpan dulu sebagai PNG/JPG (misalnya lewat "Simpan sebagai gambar" atau screenshot beresolusi tinggi).</p>`:"Belum ada layout."}</div><input type="file" id="ptImg" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>`;
+  const types=ptTypes(), all=m.markers||[], vis=ptVisible(m), sel=all.find(k=>k.id===P.sel);
+  const cnt=k=>all.filter(x=>x.type===k).length;
+  const marks=vis.map(k=>{ const t=ptType(k.type), w=ptWarn(k); return `<button type="button" class="ptm${k.id===P.sel?" on":""}${w?" w"+w.c:""}" data-ptm="${esc(k.id)}" style="left:${(k.x*100).toFixed(3)}%;top:${(k.y*100).toFixed(3)}%" aria-label="${esc(ptTitle(k))}">${ptIcon(t,28)}</button>`; }).join("");
+  const det=sel?(()=>{ const t=ptType(sel.type), w=ptWarn(sel), b=sel.type==="p3k"&&sel.kotak?S.kotak.get(sel.kotak):null, s=b?boxStat(b):null;
+    const f=(l,v)=>v?`<div class="ptdl"><span>${l}</span><b>${v}</b></div>`:"";
+    return `<section class="ptdet"><div class="row" style="gap:10px;flex-wrap:nowrap;align-items:center">${ptIcon(t,34)}<div><b style="font-size:16px">${esc(ptTitle(sel))}</b><div class="muted" style="font-size:12.5px">${esc(t.nama)}</div></div></div>
+      ${w?`<p class="chip ${w.c}" style="margin:10px 0 0;display:inline-block">${esc(w.t)}</p>`:""}
+      <div style="margin-top:10px">${f("Kode / nomor",esc(sel.kode||""))}${f("Area / lokasi",esc(sel.area||""))}${f("Spesifikasi",esc(sel.spes||""))}${f(sel.type==="apar"?"Kedaluwarsa / refill":"Tgl. kedaluwarsa",sel.tglExp?fmt(sel.tglExp):"")}${f("Pengecekan terakhir",sel.tglCek?fmt(sel.tglCek):"")}${f("Catatan",esc(sel.catatan||""))}
+      ${b?f("Bagian",esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–"))+f("Isi / standar",s.ada+" / "+s.std)+f("Pemeriksaan terakhir",s.last?fmt(s.last):"belum pernah"):""}</div>
+      <div class="row" style="margin-top:12px;gap:6px">${b?`<button class="btn small primary" data-gobox="${esc(b.kode)}">Buka kotak ${esc(b.kode)}</button>`:""}${S.canWrite?`<button class="btn small" data-act="pt-mk-edit" data-id="${esc(sel.id)}">Ubah</button><button class="btn small danger" data-act="pt-mk-del" data-id="${esc(sel.id)}">Hapus</button>`:""}<button class="btn small" data-act="pt-unsel">Tutup</button></div></section>`; })():"";
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px;gap:10px"><div class="row" style="gap:10px"><h1 style="margin:0">Peta & layout K3</h1>${ms.length>1?`<select id="ptSel" aria-label="Pilih layout" style="width:auto">${ms.map(x=>`<option value="${esc(x._id)}" ${x._id===m._id?"selected":""}>${esc(x.nama)}</option>`).join("")}</select>`:`<span class="muted">${esc(m.nama)}</span>`}</div>
+    <div class="row" style="gap:6px">${S.canWrite?`<button class="btn ${P.edit?"primary":""}" data-act="pt-edit" aria-pressed="${P.edit}">${P.edit?"Selesai edit":"Mode edit"}</button><button class="btn" data-act="pt-map-edit">Ubah layout</button><button class="btn" data-act="pt-new">Tambah layout</button><button class="btn" data-act="pt-types">Jenis titik</button>`:""}<button class="btn" data-act="pt-print">Cetak</button><button class="btn" data-act="pt-csv">Ekspor CSV</button></div></div>
+   ${P.edit?`<div class="banner ptbanner">Mode edit: <b>klik di peta</b> untuk menambah titik, <b>geser simbol</b> untuk memindahkan, klik simbol untuk mengubah atau menghapus. Klik <b>Selesai edit</b> bila sudah.</div>`:""}
+   <div class="ptwrap"><div class="ptvp${P.edit?" editing":""}" id="ptVp"><div class="ptin" id="ptIn" style="width:${m.w}px;height:${m.h}px"><img src="${m.img}" alt="Layout ${esc(m.nama)}" draggable="false" width="${m.w}" height="${m.h}">${marks}</div>
+     <div class="ptzoom"><button type="button" data-act="pt-zin" aria-label="Perbesar">+</button><button type="button" data-act="pt-zout" aria-label="Perkecil">−</button><button type="button" data-act="pt-fit" aria-label="Tampilkan seluruh peta">⤢</button></div><div class="pttip" id="ptTip" hidden></div></div>
+    <aside class="ptside">${det}
+     <section><h2 style="font-size:15px;margin:0 0 8px">Tampilkan</h2><div class="ptflt">${types.map(t=>`<label class="ptf"><input type="checkbox" data-ptf="${esc(t.key)}" ${P.hide.has(t.key)?"":"checked"}>${ptIcon(t,20)}<span>${esc(t.nama)}</span><b>${cnt(t.key)}</b></label>`).join("")}</div>
+      <div class="row" style="gap:6px;margin-top:6px"><button class="linkbtn" data-act="pt-all">semua</button><button class="linkbtn" data-act="pt-none">sembunyikan semua</button></div></section>
+     <section><input type="search" id="ptQ" placeholder="Cari nama, kode, area" value="${esc(P.q)}" aria-label="Cari titik"><ul class="ptlist">${vis.slice().sort((a,b)=>ptType(a.type).nama.localeCompare(ptType(b.type).nama)||ptTitle(a).localeCompare(ptTitle(b),"id",{numeric:true})).map(k=>{ const w=ptWarn(k); return `<li><button type="button" data-ptgo="${esc(k.id)}" class="${k.id===P.sel?"on":""}">${ptIcon(ptType(k.type),18)}<span>${esc(ptTitle(k))}${k.area?`<small>${esc(k.area)}</small>`:""}</span>${w?`<i class="dot ${w.c}" title="${esc(w.t)}"></i>`:""}</button></li>`; }).join("")||`<li class="muted" style="padding:6px">Tidak ada titik${all.length?" yang cocok":". Klik Mode edit lalu klik di peta untuk menambah"}.</li>`}</ul></section></aside></div>
+   <input type="file" id="ptImg" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>`;
+}
+// ---- zoom & geser
+function ptApply(){ const vp=$("#ptVp"), inr=$("#ptIn"); if(!vp||!inr) return; const P=S.pt; inr.style.transform=`translate(${P.tx}px,${P.ty}px) scale(${P.z})`; inr.style.setProperty("--s",(1/P.z).toFixed(4)); }
+function ptFit(){ const vp=$("#ptVp"), m=ptCur(); if(!vp||!m) return; const r=vp.getBoundingClientRect(), z=Math.min(r.width/m.w,r.height/m.h)*0.98; S.pt.z=z; S.pt.tx=(r.width-m.w*z)/2; S.pt.ty=(r.height-m.h*z)/2; S.pt.fitZ=z; ptApply(); }
+function ptZoomAt(f,cx,cy){ const P=S.pt, vp=$("#ptVp"); if(!vp) return; const r=vp.getBoundingClientRect(); if(cx==null){ cx=r.width/2; cy=r.height/2; } const nz=Math.max((P.fitZ||P.z)*0.5,Math.min(P.z*f,8)); const k=nz/P.z; P.tx=cx-(cx-P.tx)*k; P.ty=cy-(cy-P.ty)*k; P.z=nz; ptApply(); }
+function ptAfterRender(){ if(!S.route.startsWith("peta")) return; const vp=$("#ptVp"); if(!vp) return; if(!S.pt.z||S.pt._mapFor!==S.pt.id){ S.pt._mapFor=S.pt.id; const img=vp.querySelector("img"); if(img.complete) ptFit(); else img.addEventListener("load",ptFit,{once:true}); } else ptApply(); }
+const PTP={ptrs:new Map(),mode:"",sx:0,sy:0,tx:0,ty:0,mk:null,moved:false,d0:0,z0:1};
+function ptRel(ev){ const inr=$("#ptIn"), r=inr.getBoundingClientRect(); return {x:Math.min(1,Math.max(0,(ev.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(ev.clientY-r.top)/r.height))}; }
+document.addEventListener("pointerdown",ev=>{ const vp=ev.target.closest&&ev.target.closest("#ptVp"); if(!vp||ev.target.closest(".ptzoom")) return; PTP.ptrs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  if(PTP.ptrs.size===2){ const [a,b]=[...PTP.ptrs.values()]; PTP.mode="pinch"; PTP.d0=Math.hypot(a.x-b.x,a.y-b.y); PTP.z0=S.pt.z; return; }
+  const mk=ev.target.closest(".ptm"); PTP.moved=false; PTP.sx=ev.clientX; PTP.sy=ev.clientY; PTP.tx=S.pt.tx; PTP.ty=S.pt.ty;
+  if(mk){ PTP.mode=S.pt.edit?"drag":"mk"; PTP.mk=mk; } else { PTP.mode="pan"; PTP.mk=null; } try{ vp.setPointerCapture(ev.pointerId); }catch(e){} ev.preventDefault(); });
+document.addEventListener("pointermove",ev=>{ const vp=$("#ptVp"); if(!vp) return;
+  if(!PTP.mode){ const mk=ev.target.closest&&ev.target.closest(".ptm"), tip=$("#ptTip"); if(tip){ if(mk&&!S.pt.edit){ const m=ptCur(), k=(m.markers||[]).find(x=>x.id===mk.dataset.ptm); if(k){ const r=vp.getBoundingClientRect(), w=ptWarn(k); tip.innerHTML=`<b>${esc(ptTitle(k))}</b><span>${esc(ptType(k.type).nama)}${k.area?" · "+esc(k.area):""}</span>${w?`<em>${esc(w.t)}</em>`:""}`; tip.style.left=(ev.clientX-r.left+14)+"px"; tip.style.top=(ev.clientY-r.top+14)+"px"; tip.hidden=false; } } else tip.hidden=true; } return; }
+  if(!PTP.ptrs.has(ev.pointerId)) return; PTP.ptrs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  if(PTP.mode==="pinch"&&PTP.ptrs.size>=2){ const [a,b]=[...PTP.ptrs.values()], d=Math.hypot(a.x-b.x,a.y-b.y), r=vp.getBoundingClientRect(); ptZoomAt(PTP.z0*d/PTP.d0/S.pt.z,(a.x+b.x)/2-r.left,(a.y+b.y)/2-r.top); return; }
+  const dx=ev.clientX-PTP.sx, dy=ev.clientY-PTP.sy; if(Math.abs(dx)+Math.abs(dy)>4) PTP.moved=true;
+  if(PTP.mode==="pan"||(PTP.mode==="mk"&&PTP.moved)){ if(PTP.mode==="mk") PTP.mode="pan"; S.pt.tx=PTP.tx+dx; S.pt.ty=PTP.ty+dy; ptApply(); }
+  else if(PTP.mode==="drag"&&PTP.moved){ const p=ptRel(ev); PTP.mk.style.left=(p.x*100)+"%"; PTP.mk.style.top=(p.y*100)+"%"; PTP.mk.classList.add("dragging"); } });
+async function ptEnd(ev){ if(!PTP.ptrs.has(ev.pointerId)) return; PTP.ptrs.delete(ev.pointerId); const mode=PTP.mode; if(PTP.ptrs.size) { if(mode==="pinch") PTP.mode="pinch-end"; return; } PTP.mode="";
+  if(mode==="pinch"||mode==="pinch-end") return; const m=ptCur(); if(!m) return;
+  if(mode==="drag"){ const id=PTP.mk.dataset.ptm; if(PTP.moved){ const p=ptRel(ev); await ptSaveMarker(m,id,{x:p.x,y:p.y}); toast("Posisi titik dipindahkan."); } else dlgPtMarker(m,(m.markers||[]).find(k=>k.id===id)); return; }
+  if(mode==="mk"&&!PTP.moved){ S.pt.sel=PTP.mk.dataset.ptm; const y=window.scrollY; render(); window.scrollTo(0,y); return; }
+  if(mode==="pan"&&!PTP.moved&&S.pt.edit&&S.canWrite&&ev.target.closest&&ev.target.closest("#ptVp")){ const p=ptRel(ev); dlgPtMarker(m,null,p); } }
+document.addEventListener("pointerup",ptEnd); document.addEventListener("pointercancel",ev=>{ PTP.ptrs.delete(ev.pointerId); if(!PTP.ptrs.size) PTP.mode=""; });
+document.addEventListener("wheel",ev=>{ const vp=ev.target.closest&&ev.target.closest("#ptVp"); if(!vp) return; ev.preventDefault(); const r=vp.getBoundingClientRect(); ptZoomAt(ev.deltaY<0?1.15:1/1.15,ev.clientX-r.left,ev.clientY-r.top); },{passive:false});
+document.addEventListener("pointerleave",ev=>{ if(ev.target&&ev.target.id==="ptVp"){ const t=$("#ptTip"); if(t) t.hidden=true; } },true);
+// ---- simpan data
+async function ptSaveMap(id,patch){ const d=clone(S.peta.get(id)||{}); delete d._id; Object.assign(d,patch,{diubah:new Date().toISOString()}); await S.db.doc("peta/"+id).set(d); }
+async function ptSaveMarker(m,id,patch,del){ const ms=clone(m.markers||[]); const i=ms.findIndex(k=>k.id===id); if(del){ if(i>=0) ms.splice(i,1); } else if(i>=0) Object.assign(ms[i],patch,{diubah:new Date().toISOString()}); else ms.push(Object.assign({id},patch,{dibuat:new Date().toISOString()})); await ptSaveMap(m._id,{markers:ms}); }
+function dlgPtMarker(m,k,pos){ const isNew=!k; k=k||{type:S.pt.lastType||"apar",x:pos.x,y:pos.y}; const types=ptTypes();
+  const used=new Set(); S.peta.forEach(mp=>(mp.markers||[]).forEach(x=>{ if(x.type==="p3k"&&x.kotak&&x.id!==k.id) used.add(x.kotak); }));
+  openDlg(`<header><h2>${isNew?"Tambah titik":"Ubah titik"}</h2></header><div class="body"><div class="grid2">
+   <label class="f full"><span>Jenis</span><select name="type">${types.map(t=>`<option value="${esc(t.key)}" ${k.type===t.key?"selected":""}>${esc(t.nama)}</option>`).join("")}</select></label>
+   <div class="f full ptp3k" ${k.type==="p3k"?"":"hidden"}><span class="lbl">Kotak P3K</span><select name="kotak"><option value="">– pilih kotak –</option>${boxList().map(b=>`<option value="${esc(b.kode)}" ${k.kotak===b.kode?"selected":""}>${esc(b.kode)} · ${esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–")}${used.has(b.kode)?" (sudah di peta)":""}</option>`).join("")}</select></div>
+   <label class="f"><span>Nama / label <span class="muted" style="font-weight:400">(opsional)</span></span><input type="text" name="nama" value="${esc(k.nama||"")}" placeholder="Misal: APAR Gudang Benang 1"></label>
+   <label class="f"><span>Kode / nomor</span><input type="text" name="kode" value="${esc(k.kode||"")}" placeholder="Misal: APAR-012"></label>
+   <label class="f"><span>Area / lokasi</span><input type="text" name="area" value="${esc(k.area||"")}" placeholder="Misal: Weaving, dekat pintu timur"></label>
+   <label class="f"><span>Spesifikasi</span><input type="text" name="spes" value="${esc(k.spes||"")}" placeholder="Misal: Powder 6 kg"></label>
+   <label class="f"><span>Tgl. kedaluwarsa / refill</span><input type="date" name="tglExp" value="${esc(k.tglExp||"")}"></label>
+   <label class="f"><span>Pengecekan terakhir</span><input type="date" name="tglCek" value="${esc(k.tglCek||"")}" max="${todayISO()}"></label>
+   <label class="f full"><span>Catatan</span><input type="text" name="catatan" value="${esc(k.catatan||"")}"></label></div>
+   ${!isNew?`<p style="margin:12px 0 0"><button type="button" class="linkbtn" data-act="pt-mk-del" data-id="${esc(k.id)}" style="color:var(--red)">Hapus titik ini</button></p>`:""}</div>${foot(isNew?"Tambah titik":"Simpan")}`, async f=>{
+    const v=Object.fromEntries(new FormData(f)); ["nama","kode","area","spes","catatan"].forEach(x=>v[x]=String(v[x]||"").trim()); if(v.type!=="p3k") v.kotak="";
+    if(v.type==="p3k"&&!v.kotak&&!v.nama){ toast("Pilih kotak P3K atau isi nama titik."); return false; }
+    S.pt.lastType=v.type; const id=k.id||uidGen("mk"); await ptSaveMarker(m,id,Object.assign(v,{x:k.x,y:k.y})); S.pt.sel=id; toast(isNew?"Titik ditambahkan.":"Titik disimpan."); });
+  const f=$("#dlg form"); f.type.addEventListener("change",()=>{ f.querySelector(".ptp3k").hidden=f.type.value!=="p3k"; });
+}
+async function ptReadImage(file){ const url=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
+  const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("Gambar tidak bisa dibaca.")); i.src=url; });
+  let w=img.naturalWidth||1600, h=img.naturalHeight||1000; if(/svg/.test(file.type)&&(!img.naturalWidth)){ w=1600; h=1000; }
+  const max=4000; if(file.size<=1.8e6&&w<=max&&h<=max) return {img:url,w,h};
+  const k=Math.min(1,max/Math.max(w,h)); const c=document.createElement("canvas"); c.width=Math.round(w*k); c.height=Math.round(h*k); const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,c.width,c.height); g.drawImage(img,0,0,c.width,c.height);
+  return {img:c.toDataURL("image/jpeg",0.86),w:c.width,h:c.height}; }
+function dlgPtMap(m){ const isNew=!m;
+  openDlg(`<header><h2>${isNew?"Tambah layout":"Ubah layout"}</h2></header><div class="body"><div class="grid2">
+   <label class="f full"><span>Nama layout</span><input type="text" name="nama" required value="${esc(m?m.nama:"")}" placeholder="Misal: Lokasi 2 – keseluruhan, Gedung Processing lantai 1"></label>
+   <label class="f full"><span>${isNew?"Gambar layout":"Ganti gambar layout (opsional)"}</span><input type="file" name="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" ${isNew?"required":""}></label>
+   <label class="f"><span>No. urut</span><input type="number" name="urut" min="1" value="${esc(m?m.urut||"":ptMaps().length+1)}"></label></div>
+   <p class="hint" style="margin:10px 0 0">Format PNG atau JPG. Gambar besar diperkecil otomatis agar program tetap ringan. ${!isNew?"Posisi titik disimpan relatif terhadap gambar, jadi ganti gambar dengan layout yang sama ukurannya agar titik tidak bergeser.":""}</p>
+   ${!isNew?`<p style="margin:12px 0 0"><button type="button" class="linkbtn" data-act="pt-map-del" style="color:var(--red)">Hapus layout ini beserta ${(m.markers||[]).length} titiknya</button></p>`:""}</div>${foot(isNew?"Tambah layout":"Simpan")}`, async f=>{
+    const nama=String(f.nama.value||"").trim(), file=f.file.files[0], urut=+f.urut.value||99; let im=null;
+    if(file){ try{ toast("Memproses gambar…"); im=await ptReadImage(file); }catch(e){ toast(e.message||"Gambar gagal dibaca."); return false; } }
+    if(isNew){ const id=uidGen("pt"); await S.db.doc("peta/"+id).set(Object.assign({nama,urut,markers:[],dibuat:new Date().toISOString()},im)); S.pt.id=id; S.pt.z=0; S.pt.edit=true; toast("Layout ditambahkan. Klik di peta untuk menambah titik."); }
+    else { await ptSaveMap(m._id,Object.assign({nama,urut},im||{})); if(im) S.pt.z=0; toast("Layout disimpan."); } });
+}
+function dlgPtTypes(){ const ts=ptTypes(), ics=Object.keys(PT_GLYPH);
+  openDlg(`<header><h2>Jenis titik</h2><p class="hint" style="margin:4px 0 0">Ubah nama dan warna, atau tambah jenis baru (misalnya Smoke detector, Spill kit). Jenis tanpa simbol bawaan memakai 1–3 huruf singkatan.</p></header><div class="body">
+   <div class="pttypes">${ts.map((t,i)=>`<div class="ptty" data-i="${i}">${ptIcon(t,26)}<input type="hidden" name="key${i}" value="${esc(t.key)}"><input type="text" name="nama${i}" value="${esc(t.nama)}" aria-label="Nama jenis"><input type="color" name="warna${i}" value="${esc(t.warna)}" aria-label="Warna"><select name="ikon${i}" aria-label="Simbol"><option value="">Huruf</option>${ics.map(c=>`<option value="${c}" ${t.ikon===c?"selected":""}>${c}</option>`).join("")}</select><input type="text" name="teks${i}" value="${esc(t.teks||"")}" maxlength="3" placeholder="Huruf" aria-label="Huruf singkatan" style="width:70px"></div>`).join("")}
+    <div class="ptty"><span style="width:26px;text-align:center">+</span><input type="text" name="namaN" placeholder="Jenis baru, misal: Smoke detector"><input type="color" name="warnaN" value="#7c3aed"><select name="ikonN"><option value="">Huruf</option>${ics.map(c=>`<option value="${c}">${c}</option>`).join("")}</select><input type="text" name="teksN" maxlength="3" placeholder="SD" style="width:70px"></div></div></div>${foot("Simpan jenis titik")}`, async f=>{
+    const out=ts.map((t,i)=>({key:t.key,nama:String(f["nama"+i].value||"").trim()||t.nama,warna:f["warna"+i].value,ikon:f["ikon"+i].value,teks:String(f["teks"+i].value||"").trim()}));
+    const nn=String(f.namaN.value||"").trim(); if(nn){ let key=nn.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"jenis"; while(out.some(t=>t.key===key)) key+="-2"; out.push({key,nama:nn,warna:f.warnaN.value,ikon:f.ikonN.value,teks:String(f.teksN.value||"").trim()||nn.split(/\s+/).map(w=>w[0]).join("").slice(0,3)}); }
+    await S.db.doc("pengaturan/peta").set({types:out}); toast("Jenis titik disimpan."); });
+}
+function ptPrintHtml(m){ const vis=ptVisible(m), types=ptTypes().filter(t=>vis.some(k=>k.type===t.key)), land=m.w>=m.h;
+  const mk=vis.map((k,i)=>`<span class="ptpm" style="left:${(k.x*100).toFixed(3)}%;top:${(k.y*100).toFixed(3)}%">${ptIcon(ptType(k.type),18)}<i>${i+1}</i></span>`).join("");
+  return `<div class="ptdoc"><div class="ptph"><b>PT. DEWASUTRATEX · Layout sarana K3</b><span>${esc(m.nama)} · dicetak ${fmt(todayISO())}${S.pt.hide.size?" · hanya: "+esc(types.map(t=>t.nama).join(", ")):""}</span></div>
+   <div class="ptpmap" style="aspect-ratio:${m.w}/${m.h};width:min(100%,calc(${land?150:200}mm * ${(m.w/m.h).toFixed(4)}))"><img src="${m.img}" alt="">${mk}</div>
+   <div class="ptpleg">${types.map(t=>`<span>${ptIcon(t,14)} ${esc(t.nama)} (${vis.filter(k=>k.type===t.key).length})</span>`).join("")}</div>
+   <table class="ptpt"><thead><tr><th>No</th><th>Jenis</th><th>Nama / label</th><th>Kode</th><th>Area</th><th>Spesifikasi</th><th>Exp. / refill</th></tr></thead><tbody>${vis.map((k,i)=>`<tr><td>${i+1}</td><td>${esc(ptType(k.type).nama)}</td><td>${esc(ptTitle(k))}</td><td>${esc(k.kode||"")}</td><td>${esc(k.area||"")}</td><td>${esc(k.spes||"")}</td><td>${k.tglExp?fmt(k.tglExp):""}</td></tr>`).join("")}</tbody></table></div>`; }
+function ptPrint(){ const m=ptCur(); if(!m) return; const pa=$("#printArea"); pa.innerHTML=ptPrintHtml(m); const land=m.w>=m.h;
+  const ps=document.createElement("style"); ps.textContent=`@page{size:A4 ${land?"landscape":"portrait"};margin:8mm}`; document.head.appendChild(ps); document.body.classList.add("printing");
+  const done=()=>{ document.body.classList.remove("printing"); ps.remove(); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done); setTimeout(()=>{ window.print(); setTimeout(done,500); },150); }
+function ptCsv(){ const m=ptCur(); if(!m) return; const out=[["Layout","Jenis","Nama / label","Kode / nomor","Area / lokasi","Spesifikasi","Tgl. kedaluwarsa / refill","Pengecekan terakhir","Kotak P3K","Catatan","Posisi X (%)","Posisi Y (%)"]];
+  (m.markers||[]).forEach(k=>out.push([m.nama,ptType(k.type).nama,ptTitle(k),k.kode||"",k.area||"",k.spes||"",k.tglExp?fmt(k.tglExp):"",k.tglCek?fmt(k.tglCek):"",k.kotak||"",k.catatan||"",(k.x*100).toFixed(2),(k.y*100).toFixed(2)]));
+  exportCsv("titik-sarana-k3-"+todayISO()+".csv",out); }
+document.addEventListener("click",ev=>{ const g=ev.target.closest("[data-ptgo]"); if(g){ S.pt.sel=g.dataset.ptgo; const m=ptCur(), k=(m.markers||[]).find(x=>x.id===S.pt.sel); render(); if(k){ const vp=$("#ptVp"), r=vp.getBoundingClientRect(); if(S.pt.z<(S.pt.fitZ||1)*1.6) S.pt.z=(S.pt.fitZ||1)*2; S.pt.tx=r.width/2-k.x*m.w*S.pt.z; S.pt.ty=r.height/2-k.y*m.h*S.pt.z; ptApply(); } return; }
+  const t=ev.target.closest("[data-act]"); if(!t||!t.dataset.act.startsWith("pt-")) return; const m=ptCur();
+  switch(t.dataset.act){
+    case "pt-new": dlgPtMap(null); break; case "pt-map-edit": if(m) dlgPtMap(m); break;
+    case "pt-map-del": $("#dlg").close(); openDlg(`<header><h2>Hapus layout ${esc(m.nama)}?</h2></header><div class="body"><p style="margin:0">Layout dan ${(m.markers||[]).length} titiknya dihapus permanen.</p></div>${foot("Hapus layout")}`, async ()=>{ await S.db.doc("peta/"+m._id).delete(); S.pt.id=""; S.pt.z=0; toast("Layout dihapus."); }); break;
+    case "pt-edit": S.pt.edit=!S.pt.edit; render(); break; case "pt-types": dlgPtTypes(); break;
+    case "pt-zin": ptZoomAt(1.3); break; case "pt-zout": ptZoomAt(1/1.3); break; case "pt-fit": ptFit(); break;
+    case "pt-unsel": S.pt.sel=""; render(); break; case "pt-all": S.pt.hide.clear(); render(); break; case "pt-none": ptTypes().forEach(x=>S.pt.hide.add(x.key)); render(); break;
+    case "pt-mk-edit": if(m) dlgPtMarker(m,(m.markers||[]).find(k=>k.id===t.dataset.id)); break;
+    case "pt-mk-del": { const k=m&&(m.markers||[]).find(x=>x.id===t.dataset.id); if(!k) break; const d=$("#dlg"); if(d.open) d.close(); openDlg(`<header><h2>Hapus titik ${esc(ptTitle(k))}?</h2></header><div class="body"><p style="margin:0">Titik ini dihapus dari layout ${esc(m.nama)}.</p></div>${foot("Hapus titik")}`, async ()=>{ await ptSaveMarker(m,k.id,null,true); S.pt.sel=""; toast("Titik dihapus."); }); break; }
+    case "pt-print": ptPrint(); break; case "pt-csv": ptCsv(); break; } });
+document.addEventListener("change",ev=>{ const el=ev.target; if(el.dataset&&el.dataset.ptf){ if(el.checked) S.pt.hide.delete(el.dataset.ptf); else S.pt.hide.add(el.dataset.ptf); render(); return; }
+  if(el.id==="ptSel"){ S.pt.id=el.value; S.pt.z=0; S.pt.sel=""; render(); } });
+document.addEventListener("input",ev=>{ const el=ev.target; if(el.id==="ptQ"){ S.pt.q=el.value; clearTimeout(S._ptQt); S._ptQt=setTimeout(()=>{ const pos=el.selectionStart; render(); const q=$("#ptQ"); if(q){ q.focus(); try{q.setSelectionRange(pos,pos);}catch(e){} } },180); } });
+window.addEventListener("resize",()=>{ if(S.route&&S.route.startsWith("peta")&&S.pt.z&&S.pt.fitZ&&Math.abs(S.pt.z-S.pt.fitZ)<1e-6) ptFit(); });
+
+// ---------- Hasil scan barcode item yang jelas: "(nama item) ditemukan" ----------
+function bcItemName(bc,boxKode){ let nm="", box=""; S.kotak.forEach(k=>{ if(nm||(boxKode&&k.kode!==boxKode)) return; const x=(k.isi||[]).find(i=>i.bc.toUpperCase()===String(bc).toUpperCase()); if(x){ nm=itemOf(x.kode).nama; box=k.kode; } }); return {nm,box}; }
+function scanInfo(r,bc,boxKode){ const [t,v]=String(r).split(":"); bc=String(bc||"").trim().toUpperCase();
+  if(t==="ok"){ const i=bcItemName(v,boxKode); return {ok:true,cls:"good",title:`${i.nm||"Item"} ditemukan`,sub:`${v} · otomatis dicentang Ada`}; }
+  if(t==="dup"){ const i=bcItemName(v,boxKode); return {ok:true,cls:"good",title:`${i.nm||"Item"} sudah dicentang`,sub:v}; }
+  if(t==="other"){ const i=bcItemName(bc,v); return {ok:false,cls:"bad",title:`${bc} terdaftar di kotak ${v}`,sub:`${i.nm?i.nm+" · ":""}bukan isi kotak ini, tidak dicentang`}; }
+  if(t==="temu") return {ok:false,cls:"warn",title:`${bc} belum terdaftar di kotak ini`,sub:"Barcode belum ada di program · dicatat di bagian Item belum tercatat"};
+  return {ok:false,cls:"bad",title:`${bc} tidak ada di kotak ini`,sub:""}; }
+function scanResHtml(s){ return s?`<div class="scanres ${s.cls}" role="status"><b>${s.ok?"✓ ":s.cls==="warn"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}</div>`:""; }
+let SC_AC=null; function scanSound(ok){ try{ SC_AC=SC_AC||new (window.AudioContext||window.webkitAudioContext)(); const t=SC_AC.currentTime, beep=(f,s,d)=>{ const o=SC_AC.createOscillator(), g=SC_AC.createGain(); o.frequency.value=f; o.type="square"; g.gain.setValueAtTime(.07,t+s); g.gain.exponentialRampToValueAtTime(.001,t+s+d); o.connect(g); g.connect(SC_AC.destination); o.start(t+s); o.stop(t+s+d+.02); };
+  if(ok) beep(1400,0,.09); else { beep(320,0,.14); beep(320,.2,.14); } }catch(e){} }
+// komputer: kolom scan (scanner barcode USB atau ketik)
+function ckMark(bc){ const ck=S.ck, b=S.kotak.get(ck.kode); bc=String(bc||"").trim().toUpperCase(); const x=(b.isi||[]).find(i=>i.bc.toUpperCase()===bc);
+  if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other) return "other:"+other;
+    const tl=tmState("ck"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); return "temu:"+bc; }
+  if(ck.scan[x.bc]) return "dup:"+x.bc; ck.scan[x.bc]=true; if(ck.st[x.bc]&&ck.st[x.bc].k==="hilang") delete ck.st[x.bc]; if(!ck.st[x.bc]) ck.st[x.bc]={k:"ada"}; return "ok:"+x.bc; }
+function ckScanBar(){ const ck=S.ck; return `<form id="ckScanF" class="scanbar" autocomplete="off"><input type="text" id="ckBc" placeholder="Scan barcode item (scanner atau ketik), lalu Enter" aria-label="Scan barcode item" autocapitalize="characters"><button class="btn" type="submit">Centang</button></form>${scanResHtml(ck.lastScan)}`; }
+document.addEventListener("submit",ev=>{ if(ev.target.id!=="ckScanF"||!S.ck) return; ev.preventDefault(); const v=$("#ckBc").value.trim(); if(!v) return;
+  const s=scanInfo(ckMark(v),v,S.ck.kode); S.ck.lastScan=s; scanSound(s.ok); const y=window.scrollY; render(); window.scrollTo(0,y); const n=$("#ckBc"); if(n) n.focus(); });
+
 // ---------- penyimpanan lokal ----------
 let STORE={}; let STORAGE_LABEL="penyimpanan browser"; let idb=null;
 const subs=new Set();
@@ -3842,6 +4078,8 @@ S.route=readRoute(); render();
   localDb.collection("kecelakaan").onSnapshot(snap=>{
     const m=new Map(); snap.docs.forEach(d=>{const v=Object.assign(normInc(d.data()),{_id:d.id}); m.set(d.id,v);}); S.inc=m; if(S.loaded) render();
   });
+  localDb.collection("peta").onSnapshot(snap=>{ const m=new Map(); snap.docs.forEach(d=>m.set(d.id,Object.assign({},d.data(),{_id:d.id}))); S.peta=m; if(S.loaded&&S.route==="peta") render(); });
+  localDb.doc("pengaturan/peta").onSnapshot(s=>{ S.ptSet=(s.exists&&s.data())||null; if(S.loaded&&S.route==="peta") render(); });
   localDb.collection("pembagian").onSnapshot(snap=>{ const m=new Map(); snap.docs.forEach(d=>m.set(d.id,Object.assign({},d.data(),{_id:d.id}))); S.bagiLog=m; if(S.loaded&&S.route.startsWith("bagi")) render(); });
   localDb.doc("pengaturan/hira").onSnapshot(s=>{ S.hiraSet=(s.exists&&s.data())||null; if(S.loaded&&S.route.startsWith("hira")) render(); });
   localDb.collection("hira").onSnapshot(snap=>{ const m=new Map(); snap.docs.forEach(d=>m.set(d.id,Object.assign({},d.data(),{_id:d.id}))); S.hira=m; if(S.loaded) render(); });
