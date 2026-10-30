@@ -828,7 +828,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V7 · 30/10/2026 (APAR)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
