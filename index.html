@@ -419,6 +419,19 @@ nav.side .foot{display:none!important}
 .apbags{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px}
 .aptab td{font-size:13.5px}
 @media (max-width:640px){.approw{grid-template-columns:1fr auto}.approw input[type=text],.approw .apexp{grid-column:1/-1}}
+.bcsug{max-height:320px;overflow:auto}.bcsug button span:first-child{display:flex;gap:8px;align-items:baseline}
+.navtog{display:none}
+@media (max-width:900px){
+ nav.side{flex-wrap:wrap!important;overflow:visible!important;gap:6px!important;max-height:100vh}
+ nav.side .brand{flex:1 1 auto;min-width:0}
+ nav.side .navtog{display:inline-flex;align-items:center;gap:6px;order:3;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:7px 12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+ nav.side .themebtn{order:2}
+ nav.side>a,nav.side>.navgrp,nav.side>.navsub{display:none!important}
+ nav.side.open{overflow-y:auto!important;max-height:100dvh;padding-bottom:14px}
+ nav.side.open>a,nav.side.open>.navgrp{display:flex!important;flex:1 1 100%;order:10;width:100%;margin:0;padding:11px 10px;font-size:15px}
+ nav.side.open>.navsub:not([hidden]){display:flex!important;flex-direction:column!important;flex:1 1 100%;order:10;margin:0 0 4px 14px!important;border-left:1px solid rgba(255,255,255,.25)!important}
+ nav.side.open>.navsub a.nsub{padding:10px 12px!important;font-size:14.5px;white-space:normal!important}
+}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -590,6 +603,7 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
 <div class="app">
   <nav class="side" aria-label="Menu utama">
     <div class="brand"><b>K3 Dewasutratex</b><span>PT. Dewasutratex · HSE</span></div>
+    <button type="button" id="navToggle" class="navtog" aria-expanded="false" aria-label="Buka menu"><span aria-hidden="true">☰</span><span class="nt-l">Menu</span></button>
     <button type="button" id="themeBtn" class="themebtn"><span aria-hidden="true">◐</span><span class="tlbl">Tampilan: Otomatis</span></button>
     <a href="#ringkasan" data-nav="ringkasan">Ringkasan</a>
     <button type="button" class="navgrp" data-navg="ms" aria-expanded="false" aria-controls="ng-ms">Master karyawan</button>
@@ -828,7 +842,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V7 · 30/10/2026 (APAR)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V7.1 · 30/10/2026 (menu HP & saran barcode)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -1557,7 +1571,7 @@ function pickDone(inp,k){ const key=inp.dataset.pick; inp.parentElement.querySel
     if(key.startsWith("pr-")){ const r=$("#prRev"), p=$("#prPrev"); if(r) r.innerHTML=prRevHtml(S.kotak.get(S.pr.kode)); if(p) p.innerHTML=printHtml(S.pr.kode); } return; }
   if(key.startsWith("lk-")||key.startsWith("lku-")) return lkPick(inp,k);
   if(key==="pme-pem"||key==="pme-pic"){ const f=inp.closest("form"), n=f&&f.elements[key==="pme-pem"?"pemeriksa":"pic"]; if(n) n.value=k.nama; return; }
-  if(key==="ap-pem"||key==="apic-nrp") return apPick(inp,k);
+  if(key==="ap-pem"||key==="ap-pic"||key==="apic-nrp") return apPick(inp,k);
   if(key==="kx-nrp"){ const f=inp.closest("form"); if(f&&f.pengguna) f.pengguna.value=k.nama; return; }
   if(key.startsWith("cku-")){ const bc=key.slice(4), v=S.ck&&S.ck.st[bc]; if(!v) return; v.nrp=k.nrp; v.nama=k.nama; const n=document.querySelector(`[data-cku="${CSS.escape(bc)}"][data-f="nama"]`); if(n) n.value=k.nama; return; }
   if(key==="box-pic"){ const f=inp.closest("form"); if(f&&f.picNama) f.picNama.value=k.nama; return; }
@@ -3000,7 +3014,7 @@ function viewLapBox(route){
   const pct=isi.length?Math.round(nDone/isi.length*100):0;
   return `<div class="lkhead"><button class="back" data-go="lapangan">‹ Daftar kotak</button><div class="row" style="justify-content:space-between;align-items:baseline"><h1 style="margin:0">${esc(kode)}</h1><span class="num"><b>${nDone}</b><span class="muted">/${isi.length} diperiksa</span></span></div>
     <p class="muted" style="margin:0 0 8px">${esc(b.bagian||"")}${b.penempatan?" · "+esc(b.penempatan):""}</p><div class="life lkprog"><i style="width:${pct}%"></i></div>
-    <div class="lkscan">${lapCanScan()?`<button class="btn primary lkcam" data-act="lap-cam">Pindai dengan kamera</button>`:""}<form id="lkManual" class="lkman" autocomplete="off"><input type="text" id="lkBc" placeholder="Ketik barcode lalu Enter" aria-label="Ketik barcode" inputmode="text" autocapitalize="characters"><button class="btn" type="submit">OK</button></form>
+    <div class="lkscan">${lapCanScan()?`<button class="btn primary lkcam" data-act="lap-cam">Pindai dengan kamera</button>`:""}<form id="lkManual" class="lkman" autocomplete="off"><input type="text" id="lkBc" data-bcsug="lk" data-bcsubmit autocomplete="off" placeholder="Ketik barcode lalu Enter" aria-label="Ketik barcode" inputmode="text" autocapitalize="characters"><button class="btn" type="submit">OK</button></form>
     ${lapCanPhoto()?`<label class="btn lkfoto">Foto barcode<input type="file" accept="image/*" capture="environment" id="lkPhoto" hidden></label>`:""}</div>
     ${scanResHtml(lk.lastScan)}
     <div class="lkchips">${[["semua","Semua "+isi.length],["belum","Belum diperiksa "+nBelum],["keluar","Dikeluarkan "+nOut]].map(([k,l])=>`<button class="lkchip" data-lkshow="${k}" aria-pressed="${lk.show===k}">${l}</button>`).join("")}</div></div>
@@ -3519,7 +3533,7 @@ document.addEventListener("DOMContentLoaded",()=>dmyScan(document)); setTimeout(
 
 // ---------- Saran nama karyawan pada kolom Nama (pasangan kolom NRP) ----------
 function nameKey(el){ if(!el||el.tagName!=="INPUT"||el.type!=="text") return null; const d=el.dataset;
-  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.apf==="pem") return "ap-pem"; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
+  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.apf==="pem") return "ap-pem"; if(d.apf==="pic"&&document.querySelector('[data-pick="ap-pic"]')) return "ap-pic"; if(el.name==="nama"&&el.form&&el.form.querySelector('[data-pick="apic-nrp"]')) return "apic-nrp"; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
   if(d.cku&&d.f==="nama") return "cku-"+d.cku; if(d.lku&&d.f==="nama") return "lku-"+d.lku;
   if(d.p==="pelapor.nama") return "pelapor"; if(d.p==="korban.nama") return "korban"; const sm=(d.p||"").match(/^saksi\.(\d)\.nama$/); if(sm) return "saksi"+sm[1];
   if(el.name==="picNama"&&el.form&&el.form.querySelector('[data-pick="box-pic"]')) return "box-pic"; if(el.name==="pengguna"&&el.form&&el.form.querySelector('[data-pick="kx-nrp"]')) return "kx-nrp";
@@ -3941,7 +3955,7 @@ function dlgPtMarker(m,k,pos){ const isNew=!k; k=k||{type:S.pt.lastType||"apar",
   openDlg(`<header><h2>${isNew?"Tambah titik":"Ubah titik"}</h2></header><div class="body"><div class="grid2">
    <label class="f full"><span>Jenis</span><select name="type">${types.map(t=>`<option value="${esc(t.key)}" ${k.type===t.key?"selected":""}>${esc(t.nama)}</option>`).join("")}</select></label>
    <div class="f full ptp3k" ${k.type==="p3k"?"":"hidden"}><span class="lbl">Kotak P3K</span><select name="kotak"><option value="">– pilih kotak –</option>${boxList().map(b=>`<option value="${esc(b.kode)}" ${k.kotak===b.kode?"selected":""}>${esc(b.kode)} · ${esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–")}${used.has(b.kode)?" (sudah di peta)":""}</option>`).join("")}</select></div>
-   <div class="f full ptapar" ${PT_APAR.has(k.type)?"":"hidden"}><span class="lbl">Barcode APAR <span class="muted" style="font-weight:400">(hubungkan ke Master APAR)</span></span><input type="text" name="apar" list="ptApDL" value="${esc(k.apar||"")}" placeholder="Ketik barcode, bagian, atau penempatan" autocomplete="off"><datalist id="ptApDL">${apList().filter(a=>(a.status||"aktif")!=="afkir").map(a=>`<option value="${esc(a.bc)}">${esc(apLabel(a))} · ${esc(a.penempatan||"")}</option>`).join("")}</datalist></div>
+   <div class="f full ptapar" ${PT_APAR.has(k.type)?"":"hidden"}><span class="lbl">Barcode APAR <span class="muted" style="font-weight:400">(hubungkan ke Master APAR)</span></span><input type="text" name="apar" data-bcsug="apar" value="${esc(k.apar||"")}" placeholder="Ketik barcode, bagian, no. urut, atau penempatan" autocomplete="off" autocapitalize="characters"></div>
    <label class="f"><span>Nama / label <span class="muted" style="font-weight:400">(opsional)</span></span><input type="text" name="nama" value="${esc(k.nama||"")}" placeholder="Misal: APAR Gudang Benang 1"></label>
    <label class="f"><span>Kode / nomor</span><input type="text" name="kode" value="${esc(k.kode||"")}" placeholder="Misal: APAR-012"></label>
    <label class="f"><span>Area / lokasi</span><input type="text" name="area" value="${esc(k.area||"")}" placeholder="Misal: Weaving, dekat pintu timur"></label>
@@ -4030,7 +4044,7 @@ function ckMark(bc){ const ck=S.ck, b=S.kotak.get(ck.kode); bc=String(bc||"").tr
   if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other) return "other:"+other;
     const tl=tmState("ck"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); return "temu:"+bc; }
   if(ck.scan[x.bc]) return "dup:"+x.bc; ck.scan[x.bc]=true; if(ck.st[x.bc]&&ck.st[x.bc].k==="hilang") delete ck.st[x.bc]; if(!ck.st[x.bc]) ck.st[x.bc]={k:"ada"}; return "ok:"+x.bc; }
-function ckScanBar(){ const ck=S.ck; return `<form id="ckScanF" class="scanbar" autocomplete="off"><input type="text" id="ckBc" placeholder="Scan barcode item (scanner atau ketik), lalu Enter" aria-label="Scan barcode item" autocapitalize="characters"><button class="btn" type="submit">Centang</button></form>${scanResHtml(ck.lastScan)}`; }
+function ckScanBar(){ const ck=S.ck; return `<form id="ckScanF" class="scanbar" autocomplete="off"><input type="text" id="ckBc" data-bcsug="ck" data-bcsubmit placeholder="Scan barcode item (scanner atau ketik), lalu Enter" aria-label="Scan barcode item" autocapitalize="characters" autocomplete="off"><button class="btn" type="submit">Centang</button></form>${scanResHtml(ck.lastScan)}`; }
 document.addEventListener("submit",ev=>{ if(ev.target.id!=="ckScanF"||!S.ck) return; ev.preventDefault(); const v=$("#ckBc").value.trim(); if(!v) return;
   const s=scanInfo(ckMark(v),v,S.ck.kode); S.ck.lastScan=s; scanSound(s.ok); const y=window.scrollY; render(); window.scrollTo(0,y); const n=$("#ckBc"); if(n) n.focus(); });
 
@@ -4142,12 +4156,12 @@ function viewAparCek(){
        ${c.cek[k]==="tidak"?`<input type="text" data-apket="${k}" value="${esc(c.ket[k]||"")}" placeholder="Keterangan ${l.toLowerCase()}">`:""}${k==="expire"?`<label class="apexp"><span>Tgl. expire</span><input type="date" data-apf="tglExp" value="${esc(c.tglExp||"")}"></label>`:""}</div>`).join("")}</div>
      <div class="grid3" style="margin-top:12px"><label class="f"><span>Tanggal pemeriksaan</span><input type="date" data-apf="tgl" value="${esc(c.tgl)}" max="${todayISO()}"></label>
       ${picker("ap-pem","NRP petugas pemeriksa",c.pemNrp)}<label class="f"><span>Nama petugas pemeriksa</span><input type="text" data-apf="pem" value="${esc(c.pem)}" placeholder="Wajib diisi"></label>
-      <label class="f span2"><span>PIC APAR ${esc(a.bagian||"")}</span><input type="text" data-apf="pic" value="${esc(c.pic)}" placeholder="Atur di menu PIC APAR"></label><span></span>
+      ${picker("ap-pic","NRP PIC APAR",c.picNrp)}<label class="f span2"><span>Nama PIC APAR ${esc(a.bagian||"")}</span><input type="text" data-apf="pic" value="${esc(c.pic)}" placeholder="Otomatis dari PIC bagian, atau ketik nama"></label>
       <label class="f full"><span>Catatan</span><input type="text" data-apf="catatan" value="${esc(c.catatan)}"></label></div>
      <div class="row" style="margin-top:12px"><button class="btn primary" data-act="ap-save">Simpan pemeriksaan</button><span class="hint">Setelah disimpan, langsung scan APAR berikutnya.</span></div></section>`:"";
   const recent=apList().flatMap(x=>(x.pemeriksaan||[]).filter(p=>p.tgl===c.tgl).map(p=>({a:x,p}))).sort((x,y)=>(y.p.dibuat||"").localeCompare(x.p.dibuat||"")).slice(0,15);
   return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Pemeriksaan APAR</h1><span class="muted">${done}/${akt.length} APAR aktif sudah diperiksa ${esc(kxPeriod(ym))}</span></div>
-   <section class="panel"><form id="apScanF" class="scanbar" autocomplete="off" style="margin-top:0"><input type="text" id="apBc" placeholder="Scan barcode APAR (scanner/kamera) atau ketik, lalu Enter" aria-label="Barcode APAR" autocapitalize="characters"><button class="btn" type="submit">Cari</button>${lapCanScan()?`<button type="button" class="btn primary" data-act="ap-cam">Kamera</button>`:""}</form>${scanResHtml(c.last)}</section>
+   <section class="panel"><form id="apScanF" class="scanbar" autocomplete="off" style="margin-top:0"><input type="text" id="apBc" data-bcsug="apar" data-bcsubmit placeholder="Scan barcode APAR (scanner/kamera) atau ketik, lalu Enter" aria-label="Barcode APAR" autocapitalize="characters" autocomplete="off"><button class="btn" type="submit">Cari</button>${lapCanScan()?`<button type="button" class="btn primary" data-act="ap-cam">Kamera</button>`:""}</form>${scanResHtml(c.last)}</section>
    ${form}
    ${recent.length?`<section class="panel"><h2>Diperiksa ${fmt(c.tgl)} (${recent.length})</h2><div class="tablewrap"><table><thead><tr><th>Jam</th><th>APAR</th><th>Penempatan</th><th>Hasil</th><th>Pemeriksa</th></tr></thead><tbody>${recent.map(({a,p})=>`<tr><td class="num">${esc((p.dibuat||"").slice(11,16))}</td><td><b>${esc(apLabel(a))}</b><div class="muted num" style="font-size:12px">${esc(a.bc)}</div></td><td>${esc(a.penempatan||"")}</td><td>${apHasilChip(p)}</td><td>${esc(p.pemeriksa||"")}</td></tr>`).join("")}</tbody></table></div></section>`:""}`;
 }
@@ -4197,7 +4211,7 @@ async function apLapGo(fmtX){ const L=S.apL, y=L.y||apMonth(), base=("Laporan-Pe
 function apCsv(){ const out=[["Barcode","No. seri","Jenis bahan","Kapasitas","Satuan","Jenis APAR","Bagian","No. urut","Penempatan","Keterangan","Status","PIC","Tgl. expire","Pemeriksaan terakhir","Hasil terakhir"]];
   apRows().forEach(a=>{ const p=apLast(a); out.push([a.bc,a.seri||"",a.bahan||"",a.kap||"",a.sat||"",a.jenis||"",a.bagian||"",a.urut??"",a.penempatan||"",a.ket||"",AP_ST[a.status||"aktif"][0],apPicTxt(a.bagian),a.tglExp?fmt(a.tglExp):"",p?fmt(p.tgl):"",p?(apBad(p).length?"Tidak baik: "+apBad(p).join(", "):"Baik"):""]); });
   exportCsv("database-apar-"+todayISO()+".csv",out); }
-function apPick(inp,k){ const key=inp.dataset.pick, c=apCState(); if(key==="ap-pem"){ c.pemNrp=k.nrp; c.pem=k.nama; const n=document.querySelector('[data-apf="pem"]'); if(n) n.value=k.nama; } else if(key==="apic-nrp"){ const f=inp.closest("form"); if(f&&f.nama) f.nama.value=k.nama; } }
+function apPick(inp,k){ const key=inp.dataset.pick, c=apCState(); if(key==="ap-pic"){ c.picNrp=k.nrp; c.pic=k.nama; const n=document.querySelector('[data-apf="pic"]'); if(n) n.value=k.nama; return; } if(key==="ap-pem"){ c.pemNrp=k.nrp; c.pem=k.nama; const n=document.querySelector('[data-apf="pem"]'); if(n) n.value=k.nama; } else if(key==="apic-nrp"){ const f=inp.closest("form"); if(f&&f.nama) f.nama.value=k.nama; } }
 document.addEventListener("click",ev=>{ const ck=ev.target.closest("[data-apcek]"); if(ck){ apOpenCek(ck.dataset.apcek); apCState().last=null; go("apar-cek"); return; }
   const op=ev.target.closest("[data-apopen]"); if(op){ dlgApar(S.apar.get(op.dataset.apopen)); return; }
   const tf=ev.target.closest("[data-aptile]"); if(tf){ const v=tf.dataset.aptile; Object.assign(S.apF,{st:v==="afkir"?"afkir":"aktif",cek:v==="belum"?"belum":v==="bad"?"bad":""}); render(); return; }
@@ -4216,12 +4230,46 @@ document.addEventListener("input",ev=>{ const el=ev.target; const c=S.apC;
   if(el.id==="apQ"){ S.apF.q=el.value; clearTimeout(S._apQt); S._apQt=setTimeout(()=>{ const pos=el.selectionStart; render(); const q=$("#apQ"); if(q){ q.focus(); try{q.setSelectionRange(pos,pos);}catch(e){} } },200); return; }
   if(c&&el.dataset&&el.dataset.apf&&el.type!=="date") c[el.dataset.apf]=el.value;
   if(c&&el.dataset&&el.dataset.apket) c.ket[el.dataset.apket]=el.value;
-  if(c&&el.dataset&&el.dataset.pick==="ap-pem") c.pemNrp=el.value.trim(); });
+  if(c&&el.dataset&&el.dataset.pick==="ap-pem") c.pemNrp=el.value.trim(); if(c&&el.dataset&&el.dataset.pick==="ap-pic") c.picNrp=el.value.trim(); });
 document.addEventListener("change",ev=>{ const el=ev.target; const c=S.apC;
   if(el.id==="apImp"&&el.files[0]){ const f=el.files[0]; el.value=""; apImportFile(f); return; }
   const m={apBag:"bag",apJenis:"jenis",apBahan:"bahan",apSt:"st",apCek:"cek"}[el.id]; if(m){ S.apF[m]=el.value; S.apLim=200; render(); return; }
   const l={apLy:"y",apLb:"bag",apLh:"hasil"}[el.id]; if(l){ S.apL[l]=el.value; render(); return; }
   if(c&&el.dataset&&el.dataset.apf&&el.type==="date") c[el.dataset.apf]=el.value; });
+
+// ---------- Saran barcode saat diketik (APAR & item kotak P3K) ----------
+function bcSugSource(kind){
+  if(kind==="apar") return apList().filter(a=>a.status!=="afkir").map(a=>({v:a.bc,t:apLabel(a),s:[a.penempatan,[a.bahan,a.kap,a.sat].filter(Boolean).join(" ")].filter(Boolean).join(" · "),k:[a.bc,a.seri,a.bagian,a.penempatan,a.urut?String(a.urut).padStart(3,"0"):""].join(" ").toLowerCase()}));
+  const o=kind==="ck"?S.ck:S.lk; if(!o) return []; const b=S.kotak.get(o.kode); if(!b) return [];
+  const st=kind==="ck"?(bc=>ckSt(o,bc)):(bc=>lkStOf(bc));
+  return (b.isi||[]).filter(x=>!st(x.bc)).map(x=>({v:x.bc,t:itemOf(x.kode).nama,s:"belum diperiksa",k:(x.bc+" "+itemOf(x.kode).nama).toLowerCase()})); }
+function bcScore(q,it){ const v=it.v.toLowerCase(); if(v===q) return 0; if(v.startsWith(q)) return 1; if(v.includes(q)) return 2; if(it.k.includes(q)) return 3;
+  // kemiripan: jumlah karakter yang sama di posisi sama (salah ketik 1–2 huruf)
+  if(q.length>=5&&Math.abs(v.length-q.length)<=1){ let d=0; for(let i=0;i<Math.max(v.length,q.length);i++) if(v[i]!==q[i]) d++; if(d<=2) return 4+d; } return 99; }
+let BCS=null; function bcsBox(){ if(!BCS){ BCS=document.createElement("div"); BCS.className="picklist bcsug"; BCS.hidden=true; } return BCS; }
+function bcsHide(){ if(BCS) BCS.hidden=true; }
+function bcsShow(inp){ const kind=inp.dataset.bcsug, q=inp.value.trim().toLowerCase(), box=bcsBox(); if(q.length<2){ bcsHide(); return; }
+  const res=bcSugSource(kind).map(it=>({it,sc:bcScore(q,it)})).filter(x=>x.sc<99).sort((a,b)=>a.sc-b.sc||a.it.v.localeCompare(b.it.v)).slice(0,8);
+  if(!res.length){ box.innerHTML=`<p class="muted" style="margin:0;padding:8px 10px">Tidak ada barcode yang mirip.</p>`; }
+  else box.innerHTML=res.map((x,i)=>`<button type="button" data-bcv="${esc(x.it.v)}" class="${i?"":"on"}"><span><b class="num">${esc(x.it.v)}</b> <span>${esc(x.it.t)}</span></span><span class="muted">${esc(x.it.s)}${x.sc>=4?" · mirip":""}</span></button>`).join("");
+  const host=inp.closest("dialog[open]")||document.body; if(box.parentNode!==host) host.appendChild(box);
+  const r=inp.getBoundingClientRect(); Object.assign(box.style,{position:"fixed",left:r.left+"px",top:(r.bottom+2)+"px",width:Math.max(r.width,300)+"px",zIndex:130}); box.hidden=false; box._inp=inp; }
+function bcsPick(v){ const inp=BCS&&BCS._inp; bcsHide(); if(!inp) return; inp.value=v; const f=inp.form; if(inp.dataset.bcsubmit!=null&&f){ if(f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event("submit",{cancelable:true,bubbles:true})); } else inp.dispatchEvent(new Event("input",{bubbles:true})); }
+document.addEventListener("input",ev=>{ const el=ev.target; if(el.dataset&&el.dataset.bcsug&&ev.isTrusted!==false) bcsShow(el); });
+document.addEventListener("mousedown",ev=>{ const b=ev.target.closest&&ev.target.closest("[data-bcv]"); if(b){ ev.preventDefault(); bcsPick(b.dataset.bcv); } else if(BCS&&!BCS.hidden&&!ev.target.closest(".bcsug")&&ev.target!==BCS._inp) bcsHide(); },true);
+document.addEventListener("keydown",ev=>{ if(!BCS||BCS.hidden||ev.target!==BCS._inp) return; const bs=[...BCS.querySelectorAll("button")], i=bs.findIndex(b=>b.classList.contains("on"));
+  if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){ ev.preventDefault(); if(!bs.length) return; const j=(i+(ev.key==="ArrowDown"?1:-1)+bs.length)%bs.length; bs.forEach((b,x)=>b.classList.toggle("on",x===j)); }
+  else if(ev.key==="Enter"){ const exact=bcSugSource(ev.target.dataset.bcsug).some(it=>it.v.toUpperCase()===ev.target.value.trim().toUpperCase()); if(exact||!bs.length){ bcsHide(); return; } ev.preventDefault(); ev.stopPropagation(); const b=bs[i>=0?i:0]; if(b) bcsPick(b.dataset.bcv); }
+  else if(ev.key==="Escape") bcsHide(); },true);
+document.addEventListener("focusout",ev=>{ if(BCS&&ev.target===BCS._inp) setTimeout(()=>{ if(document.activeElement!==BCS._inp) bcsHide(); },150); });
+window.addEventListener("scroll",()=>bcsHide(),true);
+window.addEventListener("hashchange",()=>bcsHide());
+
+// ---------- Menu HP: tombol Menu dengan daftar turun (dropdown) ----------
+document.addEventListener("click",ev=>{ const t=ev.target.closest("#navToggle"); const nav=document.querySelector("nav.side"); if(!nav) return;
+  if(t){ const o=!nav.classList.contains("open"); nav.classList.toggle("open",o); t.setAttribute("aria-expanded",o); t.querySelector(".nt-l").textContent=o?"Tutup":"Menu"; return; }
+  if(nav.classList.contains("open")&&ev.target.closest("nav.side a")){ nav.classList.remove("open"); const b=$("#navToggle"); if(b){ b.setAttribute("aria-expanded","false"); b.querySelector(".nt-l").textContent="Menu"; } }
+  else if(nav.classList.contains("open")&&!ev.target.closest("nav.side")){ nav.classList.remove("open"); const b=$("#navToggle"); if(b){ b.setAttribute("aria-expanded","false"); b.querySelector(".nt-l").textContent="Menu"; } } });
 
 // ---------- penyimpanan lokal ----------
 let STORE={}; let STORAGE_LABEL="penyimpanan browser"; let idb=null;
