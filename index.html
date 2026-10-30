@@ -855,7 +855,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V7.2 · 30/10/2026 (APAR per bagian)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V7.3 · 30/10/2026 (gabung hasil banyak HP)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2975,7 +2975,7 @@ function lapImportHasil(p){
     ${plan.ada?`<li>${plan.ada} pemeriksaan sudah pernah diimpor dan dilewati</li>`:""}${akeys.length?`<li><b>${ap.baru.length}</b> pemeriksaan APAR baru${akeys.length-ap.baru.length?` (${akeys.length-ap.baru.length} sudah pernah diimpor)`:""}</li>`:""}${plan.tanpa.length?`<li>${plan.tanpa.length} pemeriksaan untuk kotak yang tidak ada di komputer ini dilewati: ${plan.tanpa.map(h=>esc(h.kode)).join(", ")}</li>`:""}</ul></div>${foot(plan.baru.length||ap.baru.length?"Impor hasil":"Tutup")}`, async ()=>{
     ap.baru.forEach(k=>{ const h=d[k], a=STORE["apar/"+h.bc]; (a.pemeriksaan=a.pemeriksaan||[]).push(Object.assign({},h.pemeriksaan,{sumber:"HP"})); if(h.tglExp) a.tglExp=h.tglExp; a.diubah=new Date().toISOString(); });
     if(!plan.baru.length){ if(ap.baru.length){ await persist(); notify(); toast(ap.baru.length+" pemeriksaan APAR dari HP diimpor."); } return; } plan.baru.sort((a,b)=>(a.tgl+a.dibuat).localeCompare(b.tgl+b.dibuat)).forEach(h=>{ const b=STORE["kotak/"+h.kode]; const have=new Set((b.isi||[]).map(x=>x.bc));
-      lapApplyRemove(b,h); b.keluar=(b.keluar||[]).concat((h.keluar||[]).map(x=>Object.assign({},x,have.has(x.bc)?{}:{catatan:"Barcode sudah tidak ada di data komputer saat impor"})));
+      const sudahKeluar=new Set((b.keluar||[]).map(x=>x.bc)); lapApplyRemove(b,h); b.keluar=(b.keluar||[]).concat((h.keluar||[]).filter(x=>have.has(x.bc)||!sudahKeluar.has(x.bc)).map(x=>Object.assign({},x,have.has(x.bc)?{}:{catatan:"Barcode sudah tidak ada di data komputer saat impor"})));
       (b.pemeriksaan=b.pemeriksaan||[]).push(Object.assign({},h.pemeriksaan,{id:h.id,sumber:"HP"})); if((h.temuan||[]).length) b.temuan=(b.temuan||[]).concat(h.temuan);
       if(h.pic){ b.picNama=h.pic; b.picNrp=h.picNrp||""; } b.diubah=new Date().toISOString(); });
     await persist(); notify(); toast(plan.baru.length+" hasil pemeriksaan dari HP diimpor."); });
@@ -4080,7 +4080,7 @@ S.apar=new Map(); S.apPic=null; S.apF={q:"",bag:"",jenis:"",bahan:"",st:"aktif",
 function apList(){ return [...S.apar.values()].sort((a,b)=>(a.bagian||"").localeCompare(b.bagian||"","id")||(+a.urut||0)-(+b.urut||0)||a.bc.localeCompare(b.bc)); }
 function apStatusOf(r){ const p=String(r.penempatan||"").toUpperCase(), k=String(r.ket||"").toUpperCase(); if(/GUDANG ATAS/.test(p)) return "afkir"; if(/DIPINJAM/.test(k)) return "dipinjam"; return "aktif"; }
 const AP_ST={aktif:["Aktif","green"],afkir:["Afkir / rusak (gudang atas)","gray"],dipinjam:["Dipinjamkan","amber"]};
-function apLast(a){ const p=a.pemeriksaan||[]; return p.length?p[p.length-1]:null; }
+function apLast(a){ const p=a.pemeriksaan||[]; if(!p.length) return null; let b=p[0]; p.forEach(x=>{ if((x.tgl||"")+(x.dibuat||"")>=(b.tgl||"")+(b.dibuat||"")) b=x; }); return b; }
 function apBad(p){ return p?AP_POIN.filter(([k])=>p.cek&&p.cek[k]==="tidak").map(([,l])=>l):[]; }
 function apMonth(){ return todayISO().slice(0,7); }
 function apChecked(a,ym){ return (a.pemeriksaan||[]).some(p=>(p.tgl||"").startsWith(ym||apMonth())); }
