@@ -406,6 +406,19 @@ nav.side .foot{display:none!important}
 .cambar .btn{background:#fff!important;color:#111!important;border-color:#fff!important;font-weight:700;min-width:84px}.cammsg{color:#fff}
 .camres[hidden]{display:none}.camres b{font-size:18px}.camres span{font-size:13px;opacity:.9}
 .camres.good{background:#15803d}.camres.bad{background:#b91c1c}.camres.warn{background:#b45309}
+.apform{border-left:4px solid var(--accent)}
+.appoin{display:flex;flex-direction:column;gap:6px}
+.approw{display:grid;grid-template-columns:130px auto 1fr;gap:8px 12px;align-items:center;padding:6px 8px;border-radius:8px;border:1px solid var(--line)}
+.approw.ok{background:var(--green-bg)}.approw.bad{background:var(--red-bg)}
+.approw .apl{font-weight:600}.approw input[type=text]{min-width:0}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--text);padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line-strong)}
+.seg button[aria-pressed="true"][data-v="baik"]{background:var(--green);color:#fff}.seg button[aria-pressed="true"][data-v="tidak"]{background:var(--red);color:#fff}
+.apexp{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}.apexp .dmyw{width:170px}
+.apbags{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px}
+.aptab td{font-size:13.5px}
+@media (max-width:640px){.approw{grid-template-columns:1fr auto}.approw input[type=text],.approw .apexp{grid-column:1/-1}}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -613,6 +626,12 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
     <div class="navsub" id="ng-track" data-navgs="track" hidden>
      <a class="nsub" href="#track" data-nav="track">Input proses</a>
      <a class="nsub" href="#track-riwayat" data-nav="track-riwayat">Riwayat & rekap</a></div>
+    <button type="button" class="navgrp" data-navg="apar" aria-expanded="false" aria-controls="ng-apar">APAR</button>
+    <div class="navsub" id="ng-apar" data-navgs="apar" hidden>
+     <a class="nsub" href="#apar" data-nav="apar">Master APAR</a>
+     <a class="nsub" href="#apar-cek" data-nav="apar-cek">Pemeriksaan APAR</a>
+     <a class="nsub" href="#apar-lap" data-nav="apar-lap">Laporan pemeriksaan</a>
+     <a class="nsub" href="#apar-pic" data-nav="apar-pic">PIC APAR</a></div>
     <button type="button" class="navgrp" data-navg="peta" aria-expanded="false" aria-controls="ng-peta">Peta K3</button>
     <div class="navsub" id="ng-peta" data-navgs="peta" hidden>
      <a class="nsub" href="#peta" data-nav="peta">Layout sarana K3</a></div>
@@ -747,7 +766,7 @@ function writeErr(e){
 function readRoute(){
   const h=(location.hash||"").replace(/^#/,"");
   if(["k-","inv-","box-","itm-","cek-","prt-","lap-","hira-","bagi-"].some(p=>h.startsWith(p))) return h;
-  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi","peta"].includes(h)?h:"ringkasan";
+  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi","peta","apar","apar-cek","apar-lap","apar-pic"].includes(h)?h:"ringkasan";
 }
 window.addEventListener("hashchange",()=>{S.route=readRoute(); render(); window.scrollTo(0,0);});
 function go(r){ if(location.hash!=="#"+r) location.hash=r; else {S.route=r; render();} }
@@ -784,6 +803,10 @@ function render(){
   else if(S.route==="p3k-riwayat") m.innerHTML=ro+viewP3kRiwayat();
   else if(S.route==="bagi") m.innerHTML=ro+viewBagiHome();
   else if(S.route==="peta") m.innerHTML=ro+viewPeta();
+  else if(S.route==="apar") m.innerHTML=ro+viewApar();
+  else if(S.route==="apar-cek") m.innerHTML=ro+viewAparCek();
+  else if(S.route==="apar-lap") m.innerHTML=viewAparLap();
+  else if(S.route==="apar-pic") m.innerHTML=ro+viewAparPic();
   else if(S.route.startsWith("bagi-")) m.innerHTML=ro+viewBagi(S.route);
   else if(S.route==="hira") m.innerHTML=ro+viewHira();
   else if(S.route==="hira-rekap") m.innerHTML=viewHiraRekap();
@@ -1534,6 +1557,7 @@ function pickDone(inp,k){ const key=inp.dataset.pick; inp.parentElement.querySel
     if(key.startsWith("pr-")){ const r=$("#prRev"), p=$("#prPrev"); if(r) r.innerHTML=prRevHtml(S.kotak.get(S.pr.kode)); if(p) p.innerHTML=printHtml(S.pr.kode); } return; }
   if(key.startsWith("lk-")||key.startsWith("lku-")) return lkPick(inp,k);
   if(key==="pme-pem"||key==="pme-pic"){ const f=inp.closest("form"), n=f&&f.elements[key==="pme-pem"?"pemeriksa":"pic"]; if(n) n.value=k.nama; return; }
+  if(key==="ap-pem"||key==="apic-nrp") return apPick(inp,k);
   if(key==="kx-nrp"){ const f=inp.closest("form"); if(f&&f.pengguna) f.pengguna.value=k.nama; return; }
   if(key.startsWith("cku-")){ const bc=key.slice(4), v=S.ck&&S.ck.st[bc]; if(!v) return; v.nrp=k.nrp; v.nama=k.nama; const n=document.querySelector(`[data-cku="${CSS.escape(bc)}"][data-f="nama"]`); if(n) n.value=k.nama; return; }
   if(key==="box-pic"){ const f=inp.closest("form"); if(f&&f.picNama) f.picNama.value=k.nama; return; }
@@ -2879,13 +2903,13 @@ async function saveBlob(name,data,type){
 // Komputer membuat paket (JSON) → HP mengimpor → pemeriksaan di HP → HP mengirim hasil (JSON) → komputer mengimpor hasil.
 S.lap=null; S.lapQ=""; S.lk=null;
 function lapRole(){ return (S.lapSet&&S.lapSet.peran)||"komputer"; }
-function lapHasil(){ return Object.keys(STORE).filter(k=>/^lapangan\/[^/]+$/.test(k)).map(k=>Object.assign({_k:k},STORE[k])).sort((a,b)=>(b.dibuat||"").localeCompare(a.dibuat||"")); }
+function lapHasil(){ return Object.keys(STORE).filter(k=>/^(lapangan|lapapar)\/[^/]+$/.test(k)).map(k=>Object.assign({_k:k},STORE[k])).sort((a,b)=>(b.dibuat||"").localeCompare(a.dibuat||"")); }
 function lapBelum(){ return lapHasil().filter(h=>!h.dikirim); }
 function lapNowStamp(){ const d=new Date(); return todayISO()+"_"+pad(d.getHours())+pad(d.getMinutes()); }
 async function lapPaket(){
   const data={}; Object.keys(STORE).forEach(k=>{ if(/^kotak\/[^/]+$/.test(k)) data[k]=clone(STORE[k]); });
   if(STORE["pengaturan/p3k"]) data["pengaturan/p3k"]=clone(STORE["pengaturan/p3k"]);
-  Object.keys(STORE).forEach(k=>{ if(/^peta\/[^/]+$/.test(k)||k==="pengaturan/peta") data[k]=clone(STORE[k]); });
+  Object.keys(STORE).forEach(k=>{ if(/^(peta|apar)\/[^/]+$/.test(k)||k==="pengaturan/peta"||k==="pengaturan/aparpic") data[k]=clone(STORE[k]); });
   let nk=0; S.list.forEach(k=>{ if(k.aktif===false||!k.nrp) return; nk++; data["karyawan/"+k._id]={nama:k.nama||"",nrp:k.nrp,bagian:k.bagian||"",jabatan:k.jabatan||"",shift:k.shift||"",status:k.status||"",aktif:true}; });
   const nb=Object.keys(data).filter(k=>k.startsWith("kotak/")).length; if(!nb){ toast("Belum ada data kotak P3K untuk dikirim."); return; }
   const payload={aplikasi:"K3 Dewasutratex – PT. Dewasutratex",jenis:"paket-lapangan",versi:1,dibuat:new Date().toISOString(),dari:S.uid||"",ringkas:{kotak:nb,karyawan:nk},data};
@@ -2900,7 +2924,9 @@ function lapImportPaket(p){
     <p style="margin:0">Data kotak dan karyawan di perangkat ini akan diganti dengan isi paket.${belum.length?` <b>${belum.length} hasil pemeriksaan yang belum dikirim tetap disimpan</b> dan tetap bisa dikirim ke komputer.`:""}</p></div>${foot("Impor paket")}`, async ()=>{
     const hasPeta=Object.keys(d).some(k=>/^peta\//.test(k));
     Object.keys(STORE).forEach(k=>{ if(/^(kotak|karyawan)\/[^/]+$/.test(k)||(hasPeta&&/^peta\/[^/]+$/.test(k))) delete STORE[k]; });
-    Object.keys(d).forEach(k=>{ if(/^(kotak|karyawan|peta)\/[^/]+$/.test(k)||k==="pengaturan/p3k"||k==="pengaturan/peta") STORE[k]=clone(d[k]); });
+    const hasApar=Object.keys(d).some(k=>/^apar\//.test(k)); if(hasApar) Object.keys(STORE).forEach(k=>{ if(/^apar\/[^/]+$/.test(k)) delete STORE[k]; });
+    Object.keys(d).forEach(k=>{ if(/^(kotak|karyawan|peta|apar)\/[^/]+$/.test(k)||k==="pengaturan/p3k"||k==="pengaturan/peta"||k==="pengaturan/aparpic") STORE[k]=clone(d[k]); });
+    Object.keys(STORE).filter(k=>/^lapapar\//.test(k)&&!STORE[k].dikirim).forEach(k=>{ const h=STORE[k], a=STORE["apar/"+h.bc]; if(a&&!(a.pemeriksaan||[]).some(x=>x.id===h.id)){ (a.pemeriksaan=a.pemeriksaan||[]).push(h.pemeriksaan); if(h.tglExp) a.tglExp=h.tglExp; } });
     belum.forEach(h=>{ const b=STORE["kotak/"+h.kode]; if(b) lapApplyRemove(b,h); });
     STORE["pengaturan/lapangan"]=Object.assign({},STORE["pengaturan/lapangan"]||{},{peran:"hp",paket:p.dibuat||"",paketDari:p.dari||"",diimpor:new Date().toISOString()});
     await persist(); notify(); toast("Paket diimpor: "+kotak.length+" kotak."); go("lapangan"); });
@@ -2913,13 +2939,15 @@ async function lapKirim(semua){
   const now=new Date().toISOString(); list.forEach(h=>{ if(STORE[h._k]&&!STORE[h._k].dikirim) STORE[h._k].dikirim=now; }); await persist(); notify();
   toast(list.length+" hasil pemeriksaan disimpan. Kirim file ini ke komputer."); }
 function lapImportHasil(p){
-  const d=(p&&p.data)||{}, keys=Object.keys(d).filter(k=>/^lapangan\/[^/]+$/.test(k)); if(!keys.length){ toast("File ini tidak berisi hasil pemeriksaan."); return; }
+  const d=(p&&p.data)||{}, keys=Object.keys(d).filter(k=>/^lapangan\/[^/]+$/.test(k)), akeys=Object.keys(d).filter(k=>/^lapapar\/[^/]+$/.test(k)); if(!keys.length&&!akeys.length){ toast("File ini tidak berisi hasil pemeriksaan."); return; }
+  const ap={baru:akeys.filter(k=>{ const h=d[k], a=STORE["apar/"+h.bc]; return a&&!(a.pemeriksaan||[]).some(x=>x.id===h.id); })};
   const plan={baru:[],ada:0,tanpa:[]}; keys.forEach(k=>{ const h=d[k], b=STORE["kotak/"+h.kode]; if(!b){ plan.tanpa.push(h); return; } if((b.pemeriksaan||[]).some(x=>x.id===h.id)) plan.ada++; else plan.baru.push(h); });
   const nk=plan.baru.reduce((a,h)=>a+(h.keluar||[]).length,0);
-  openDlg(`<header><h2>Impor hasil pemeriksaan dari HP?</h2></header><div class="body"><p style="margin:0 0 8px">File berisi <b>${keys.length}</b> pemeriksaan${p.dari?` dari ${esc(p.dari)}`:""}.</p>
+  openDlg(`<header><h2>Impor hasil pemeriksaan dari HP?</h2></header><div class="body"><p style="margin:0 0 8px">File berisi <b>${keys.length}</b> pemeriksaan kotak P3K${akeys.length?` dan <b>${akeys.length}</b> pemeriksaan APAR`:""}${p.dari?` dari ${esc(p.dari)}`:""}.</p>
     <ul style="margin:0;padding-left:18px"><li><b>${plan.baru.length}</b> pemeriksaan baru: ${plan.baru.map(h=>esc(h.kode)+" ("+fmt(h.tgl)+")").join(", ")||"–"}</li>${nk?`<li>${nk} item dikeluarkan dari kotak dan dicatat di riwayat item keluar</li>`:""}
-    ${plan.ada?`<li>${plan.ada} pemeriksaan sudah pernah diimpor dan dilewati</li>`:""}${plan.tanpa.length?`<li>${plan.tanpa.length} pemeriksaan untuk kotak yang tidak ada di komputer ini dilewati: ${plan.tanpa.map(h=>esc(h.kode)).join(", ")}</li>`:""}</ul></div>${foot(plan.baru.length?"Impor hasil":"Tutup")}`, async ()=>{
-    if(!plan.baru.length) return; plan.baru.sort((a,b)=>(a.tgl+a.dibuat).localeCompare(b.tgl+b.dibuat)).forEach(h=>{ const b=STORE["kotak/"+h.kode]; const have=new Set((b.isi||[]).map(x=>x.bc));
+    ${plan.ada?`<li>${plan.ada} pemeriksaan sudah pernah diimpor dan dilewati</li>`:""}${akeys.length?`<li><b>${ap.baru.length}</b> pemeriksaan APAR baru${akeys.length-ap.baru.length?` (${akeys.length-ap.baru.length} sudah pernah diimpor)`:""}</li>`:""}${plan.tanpa.length?`<li>${plan.tanpa.length} pemeriksaan untuk kotak yang tidak ada di komputer ini dilewati: ${plan.tanpa.map(h=>esc(h.kode)).join(", ")}</li>`:""}</ul></div>${foot(plan.baru.length||ap.baru.length?"Impor hasil":"Tutup")}`, async ()=>{
+    ap.baru.forEach(k=>{ const h=d[k], a=STORE["apar/"+h.bc]; (a.pemeriksaan=a.pemeriksaan||[]).push(Object.assign({},h.pemeriksaan,{sumber:"HP"})); if(h.tglExp) a.tglExp=h.tglExp; a.diubah=new Date().toISOString(); });
+    if(!plan.baru.length){ if(ap.baru.length){ await persist(); notify(); toast(ap.baru.length+" pemeriksaan APAR dari HP diimpor."); } return; } plan.baru.sort((a,b)=>(a.tgl+a.dibuat).localeCompare(b.tgl+b.dibuat)).forEach(h=>{ const b=STORE["kotak/"+h.kode]; const have=new Set((b.isi||[]).map(x=>x.bc));
       lapApplyRemove(b,h); b.keluar=(b.keluar||[]).concat((h.keluar||[]).map(x=>Object.assign({},x,have.has(x.bc)?{}:{catatan:"Barcode sudah tidak ada di data komputer saat impor"})));
       (b.pemeriksaan=b.pemeriksaan||[]).push(Object.assign({},h.pemeriksaan,{id:h.id,sumber:"HP"})); if((h.temuan||[]).length) b.temuan=(b.temuan||[]).concat(h.temuan);
       if(h.pic){ b.picNama=h.pic; b.picNrp=h.picNrp||""; } b.diubah=new Date().toISOString(); });
@@ -2944,7 +2972,7 @@ function viewLapangan(){
    ${sync}
    ${all.length?`<div class="toolbar laptool"><input type="search" id="lapQ" placeholder="Cari kode kotak atau bagian" value="${esc(S.lapQ)}" aria-label="Cari kotak">${lapCanScan()?`<button class="btn" data-act="lap-scanbox">Pindai kode kotak</button>`:""}</div>
    <div class="lapcards">${cards||`<p class="empty">Tidak ada kotak yang cocok.</p>`}</div>`:`<div class="panel empty">${hp?"Belum ada data. Impor paket dari komputer terlebih dahulu.":"Belum ada data kotak P3K."}</div>`}
-   ${hasil.length?`<section class="panel" style="margin-top:18px"><h2>Hasil pemeriksaan di perangkat ini</h2><ul class="laphasil">${hasil.slice(0,15).map(h=>`<li><span class="num"><b>${esc(h.kode)}</b> · ${fmt(h.tgl)}</span><span>${esc(h.pemeriksaan&&h.pemeriksaan.pemeriksa||"")} · ${(h.keluar||[]).length} item keluar</span><span>${h.dikirim?`<span class="chip green">Terkirim</span>`:`<span class="chip amber">Belum dikirim</span>`}</span></li>`).join("")}</ul></section>`:""}`;
+   ${hasil.length?`<section class="panel" style="margin-top:18px"><h2>Hasil pemeriksaan di perangkat ini</h2><ul class="laphasil">${hasil.slice(0,15).map(h=>`<li><span class="num"><b>${esc(h.kode||("APAR "+h.bc))}</b> · ${fmt(h.tgl)}</span><span>${esc(h.pemeriksaan&&h.pemeriksaan.pemeriksa||"")} · ${(h.keluar||[]).length} item keluar</span><span>${h.dikirim?`<span class="chip green">Terkirim</span>`:`<span class="chip amber">Belum dikirim</span>`}</span></li>`).join("")}</ul></section>`:""}`;
 }
 // ---- draft pemeriksaan (tersimpan di HP agar aman bila layar mati / halaman ter-reload)
 function lapDraftKey(k){ return "k3.lapDraft."+k; }
@@ -3491,7 +3519,7 @@ document.addEventListener("DOMContentLoaded",()=>dmyScan(document)); setTimeout(
 
 // ---------- Saran nama karyawan pada kolom Nama (pasangan kolom NRP) ----------
 function nameKey(el){ if(!el||el.tagName!=="INPUT"||el.type!=="text") return null; const d=el.dataset;
-  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
+  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.apf==="pem") return "ap-pem"; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
   if(d.cku&&d.f==="nama") return "cku-"+d.cku; if(d.lku&&d.f==="nama") return "lku-"+d.lku;
   if(d.p==="pelapor.nama") return "pelapor"; if(d.p==="korban.nama") return "korban"; const sm=(d.p||"").match(/^saksi\.(\d)\.nama$/); if(sm) return "saksi"+sm[1];
   if(el.name==="picNama"&&el.form&&el.form.querySelector('[data-pick="box-pic"]')) return "box-pic"; if(el.name==="pengguna"&&el.form&&el.form.querySelector('[data-pick="kx-nrp"]')) return "kx-nrp";
@@ -3830,6 +3858,8 @@ const PT_GLYPH={
   people:'<circle cx="8.5" cy="8" r="2" fill="#fff"/><circle cx="15.5" cy="8" r="2" fill="#fff"/><path d="M5 18v-3.5a3.5 3.5 0 0 1 7 0V18zM12 18v-3.5a3.5 3.5 0 0 1 7 0V18z" fill="#fff"/>'};
 const PT_DEF=[
   {key:"apar",nama:"APAR",warna:"#d92d20",ikon:"apar"},
+  {key:"apab",nama:"APAB (APAR beroda)",warna:"#1d4ed8",ikon:"apar"},
+  {key:"thermatic",nama:"APAR thermatic",warna:"#334155",ikon:"apar"},
   {key:"hydrant",nama:"Hydrant",warna:"#9f1239",ikon:"hydrant"},
   {key:"p3k",nama:"Kotak P3K",warna:"#15803d",ikon:"cross"},
   {key:"eyewash",nama:"Eyewash / safety shower",warna:"#0284c7",ikon:"eye"},
@@ -3842,11 +3872,13 @@ function ptType(k){ return ptTypes().find(t=>t.key===k)||{key:k,nama:k,warna:"#6
 function ptIcon(t,size){ const g=PT_GLYPH[t.ikon]; return `<svg viewBox="0 0 24 24" width="${size||26}" height="${size||26}" aria-hidden="true" style="--c:${t.warna}"><circle cx="12" cy="12" r="11" fill="${t.warna}" stroke="#fff" stroke-width="1.6"/>${g||`<text x="12" y="15.6" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="${String(t.teks||"?").length>2?7.5:9.5}" fill="#fff">${esc(String(t.teks||t.nama||"?").slice(0,3).toUpperCase())}</text>`}</svg>`; }
 function ptMaps(){ return [...S.peta.values()].sort((a,b)=>(a.urut||99)-(b.urut||99)||(a.nama||"").localeCompare(b.nama||"")); }
 function ptCur(){ const ms=ptMaps(); let m=S.peta.get(S.pt.id); if(!m&&ms.length){ m=ms[0]; S.pt.id=m._id; S.pt.z=0; } return m||null; }
-function ptWarn(mk){ const t=mk.type; if(mk.tglExp){ const d=daysBetween(todayISO(),mk.tglExp); if(d<0) return {c:"red",t:"Kedaluwarsa "+fmt(mk.tglExp)}; if(d<=30) return {c:"amber",t:"Kedaluwarsa "+fmt(mk.tglExp)+" ("+d+" hari lagi)"}; }
+const PT_APAR=new Set(["apar","apab","thermatic"]);
+function ptApar(mk){ return PT_APAR.has(mk.type)&&mk.apar?S.apar.get(mk.apar)||null:null; }
+function ptWarn(mk){ const t=mk.type; const ap=ptApar(mk); if(ap){ const p=apLast(ap), b=apBad(p); if(b.length) return {c:"red",t:"Tidak baik: "+b.join(", ")}; if(ap.tglExp&&daysBetween(todayISO(),ap.tglExp)<0) return {c:"red",t:"Expire "+fmt(ap.tglExp)}; if((ap.status||"aktif")==="aktif"&&!apChecked(ap)) return {c:"amber",t:"Belum diperiksa bulan ini"}; } if(mk.tglExp){ const d=daysBetween(todayISO(),mk.tglExp); if(d<0) return {c:"red",t:"Kedaluwarsa "+fmt(mk.tglExp)}; if(d<=30) return {c:"amber",t:"Kedaluwarsa "+fmt(mk.tglExp)+" ("+d+" hari lagi)"}; }
   if(t==="p3k"&&mk.kotak){ const b=S.kotak.get(mk.kotak); if(b){ const s=boxStat(b); if(s.exp) return {c:"red",t:s.exp+" item kadaluarsa"}; if(s.kurangQty||s.soon) return {c:"amber",t:[s.kurangQty?"kurang "+s.kurangQty:"",s.soon?s.soon+" item H-6 bulan":""].filter(Boolean).join(", ")}; if(s.due) return {c:"amber",t:"Perlu diperiksa"}; } }
   return null; }
-function ptVisible(m){ const q=S.pt.q.trim().toLowerCase(); return (m.markers||[]).filter(k=>!S.pt.hide.has(k.type)&&(!q||[k.nama,k.kode,k.area,k.spes,k.kotak,ptType(k.type).nama].join(" ").toLowerCase().includes(q))); }
-function ptTitle(k){ const t=ptType(k.type); return k.nama||(k.type==="p3k"&&k.kotak?"Kotak P3K "+k.kotak:t.nama+(k.kode?" "+k.kode:"")); }
+function ptVisible(m){ const q=S.pt.q.trim().toLowerCase(); return (m.markers||[]).filter(k=>!S.pt.hide.has(k.type)&&(!q||[k.nama,k.kode,k.area,k.spes,k.kotak,k.apar,ptType(k.type).nama,(ptApar(k)||{}).penempatan].join(" ").toLowerCase().includes(q))); }
+function ptTitle(k){ const t=ptType(k.type), ap=ptApar(k); if(!k.nama&&ap) return "APAR "+apLabel(ap); return k.nama||(k.type==="p3k"&&k.kotak?"Kotak P3K "+k.kotak:t.nama+(k.kode?" "+k.kode:"")); }
 function viewPeta(){
   if(!S.loaded) return `<h1>Peta & layout K3</h1><p class="muted">Memuat data…</p>`;
   const m=ptCur(), ms=ptMaps(), P=S.pt;
@@ -3854,14 +3886,16 @@ function viewPeta(){
     <div class="panel empty">${S.canWrite?`<button class="btn primary" data-act="pt-new">Tambah layout</button><p class="hint" style="margin:10px 0 0">Bila layout masih berupa PDF atau gambar CAD, simpan dulu sebagai PNG/JPG (misalnya lewat "Simpan sebagai gambar" atau screenshot beresolusi tinggi).</p>`:"Belum ada layout."}</div><input type="file" id="ptImg" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>`;
   const types=ptTypes(), all=m.markers||[], vis=ptVisible(m), sel=all.find(k=>k.id===P.sel);
   const cnt=k=>all.filter(x=>x.type===k).length;
-  const marks=vis.map(k=>{ const t=ptType(k.type), w=ptWarn(k); return `<button type="button" class="ptm${k.id===P.sel?" on":""}${w?" w"+w.c:""}" data-ptm="${esc(k.id)}" style="left:${(k.x*100).toFixed(3)}%;top:${(k.y*100).toFixed(3)}%" aria-label="${esc(ptTitle(k))}">${ptIcon(t,28)}</button>`; }).join("");
+  const msz=all.length>150?18:all.length>60?22:28;
+  const marks=vis.map(k=>{ const t=ptType(k.type), w=ptWarn(k); return `<button type="button" class="ptm${k.id===P.sel?" on":""}${w?" w"+w.c:""}" data-ptm="${esc(k.id)}" style="left:${(k.x*100).toFixed(3)}%;top:${(k.y*100).toFixed(3)}%" aria-label="${esc(ptTitle(k))}">${ptIcon(t,msz)}</button>`; }).join("");
   const det=sel?(()=>{ const t=ptType(sel.type), w=ptWarn(sel), b=sel.type==="p3k"&&sel.kotak?S.kotak.get(sel.kotak):null, s=b?boxStat(b):null;
     const f=(l,v)=>v?`<div class="ptdl"><span>${l}</span><b>${v}</b></div>`:"";
     return `<section class="ptdet"><div class="row" style="gap:10px;flex-wrap:nowrap;align-items:center">${ptIcon(t,34)}<div><b style="font-size:16px">${esc(ptTitle(sel))}</b><div class="muted" style="font-size:12.5px">${esc(t.nama)}</div></div></div>
       ${w?`<p class="chip ${w.c}" style="margin:10px 0 0;display:inline-block">${esc(w.t)}</p>`:""}
       <div style="margin-top:10px">${f("Kode / nomor",esc(sel.kode||""))}${f("Area / lokasi",esc(sel.area||""))}${f("Spesifikasi",esc(sel.spes||""))}${f(sel.type==="apar"?"Kedaluwarsa / refill":"Tgl. kedaluwarsa",sel.tglExp?fmt(sel.tglExp):"")}${f("Pengecekan terakhir",sel.tglCek?fmt(sel.tglCek):"")}${f("Catatan",esc(sel.catatan||""))}
+      ${(()=>{ const ap=ptApar(sel); if(!ap) return PT_APAR.has(sel.type)?f("Data APAR","belum dihubungkan"):""; const lp=apLast(ap); return f("Barcode",esc(ap.bc))+f("Isi",esc([ap.bahan,ap.kap,ap.sat].filter(Boolean).join(" ")))+f("Penempatan",esc(ap.penempatan||""))+f("PIC",esc(apPicTxt(ap.bagian)||"–"))+f("Pemeriksaan terakhir",lp?fmt(lp.tgl)+" · "+(apBad(lp).length?"tidak baik":"baik"):"belum pernah"); })()}
       ${b?f("Bagian",esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–"))+f("Isi / standar",s.ada+" / "+s.std)+f("Pemeriksaan terakhir",s.last?fmt(s.last):"belum pernah"):""}</div>
-      <div class="row" style="margin-top:12px;gap:6px">${b?`<button class="btn small primary" data-gobox="${esc(b.kode)}">Buka kotak ${esc(b.kode)}</button>`:""}${S.canWrite?`<button class="btn small" data-act="pt-mk-edit" data-id="${esc(sel.id)}">Ubah</button><button class="btn small danger" data-act="pt-mk-del" data-id="${esc(sel.id)}">Hapus</button>`:""}<button class="btn small" data-act="pt-unsel">Tutup</button></div></section>`; })():"";
+      <div class="row" style="margin-top:12px;gap:6px">${b?`<button class="btn small primary" data-gobox="${esc(b.kode)}">Buka kotak ${esc(b.kode)}</button>`:""}${ptApar(sel)&&S.canWrite?`<button class="btn small primary" data-apcek="${esc(sel.apar)}">Periksa APAR</button><button class="btn small" data-apopen="${esc(sel.apar)}">Data APAR</button>`:""}${S.canWrite?`<button class="btn small" data-act="pt-mk-edit" data-id="${esc(sel.id)}">Ubah</button><button class="btn small danger" data-act="pt-mk-del" data-id="${esc(sel.id)}">Hapus</button>`:""}<button class="btn small" data-act="pt-unsel">Tutup</button></div></section>`; })():"";
   return `<div class="row" style="justify-content:space-between;margin-bottom:6px;gap:10px"><div class="row" style="gap:10px"><h1 style="margin:0">Peta & layout K3</h1>${ms.length>1?`<select id="ptSel" aria-label="Pilih layout" style="width:auto">${ms.map(x=>`<option value="${esc(x._id)}" ${x._id===m._id?"selected":""}>${esc(x.nama)}</option>`).join("")}</select>`:`<span class="muted">${esc(m.nama)}</span>`}</div>
     <div class="row" style="gap:6px">${S.canWrite?`<button class="btn ${P.edit?"primary":""}" data-act="pt-edit" aria-pressed="${P.edit}">${P.edit?"Selesai edit":"Mode edit"}</button><button class="btn" data-act="pt-map-edit">Ubah layout</button><button class="btn" data-act="pt-new">Tambah layout</button><button class="btn" data-act="pt-types">Jenis titik</button>`:""}<button class="btn" data-act="pt-print">Cetak</button><button class="btn" data-act="pt-csv">Ekspor CSV</button></div></div>
    ${P.edit?`<div class="banner ptbanner">Mode edit: <b>klik di peta</b> untuk menambah titik, <b>geser simbol</b> untuk memindahkan, klik simbol untuk mengubah atau menghapus. Klik <b>Selesai edit</b> bila sudah.</div>`:""}
@@ -3907,6 +3941,7 @@ function dlgPtMarker(m,k,pos){ const isNew=!k; k=k||{type:S.pt.lastType||"apar",
   openDlg(`<header><h2>${isNew?"Tambah titik":"Ubah titik"}</h2></header><div class="body"><div class="grid2">
    <label class="f full"><span>Jenis</span><select name="type">${types.map(t=>`<option value="${esc(t.key)}" ${k.type===t.key?"selected":""}>${esc(t.nama)}</option>`).join("")}</select></label>
    <div class="f full ptp3k" ${k.type==="p3k"?"":"hidden"}><span class="lbl">Kotak P3K</span><select name="kotak"><option value="">– pilih kotak –</option>${boxList().map(b=>`<option value="${esc(b.kode)}" ${k.kotak===b.kode?"selected":""}>${esc(b.kode)} · ${esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–")}${used.has(b.kode)?" (sudah di peta)":""}</option>`).join("")}</select></div>
+   <div class="f full ptapar" ${PT_APAR.has(k.type)?"":"hidden"}><span class="lbl">Barcode APAR <span class="muted" style="font-weight:400">(hubungkan ke Master APAR)</span></span><input type="text" name="apar" list="ptApDL" value="${esc(k.apar||"")}" placeholder="Ketik barcode, bagian, atau penempatan" autocomplete="off"><datalist id="ptApDL">${apList().filter(a=>(a.status||"aktif")!=="afkir").map(a=>`<option value="${esc(a.bc)}">${esc(apLabel(a))} · ${esc(a.penempatan||"")}</option>`).join("")}</datalist></div>
    <label class="f"><span>Nama / label <span class="muted" style="font-weight:400">(opsional)</span></span><input type="text" name="nama" value="${esc(k.nama||"")}" placeholder="Misal: APAR Gudang Benang 1"></label>
    <label class="f"><span>Kode / nomor</span><input type="text" name="kode" value="${esc(k.kode||"")}" placeholder="Misal: APAR-012"></label>
    <label class="f"><span>Area / lokasi</span><input type="text" name="area" value="${esc(k.area||"")}" placeholder="Misal: Weaving, dekat pintu timur"></label>
@@ -3915,10 +3950,10 @@ function dlgPtMarker(m,k,pos){ const isNew=!k; k=k||{type:S.pt.lastType||"apar",
    <label class="f"><span>Pengecekan terakhir</span><input type="date" name="tglCek" value="${esc(k.tglCek||"")}" max="${todayISO()}"></label>
    <label class="f full"><span>Catatan</span><input type="text" name="catatan" value="${esc(k.catatan||"")}"></label></div>
    ${!isNew?`<p style="margin:12px 0 0"><button type="button" class="linkbtn" data-act="pt-mk-del" data-id="${esc(k.id)}" style="color:var(--red)">Hapus titik ini</button></p>`:""}</div>${foot(isNew?"Tambah titik":"Simpan")}`, async f=>{
-    const v=Object.fromEntries(new FormData(f)); ["nama","kode","area","spes","catatan"].forEach(x=>v[x]=String(v[x]||"").trim()); if(v.type!=="p3k") v.kotak="";
+    const v=Object.fromEntries(new FormData(f)); ["nama","kode","area","spes","catatan","apar"].forEach(x=>v[x]=String(v[x]||"").trim()); if(v.type!=="p3k") v.kotak=""; v.apar=PT_APAR.has(v.type)?v.apar.toUpperCase():""; if(v.apar&&!S.apar.has(v.apar)){ toast("Barcode APAR "+v.apar+" tidak ada di Master APAR."); return false; }
     if(v.type==="p3k"&&!v.kotak&&!v.nama){ toast("Pilih kotak P3K atau isi nama titik."); return false; }
     S.pt.lastType=v.type; const id=k.id||uidGen("mk"); await ptSaveMarker(m,id,Object.assign(v,{x:k.x,y:k.y})); S.pt.sel=id; toast(isNew?"Titik ditambahkan.":"Titik disimpan."); });
-  const f=$("#dlg form"); f.type.addEventListener("change",()=>{ f.querySelector(".ptp3k").hidden=f.type.value!=="p3k"; });
+  const f=$("#dlg form"); f.type.addEventListener("change",()=>{ f.querySelector(".ptp3k").hidden=f.type.value!=="p3k"; f.querySelector(".ptapar").hidden=!PT_APAR.has(f.type.value); });
 }
 async function ptReadImage(file){ const url=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
   const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("Gambar tidak bisa dibaca.")); i.src=url; });
@@ -3974,6 +4009,11 @@ document.addEventListener("change",ev=>{ const el=ev.target; if(el.dataset&&el.d
 document.addEventListener("input",ev=>{ const el=ev.target; if(el.id==="ptQ"){ S.pt.q=el.value; clearTimeout(S._ptQt); S._ptQt=setTimeout(()=>{ const pos=el.selectionStart; render(); const q=$("#ptQ"); if(q){ q.focus(); try{q.setSelectionRange(pos,pos);}catch(e){} } },180); } });
 window.addEventListener("resize",()=>{ if(S.route&&S.route.startsWith("peta")&&S.pt.z&&S.pt.fitZ&&Math.abs(S.pt.z-S.pt.fitZ)<1e-6) ptFit(); });
 
+function ptImport(p){ const d=(p&&p.data)||{}, keys=Object.keys(d).filter(k=>/^peta\/[^/]+$/.test(k)); if(!keys.length){ toast("File tidak berisi layout."); return; }
+  const ada=keys.filter(k=>S.peta.has(k.slice(5))), nm=keys.reduce((s,k)=>s+((d[k].markers||[]).length),0);
+  openDlg(`<header><h2>Impor layout peta?</h2></header><div class="body"><p style="margin:0 0 8px">${keys.length} layout (${esc(keys.map(k=>d[k].nama).join(", "))}) dengan ${nm} titik.</p>${ada.length?`<p style="margin:0">${ada.length} layout dengan kode yang sama sudah ada dan akan <b>diganti</b>, termasuk titik-titik yang sudah Anda ubah.</p>`:""}</div>${foot("Impor layout")}`, async ()=>{
+    keys.forEach(k=>{ STORE[k]=clone(d[k]); }); await persist(); notify(); S.pt.id=keys[0].slice(5); S.pt.z=0; toast(keys.length+" layout diimpor."); go("peta"); }); }
+
 // ---------- Hasil scan barcode item yang jelas: "(nama item) ditemukan" ----------
 function bcItemName(bc,boxKode){ let nm="", box=""; S.kotak.forEach(k=>{ if(nm||(boxKode&&k.kode!==boxKode)) return; const x=(k.isi||[]).find(i=>i.bc.toUpperCase()===String(bc).toUpperCase()); if(x){ nm=itemOf(x.kode).nama; box=k.kode; } }); return {nm,box}; }
 function scanInfo(r,bc,boxKode){ const [t,v]=String(r).split(":"); bc=String(bc||"").trim().toUpperCase();
@@ -3993,6 +4033,195 @@ function ckMark(bc){ const ck=S.ck, b=S.kotak.get(ck.kode); bc=String(bc||"").tr
 function ckScanBar(){ const ck=S.ck; return `<form id="ckScanF" class="scanbar" autocomplete="off"><input type="text" id="ckBc" placeholder="Scan barcode item (scanner atau ketik), lalu Enter" aria-label="Scan barcode item" autocapitalize="characters"><button class="btn" type="submit">Centang</button></form>${scanResHtml(ck.lastScan)}`; }
 document.addEventListener("submit",ev=>{ if(ev.target.id!=="ckScanF"||!S.ck) return; ev.preventDefault(); const v=$("#ckBc").value.trim(); if(!v) return;
   const s=scanInfo(ckMark(v),v,S.ck.kode); S.ck.lastScan=s; scanSound(s.ok); const y=window.scrollY; render(); window.scrollTo(0,y); const n=$("#ckBc"); if(n) n.focus(); });
+
+// ---------- APAR: master data, pemeriksaan (scan barcode), PIC per bagian, laporan ----------
+const AP_POIN=[["nozzle","Nozzle"],["selang","Selang"],["pin","Pin"],["tuas","Tuas"],["segel","Segel"],["tekanan","Isi / tekanan"],["expire","Expire"]];
+S.apar=new Map(); S.apPic=null; S.apF={q:"",bag:"",jenis:"",bahan:"",st:"aktif",cek:""}; S.apC=null; S.apL={y:"",bag:"",hasil:""};
+function apList(){ return [...S.apar.values()].sort((a,b)=>(a.bagian||"").localeCompare(b.bagian||"","id")||(+a.urut||0)-(+b.urut||0)||a.bc.localeCompare(b.bc)); }
+function apStatusOf(r){ const p=String(r.penempatan||"").toUpperCase(), k=String(r.ket||"").toUpperCase(); if(/GUDANG ATAS/.test(p)) return "afkir"; if(/DIPINJAM/.test(k)) return "dipinjam"; return "aktif"; }
+const AP_ST={aktif:["Aktif","green"],afkir:["Afkir / rusak (gudang atas)","gray"],dipinjam:["Dipinjamkan","amber"]};
+function apLast(a){ const p=a.pemeriksaan||[]; return p.length?p[p.length-1]:null; }
+function apBad(p){ return p?AP_POIN.filter(([k])=>p.cek&&p.cek[k]==="tidak").map(([,l])=>l):[]; }
+function apMonth(){ return todayISO().slice(0,7); }
+function apChecked(a,ym){ return (a.pemeriksaan||[]).some(p=>(p.tgl||"").startsWith(ym||apMonth())); }
+function apPics(){ return (S.apPic&&S.apPic.list)||[]; }
+function apPicFor(bag){ return apPics().filter(p=>(p.bagian||[]).includes(bag)); }
+function apPicTxt(bag){ return apPicFor(bag).map(p=>p.nama).join(", "); }
+function apExpChip(a){ if(!a.tglExp) return ""; const d=daysBetween(todayISO(),a.tglExp); return d<0?`<span class="chip red">Exp. ${fmt(a.tglExp)}</span>`:d<=60?`<span class="chip amber">Exp. ${fmt(a.tglExp)}</span>`:`<span class="muted num">${fmt(a.tglExp)}</span>`; }
+function apLabel(a){ return `${a.bagian?a.bagian+" ":""}${a.urut?"#"+String(a.urut).padStart(3,"0"):""}`.trim()||a.bc; }
+function apHasilChip(p){ if(!p) return `<span class="chip gray">Belum diperiksa</span>`; const b=apBad(p); return b.length?`<span class="chip red" title="${esc(b.join(", "))}">Tidak baik: ${esc(b.join(", "))}</span>`:`<span class="chip green">Baik</span>`; }
+function apRows(){ const F=S.apF, q=F.q.trim().toLowerCase(), ym=apMonth();
+  return apList().filter(a=>(!F.st||(a.status||"aktif")===F.st)&&(!F.bag||a.bagian===F.bag)&&(!F.jenis||a.jenis===F.jenis)&&(!F.bahan||a.bahan===F.bahan)
+    &&(!F.cek||(F.cek==="belum"?!apChecked(a,ym):F.cek==="sudah"?apChecked(a,ym):apBad(apLast(a)).length))
+    &&(!q||[a.bc,a.seri,a.bagian,a.penempatan,a.ket,a.urut,a.bahan].join(" ").toLowerCase().includes(q))); }
+function viewApar(){
+  if(!S.loaded) return `<h1>Master APAR</h1><p class="muted">Memuat data…</p>`;
+  const all=apList(), F=S.apF, akt=all.filter(a=>(a.status||"aktif")==="aktif"), ym=apMonth();
+  const belum=akt.filter(a=>!apChecked(a,ym)).length, bad=akt.filter(a=>apBad(apLast(a)).length).length, rows=apRows(), shown=rows.slice(0,S.apLim||200);
+  const uniq=k=>[...new Set(all.map(a=>a[k]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"id")), opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?"selected":""}>${esc(l)}</option>`;
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Master APAR</h1><div class="row" style="gap:6px">${S.canWrite?`<button class="btn primary" data-act="ap-add">Tambah APAR</button><button class="btn" data-act="ap-imp">Impor database (.ods/.xlsx)</button><input type="file" id="apImp" accept=".ods,.xlsx,.csv" hidden>`:""}<button class="btn" data-act="ap-csv">Ekspor CSV</button></div></div>
+   <p class="sub">${all.length} tabung tercatat · ${akt.length} aktif. APAR di penempatan <b>Gudang atas</b> otomatis berstatus afkir/rusak dan tidak masuk jadwal pemeriksaan.</p>
+   <div class="tiles"><button class="tile" data-aptile="aktif"><span class="num">${akt.length}</span>APAR aktif</button><button class="tile ${belum?"warn":""}" data-aptile="belum"><span class="num">${belum}</span>Belum diperiksa ${esc(kxPeriod(ym))}</button>
+    <button class="tile ${bad?"bad":""}" data-aptile="bad"><span class="num">${bad}</span>Hasil terakhir tidak baik</button><button class="tile" data-aptile="afkir"><span class="num">${all.filter(a=>a.status==="afkir").length}</span>Afkir / rusak (gudang atas)</button></div>
+   <div class="toolbar"><input type="search" id="apQ" placeholder="Cari barcode, no. seri, bagian, penempatan" value="${esc(F.q)}" aria-label="Cari APAR">
+    <select id="apBag" aria-label="Bagian">${opt("","Semua bagian",F.bag)}${uniq("bagian").map(b=>opt(b,b,F.bag)).join("")}</select>
+    <select id="apJenis" aria-label="Jenis">${opt("","Semua jenis",F.jenis)}${uniq("jenis").map(b=>opt(b,b,F.jenis)).join("")}</select>
+    <select id="apBahan" aria-label="Bahan">${opt("","Semua bahan",F.bahan)}${uniq("bahan").map(b=>opt(b,b,F.bahan)).join("")}</select>
+    <select id="apSt" aria-label="Status">${opt("","Semua status",F.st)}${Object.entries(AP_ST).map(([k,[l]])=>opt(k,l,F.st)).join("")}</select>
+    <select id="apCek" aria-label="Pemeriksaan">${opt("","Semua",F.cek)}${opt("belum","Belum diperiksa bulan ini",F.cek)}${opt("sudah","Sudah diperiksa bulan ini",F.cek)}${opt("bad","Hasil terakhir tidak baik",F.cek)}</select></div>
+   <p class="muted" style="margin:0 0 8px">${rows.length} APAR</p>
+   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table class="aptab"><thead><tr><th>Barcode</th><th>Bagian · no.</th><th>Penempatan</th><th>Isi</th><th>Jenis</th><th>PIC</th><th>Expire</th><th>Pemeriksaan terakhir</th><th></th></tr></thead><tbody>
+    ${shown.map(a=>{ const p=apLast(a); return `<tr><td class="num"><b>${esc(a.bc)}</b>${a.seri&&a.seri!=="-"?`<div class="muted" style="font-size:12px">${esc(a.seri)}</div>`:""}</td><td>${esc(a.bagian||"–")}${a.urut?` <span class="muted">#${esc(String(a.urut).padStart(3,"0"))}</span>`:""}</td><td>${esc(a.penempatan||"–")}${a.ket?`<div class="muted" style="font-size:12px">${esc(a.ket)}</div>`:""}</td>
+     <td>${esc(a.bahan||"")} ${esc(a.kap||"")} ${esc(a.sat||"")}</td><td>${esc(a.jenis||"")}${(a.status||"aktif")!=="aktif"?` <span class="chip ${AP_ST[a.status][1]}">${esc(AP_ST[a.status][0])}</span>`:""}</td><td style="font-size:13px">${esc(apPicTxt(a.bagian)||"–")}</td><td>${apExpChip(a)||"–"}</td>
+     <td>${p?`<span class="num">${fmt(p.tgl)}</span> `:""}${apHasilChip(p)}</td><td><div class="row" style="gap:6px;flex-wrap:nowrap">${S.canWrite&&(a.status||"aktif")!=="afkir"?`<button class="btn small primary" data-apcek="${esc(a.bc)}">Periksa</button>`:""}<button class="btn small" data-apopen="${esc(a.bc)}">Detail</button></div></td></tr>`; }).join("")||`<tr><td colspan="9" class="empty">${all.length?"Tidak ada APAR yang cocok.":"Belum ada data APAR. Klik Impor database untuk memasukkan file database APAR."}</td></tr>`}</tbody></table></div>
+    ${rows.length>shown.length?`<div class="row" style="justify-content:center;padding:10px"><button class="btn" data-act="ap-more">Tampilkan 200 berikutnya</button></div>`:""}</div>`;
+}
+function dlgApar(a){ const isNew=!a; a=a||{status:"aktif",sat:"KG",jenis:"Ringan"}; const o=(v,l,c)=>`<option value="${esc(v)}" ${c===v?"selected":""}>${esc(l)}</option>`, bags=[...new Set(apList().map(x=>x.bagian).filter(Boolean))].sort();
+  const p=apLast(a);
+  openDlg(`<header><h2>${isNew?"Tambah APAR":"APAR "+esc(a.bc)}</h2>${!isNew?`<p class="hint" style="margin:4px 0 0">${esc(apLabel(a))} · ${esc(a.penempatan||"")} · PIC: ${esc(apPicTxt(a.bagian)||"belum ditentukan")}</p>`:""}</header><div class="body"><div class="grid3">
+   <label class="f"><span>Barcode</span><input type="text" name="bc" required value="${esc(a.bc||"")}" ${isNew?"":"readonly"} autocapitalize="characters"></label>
+   <label class="f"><span>No. seri</span><input type="text" name="seri" value="${esc(a.seri||"")}"></label>
+   <label class="f"><span>Status</span><select name="status">${Object.entries(AP_ST).map(([k,[l]])=>o(k,l,a.status||"aktif")).join("")}</select></label>
+   <label class="f"><span>Jenis bahan</span><input type="text" name="bahan" list="apBhDL" value="${esc(a.bahan||"")}"><datalist id="apBhDL">${["POWDER","CO2 (CARBONDIOXIDE)","FOAM","SOLKAFLAM","HALOTRON"].map(x=>`<option value="${x}">`).join("")}</datalist></label>
+   <label class="f"><span>Kapasitas</span><input type="text" name="kap" value="${esc(a.kap||"")}" inputmode="decimal"></label>
+   <label class="f"><span>Satuan</span><select name="sat">${o("KG","KG",a.sat)}${o("LITER","LITER",a.sat)}</select></label>
+   <label class="f"><span>Jenis APAR</span><select name="jenis">${["Ringan","Beroda","Thermatic"].map(x=>o(x,x,a.jenis)).join("")}</select></label>
+   <label class="f"><span>Bagian</span><input type="text" name="bagian" list="apBgDL" value="${esc(a.bagian||"")}"><datalist id="apBgDL">${bags.map(x=>`<option value="${esc(x)}">`).join("")}</datalist></label>
+   <label class="f"><span>No. urut</span><input type="number" name="urut" min="0" value="${esc(a.urut??"")}"></label>
+   <label class="f span2"><span>Penempatan</span><input type="text" name="penempatan" value="${esc(a.penempatan||"")}"></label>
+   <label class="f"><span>Tgl. expire</span><input type="date" name="tglExp" value="${esc(a.tglExp||"")}"></label>
+   <label class="f full"><span>Keterangan</span><input type="text" name="ket" value="${esc(a.ket||"")}"></label></div>
+   ${!isNew&&(a.pemeriksaan||[]).length?`<h3 style="margin:14px 0 6px;font-size:15px">Riwayat pemeriksaan</h3><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Hasil</th><th>Pemeriksa</th><th>Catatan</th></tr></thead><tbody>${(a.pemeriksaan||[]).slice().reverse().slice(0,12).map(q=>`<tr><td class="num">${fmt(q.tgl)}</td><td>${apHasilChip(q)}</td><td>${esc(q.pemeriksa||"")}</td><td>${esc(q.catatan||"")}</td></tr>`).join("")}</tbody></table></div>`:""}
+   ${!isNew&&S.canWrite?`<p style="margin:12px 0 0"><button type="button" class="linkbtn" data-act="ap-del" data-bc="${esc(a.bc)}" style="color:var(--red)">Hapus APAR ini dari database</button></p>`:""}</div>${S.canWrite?foot(isNew?"Tambah APAR":"Simpan"):`<footer><button class="btn" value="cancel">Tutup</button></footer>`}`, async f=>{
+    const v=Object.fromEntries(new FormData(f)); ["bc","seri","bahan","kap","bagian","penempatan","ket"].forEach(k=>v[k]=String(v[k]||"").trim()); v.bc=v.bc.toUpperCase(); v.urut=v.urut===""?"":+v.urut;
+    if(!v.bc){ toast("Barcode wajib diisi."); return false; } if(isNew&&S.apar.has(v.bc)){ toast("Barcode "+v.bc+" sudah ada."); return false; }
+    const d=Object.assign({},isNew?{pemeriksaan:[],dibuat:new Date().toISOString()}:clone(a),v,{diubah:new Date().toISOString()}); delete d._id; await S.db.doc("apar/"+v.bc).set(d); toast("Data APAR "+v.bc+" disimpan."); });
+}
+// ---- impor database dari .ods / .xlsx
+async function apImportFile(file){ let sheets; try{ sheets=(await msReadFile(file)).filter(s=>s.rows.some(r=>r.length)); }catch(e){ toast(e.message||"File tidak dapat dibaca."); return; }
+  let rows=null, hi=-1, sh=null; for(const s of sheets){ const i=s.rows.findIndex(r=>r.some(c=>/^barcode$/i.test(String(c||"").trim()))); if(i>=0){ rows=s.rows; hi=i; sh=s; break; } }
+  if(!rows){ toast("Kolom Barcode tidak ditemukan di file."); return; }
+  const H=rows[hi].map(h=>String(h||"").toLowerCase().replace(/[^a-z0-9]/g,"")), col=(...ns)=>H.findIndex(h=>ns.some(n=>h===n||h.includes(n)));
+  const C={bc:col("barcode"),seri:col("noseri","seri"),bahan:col("jenisbahan","bahan"),kap:col("kapasitas"),sat:col("satuan"),jenis:col("jenisapar"),bagian:col("bagian"),urut:col("nourut","urut"),pen:col("penempatan","lokasi"),ket:col("keterangan","ket")};
+  const recs=[]; rows.slice(hi+1).forEach(r=>{ const g=k=>C[k]>=0?String(r[C[k]]??"").trim():""; const bc=g("bc").toUpperCase(); if(!bc) return; let kap=g("kap").replace(/\.0+$/,"");
+    const rec={bc,seri:g("seri"),bahan:g("bahan").toUpperCase(),kap,sat:(g("sat")||"KG").toUpperCase(),jenis:g("jenis")||"Ringan",bagian:g("bagian").toUpperCase().replace(/\s+/g," ").trim(),urut:g("urut")===""?"":+g("urut").replace(/\.0+$/,""),penempatan:g("pen").toUpperCase().replace(/\s+/g," ").trim(),ket:g("ket")};
+    rec.status=apStatusOf(rec); recs.push(rec); });
+  const baru=recs.filter(r=>!S.apar.has(r.bc)), ubah=recs.filter(r=>S.apar.has(r.bc));
+  openDlg(`<header><h2>Impor database APAR</h2><p class="hint" style="margin:4px 0 0">${esc(file.name)} · sheet ${esc(sh.name)}</p></header><div class="body"><div class="msplan"><span><b>${recs.length}</b>baris APAR</span><span><b>${baru.length}</b>APAR baru</span><span><b>${ubah.length}</b>data diperbarui</span><span><b>${recs.filter(r=>r.status==="afkir").length}</b>afkir (gudang atas)</span><span><b>${recs.filter(r=>r.status==="dipinjam").length}</b>dipinjamkan</span></div>
+   <p class="hint" style="margin:10px 0 0">APAR dicocokkan berdasarkan barcode. Riwayat pemeriksaan dan tanggal expire yang sudah diisi di program tidak berubah. Status diambil dari penempatan (Gudang atas = afkir) dan keterangan (dipinjamkan).</p></div>${foot("Impor "+recs.length+" APAR")}`, async ()=>{
+    const now=new Date().toISOString(); recs.forEach(r=>{ const k="apar/"+r.bc, old=STORE[k]; STORE[k]=old?Object.assign(old,r,{tglExp:old.tglExp||"",diubah:now}):Object.assign({pemeriksaan:[],tglExp:"",dibuat:now},r); });
+    await persist(); notify(); toast(recs.length+" APAR diimpor."); });
+}
+// ---- PIC APAR per bagian
+function viewAparPic(){ const bags=[...new Set(apList().filter(a=>(a.status||"aktif")==="aktif").map(a=>a.bagian||"(tanpa bagian)"))].sort((a,b)=>a.localeCompare(b,"id")), pics=apPics();
+  const cnt=b=>apList().filter(a=>(a.bagian||"(tanpa bagian)")===b&&(a.status||"aktif")==="aktif").length;
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>PIC APAR</h1>${S.canWrite?`<button class="btn primary" data-act="ap-pic-add">Tambah PIC</button>`:""}</div>
+   <p class="sub">PIC ditentukan per bagian. Satu orang bisa menjadi PIC beberapa bagian, dan PIC otomatis terisi saat pemeriksaan APAR di bagian tersebut.</p>
+   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>PIC</th><th>Bagian yang dipegang</th><th>Jumlah APAR aktif</th>${S.canWrite?"<th></th>":""}</tr></thead><tbody>
+    ${pics.map((p,i)=>`<tr><td><b>${esc(p.nama)}</b>${p.nrp?`<div class="muted num" style="font-size:12.5px">NRP ${esc(p.nrp)}</div>`:""}</td><td>${(p.bagian||[]).map(b=>`<span class="chip">${esc(b)}</span>`).join(" ")||"–"}</td><td class="num">${(p.bagian||[]).reduce((s,b)=>s+cnt(b),0)}</td>${S.canWrite?`<td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn small" data-act="ap-pic-edit" data-i="${i}">Ubah</button><button class="btn small danger" data-act="ap-pic-del" data-i="${i}">Hapus</button></div></td>`:""}</tr>`).join("")||`<tr><td colspan="4" class="empty">Belum ada PIC APAR.</td></tr>`}</tbody></table></div></div>
+   <section class="panel"><h2>Bagian tanpa PIC</h2><div class="row" style="gap:6px">${bags.filter(b=>!apPicFor(b).length).map(b=>`<span class="chip amber">${esc(b)} (${cnt(b)})</span>`).join("")||`<span class="muted">Semua bagian sudah punya PIC.</span>`}</div></section>`; }
+function dlgApPic(i){ const pics=clone(apPics()), p=i!=null?pics[i]:{nrp:"",nama:"",bagian:[]}, bags=[...new Set(apList().map(a=>a.bagian).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"id"));
+  openDlg(`<header><h2>${i!=null?"Ubah PIC APAR":"Tambah PIC APAR"}</h2></header><div class="body"><div class="grid2">${picker("apic-nrp","NRP",p.nrp)}<label class="f"><span>Nama</span><input type="text" name="nama" required value="${esc(p.nama)}"></label></div>
+   <p style="margin:12px 0 6px;font-weight:600">Bagian yang dipegang</p><div class="apbags">${bags.map(b=>{ const other=apPicFor(b).filter(x=>x!==apPics()[i]).map(x=>x.nama); return `<label class="cb"><input type="checkbox" name="bag" value="${esc(b)}" ${(p.bagian||[]).includes(b)?"checked":""}> <span>${esc(b)}${other.length?` <small class="muted">(juga: ${esc(other.join(", "))})</small>`:""}</span></label>`; }).join("")}</div></div>${foot("Simpan PIC")}`, async f=>{
+    const nama=String(f.nama.value||"").trim(), nrp=String(f.querySelector('[data-pick="apic-nrp"]').value||"").trim(), bagian=[...f.querySelectorAll('[name=bag]:checked')].map(x=>x.value);
+    if(!nama){ toast("Isi nama PIC."); return false; } const rec={nrp,nama,bagian}; if(i!=null) pics[i]=rec; else pics.push(rec);
+    await S.db.doc("pengaturan/aparpic").set({list:pics}); toast("PIC APAR disimpan."); }); }
+// ---- pemeriksaan
+function apCState(){ if(!S.apC){ let last={}; try{ last=JSON.parse(localStorage.getItem("k3.apPem")||"{}"); }catch(e){} S.apC={bc:"",tgl:todayISO(),pem:last.pem||"",pemNrp:last.pemNrp||"",pic:"",picNrp:"",cek:{},ket:{},catatan:"",tglExp:"",last:null}; } return S.apC; }
+function apOpenCek(bc){ const c=apCState(), a=S.apar.get(bc); if(!a) return; Object.assign(c,{bc,cek:{},ket:{},catatan:"",tglExp:a.tglExp||""}); const pc=apPicFor(a.bagian); c.pic=pc.map(x=>x.nama).join(", "); c.picNrp=pc.map(x=>x.nrp).filter(Boolean).join(", "); }
+function apScan(v){ const c=apCState(), bc=String(v||"").trim().toUpperCase(); const a=S.apar.get(bc);
+  if(!a){ c.last={ok:false,cls:"bad",title:bc+" belum terdaftar di database APAR",sub:"Periksa barcode, atau tambahkan lewat Master APAR"}; return false; }
+  if(a.status==="afkir"){ c.last={ok:false,cls:"warn",title:`APAR ${apLabel(a)} berstatus afkir / rusak`,sub:`${bc} · ${a.penempatan||""} · ubah statusnya di Master APAR bila sudah diperbaiki`}; return false; }
+  apOpenCek(bc); const done=apChecked(a), pinj=a.status==="dipinjam"; c.last={ok:true,cls:done||pinj?"warn":"good",title:`APAR ${apLabel(a)} ditemukan`,sub:`${bc} · ${a.penempatan||""} · ${a.bahan||""} ${a.kap||""} ${a.sat||""}${done?" · sudah diperiksa bulan ini":""}${pinj?" · tercatat dipinjamkan, statusnya diubah menjadi aktif saat disimpan":""}`}; return true; }
+function viewAparCek(){
+  if(!S.loaded) return `<h1>Pemeriksaan APAR</h1><p class="muted">Memuat data…</p>`;
+  const c=apCState(), a=c.bc?S.apar.get(c.bc):null, ym=apMonth(), akt=apList().filter(x=>(x.status||"aktif")==="aktif"), done=akt.filter(x=>apChecked(x,ym)).length;
+  const form=a?`<section class="panel apform"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">APAR ${esc(apLabel(a))}</h2><p class="muted" style="margin:2px 0 0">${esc(a.bc)} · ${esc(a.penempatan||"–")} · ${esc(a.bahan||"")} ${esc(a.kap||"")} ${esc(a.sat||"")} · ${esc(a.jenis||"")}</p></div><button class="btn small" data-act="ap-cek-close">Batal</button></div>
+     <div class="row" style="margin:12px 0 6px;justify-content:space-between"><b>Poin pemeriksaan</b><button type="button" class="btn small" data-act="ap-allok">✓ Semua baik</button></div>
+     <div class="appoin">${AP_POIN.map(([k,l])=>`<div class="approw ${c.cek[k]==="tidak"?"bad":c.cek[k]==="baik"?"ok":""}"><span class="apl">${l}</span><div class="seg" role="group" aria-label="${l}"><button type="button" data-apk="${k}" data-v="baik" aria-pressed="${c.cek[k]==="baik"}">Baik</button><button type="button" data-apk="${k}" data-v="tidak" aria-pressed="${c.cek[k]==="tidak"}">Tidak baik</button></div>
+       ${c.cek[k]==="tidak"?`<input type="text" data-apket="${k}" value="${esc(c.ket[k]||"")}" placeholder="Keterangan ${l.toLowerCase()}">`:""}${k==="expire"?`<label class="apexp"><span>Tgl. expire</span><input type="date" data-apf="tglExp" value="${esc(c.tglExp||"")}"></label>`:""}</div>`).join("")}</div>
+     <div class="grid3" style="margin-top:12px"><label class="f"><span>Tanggal pemeriksaan</span><input type="date" data-apf="tgl" value="${esc(c.tgl)}" max="${todayISO()}"></label>
+      ${picker("ap-pem","NRP petugas pemeriksa",c.pemNrp)}<label class="f"><span>Nama petugas pemeriksa</span><input type="text" data-apf="pem" value="${esc(c.pem)}" placeholder="Wajib diisi"></label>
+      <label class="f span2"><span>PIC APAR ${esc(a.bagian||"")}</span><input type="text" data-apf="pic" value="${esc(c.pic)}" placeholder="Atur di menu PIC APAR"></label><span></span>
+      <label class="f full"><span>Catatan</span><input type="text" data-apf="catatan" value="${esc(c.catatan)}"></label></div>
+     <div class="row" style="margin-top:12px"><button class="btn primary" data-act="ap-save">Simpan pemeriksaan</button><span class="hint">Setelah disimpan, langsung scan APAR berikutnya.</span></div></section>`:"";
+  const recent=apList().flatMap(x=>(x.pemeriksaan||[]).filter(p=>p.tgl===c.tgl).map(p=>({a:x,p}))).sort((x,y)=>(y.p.dibuat||"").localeCompare(x.p.dibuat||"")).slice(0,15);
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Pemeriksaan APAR</h1><span class="muted">${done}/${akt.length} APAR aktif sudah diperiksa ${esc(kxPeriod(ym))}</span></div>
+   <section class="panel"><form id="apScanF" class="scanbar" autocomplete="off" style="margin-top:0"><input type="text" id="apBc" placeholder="Scan barcode APAR (scanner/kamera) atau ketik, lalu Enter" aria-label="Barcode APAR" autocapitalize="characters"><button class="btn" type="submit">Cari</button>${lapCanScan()?`<button type="button" class="btn primary" data-act="ap-cam">Kamera</button>`:""}</form>${scanResHtml(c.last)}</section>
+   ${form}
+   ${recent.length?`<section class="panel"><h2>Diperiksa ${fmt(c.tgl)} (${recent.length})</h2><div class="tablewrap"><table><thead><tr><th>Jam</th><th>APAR</th><th>Penempatan</th><th>Hasil</th><th>Pemeriksa</th></tr></thead><tbody>${recent.map(({a,p})=>`<tr><td class="num">${esc((p.dibuat||"").slice(11,16))}</td><td><b>${esc(apLabel(a))}</b><div class="muted num" style="font-size:12px">${esc(a.bc)}</div></td><td>${esc(a.penempatan||"")}</td><td>${apHasilChip(p)}</td><td>${esc(p.pemeriksa||"")}</td></tr>`).join("")}</tbody></table></div></section>`:""}`;
+}
+async function apSave(){ const c=apCState(), a=S.apar.get(c.bc); if(!a) return; if(!c.pem.trim()){ toast("Isi nama petugas pemeriksa."); const n=document.querySelector('[data-apf="pem"]'); if(n) n.focus(); return; }
+  const miss=AP_POIN.filter(([k])=>!c.cek[k]); if(miss.length){ toast("Belum dinilai: "+miss.map(x=>x[1]).join(", ")+"."); return; }
+  const pid=uidGen("ap"), now=new Date().toISOString(), p={id:pid,tgl:c.tgl||todayISO(),cek:Object.assign({},c.cek),ket:Object.fromEntries(Object.entries(c.ket).filter(([k,v])=>c.cek[k]==="tidak"&&v)),pemeriksa:c.pem.trim(),pemNrp:c.pemNrp.trim(),pic:c.pic.trim(),picNrp:c.picNrp||"",catatan:c.catatan.trim(),petugas:S.uid||"",dibuat:now};
+  const d=STORE["apar/"+a.bc]; (d.pemeriksaan=d.pemeriksaan||[]).push(p); if(c.tglExp) d.tglExp=c.tglExp; d.diubah=now; if(d.status==="dipinjam"){ d.status="aktif"; d.ket=(d.ket?d.ket+" · ":"")+"Kembali/terpasang, diperiksa "+fmt(p.tgl); }
+  if(typeof lapRole==="function"&&lapRole()==="hp") STORE["lapapar/"+pid]={id:pid,bc:a.bc,pemeriksaan:p,tglExp:c.tglExp||"",dibuat:now};
+  try{ localStorage.setItem("k3.apPem",JSON.stringify({pem:p.pemeriksa,pemNrp:p.pemNrp})); }catch(e){}
+  await persist(); notify(); const bad=apBad(p); c.last={ok:!bad.length,cls:bad.length?"warn":"good",title:`Pemeriksaan APAR ${apLabel(a)} disimpan`,sub:bad.length?"Tidak baik: "+bad.join(", "):"Semua poin baik"}; c.bc=""; render(); const n=$("#apBc"); if(n) n.focus(); }
+// ---- kamera untuk APAR (satu APAR per scan)
+async function apCam(){ const det=lapDet(); if(!det) return; const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="cambar"><span class="cammsg">Arahkan kamera ke barcode APAR</span><button class="btn" data-act="cam-close">Tutup</button></div>`;
+  document.body.appendChild(ov); let stream; try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}); }catch(e){ ov.remove(); toast("Kamera tidak bisa dibuka. Ketik barcode secara manual."); return; }
+  const video=ov.querySelector("video"); video.srcObject=stream; await video.play().catch(()=>{}); LAP_CAM={ov,stream,st:{on:true}}; const st=LAP_CAM.st;
+  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=await det.detect(video); for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v) continue; const ok=apScan(v); lapBeep(ok); scanSound(ok); lapCamClose(); render(); return; } } }catch(e){} setTimeout(loop,200); }; loop(); }
+// ---- laporan pemeriksaan
+function apLapRows(){ const L=S.apL, y=L.y||apMonth(), out=[]; apList().forEach(a=>(a.pemeriksaan||[]).forEach(p=>{ if((y==="semua"||(p.tgl||"").startsWith(y))&&(!L.bag||a.bagian===L.bag)&&(!L.hasil||(L.hasil==="bad")===!!apBad(p).length)) out.push({a,p}); }));
+  return out.sort((x,z)=>(x.a.bagian||"").localeCompare(z.a.bagian||"","id")||(+x.a.urut||0)-(+z.a.urut||0)||(x.p.tgl||"").localeCompare(z.p.tgl||"")); }
+function viewAparLap(){ const L=S.apL, y=L.y||apMonth(), rows=apLapRows(), all=apList(), months=[...new Set([apMonth(),...all.flatMap(a=>(a.pemeriksaan||[]).map(p=>(p.tgl||"").slice(0,7))).filter(Boolean)])].sort().reverse(), bags=[...new Set(all.map(a=>a.bagian).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"id")), opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?"selected":""}>${esc(l)}</option>`;
+  const sum=apLapSummary(); 
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Laporan pemeriksaan APAR</h1></div>
+   <div class="toolbar"><select id="apLy" aria-label="Periode">${months.map(m=>opt(m,kxPeriod(m),y)).join("")}${opt("semua","Semua periode",y)}</select><select id="apLb" aria-label="Bagian">${opt("","Semua bagian",L.bag)}${bags.map(b=>opt(b,b,L.bag)).join("")}</select><select id="apLh" aria-label="Hasil">${opt("","Semua hasil",L.hasil)}${opt("ok","Baik",L.hasil)}${opt("bad","Tidak baik",L.hasil)}</select></div>
+   <section class="panel hdl"><div class="row"><button class="btn primary" data-act="ap-lap" data-fmt="print">Cetak</button><span class="dlrow"><span>Unduh laporan</span><button class="btn" data-act="ap-lap" data-fmt="pdf">PDF</button><button class="btn" data-act="ap-lap" data-fmt="ods">ODS</button><button class="btn" data-act="ap-lap" data-fmt="odt">ODT</button></span></div>
+    <p class="hint" style="margin:6px 0 0">Laporan berisi rekap per bagian (jumlah APAR, sudah/belum diperiksa, tidak baik) dan rincian hasil tiap APAR per poin pemeriksaan.</p></section>
+   <section class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>Bagian</th><th>PIC</th><th>APAR aktif</th><th>Diperiksa</th><th>Belum</th><th>Tidak baik</th></tr></thead><tbody>${sum.map(s=>`<tr><td><b>${esc(s.bag)}</b></td><td style="font-size:13px">${esc(s.pic||"–")}</td><td class="num">${s.n}</td><td class="num">${s.done}</td><td class="num ${s.n-s.done?"kxbelum":""}">${s.n-s.done}</td><td class="num">${s.bad?`<span class="chip red">${s.bad}</span>`:"0"}</td></tr>`).join("")}</tbody></table></div></section>
+   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>APAR</th><th>Penempatan</th>${AP_POIN.map(([,l])=>`<th class="c">${l}</th>`).join("")}<th>Pemeriksa</th><th>Catatan</th></tr></thead><tbody>
+   ${rows.map(({a,p})=>`<tr><td class="num">${fmt(p.tgl)}</td><td><b>${esc(apLabel(a))}</b><div class="muted num" style="font-size:12px">${esc(a.bc)}</div></td><td>${esc(a.penempatan||"")}</td>${AP_POIN.map(([k])=>`<td class="c">${p.cek[k]==="tidak"?`<span class="chip red" title="${esc((p.ket||{})[k]||"")}">✗</span>`:p.cek[k]==="baik"?"✓":"–"}</td>`).join("")}<td>${esc(p.pemeriksa||"")}</td><td>${esc([p.catatan,...Object.entries(p.ket||{}).map(([k,v])=>(AP_POIN.find(x=>x[0]===k)||[,k])[1]+": "+v)].filter(Boolean).join("; "))}</td></tr>`).join("")||`<tr><td colspan="${5+AP_POIN.length}" class="empty">Belum ada pemeriksaan pada periode ini.</td></tr>`}</tbody></table></div></div>`; }
+function apLapSummary(){ const L=S.apL, y=L.y||apMonth(), m=new Map(); apList().filter(a=>(a.status||"aktif")==="aktif"&&(!L.bag||a.bagian===L.bag)).forEach(a=>{ const b=a.bagian||"(tanpa bagian)", o=m.get(b)||{bag:b,pic:apPicTxt(a.bagian),n:0,done:0,bad:0}; o.n++;
+    const ps=(a.pemeriksaan||[]).filter(p=>y==="semua"||(p.tgl||"").startsWith(y)); if(ps.length){ o.done++; if(apBad(ps[ps.length-1]).length) o.bad++; } m.set(b,o); }); return [...m.values()].sort((a,b)=>a.bag.localeCompare(b.bag,"id")); }
+function apLapHtml(){ const L=S.apL, y=L.y||apMonth(), rows=apLapRows(), sum=apLapSummary(), tot=sum.reduce((s,x)=>({n:s.n+x.n,done:s.done+x.done,bad:s.bad+x.bad}),{n:0,done:0,bad:0});
+  const W=[7,24,18,40,...AP_POIN.map(()=>13),28,47];
+  return `<div class="hdoc" style="font-size:7.5pt"><table class="hhd"><tr><td><div class="hco">PT. DEWASUTRATEX · Departemen HRD / K3</div><div class="hti">LAPORAN PEMERIKSAAN APAR</div><div class="hin">Periode: ${esc(kxPeriod(y))} &nbsp;|&nbsp; ${L.bag?"Bagian: "+esc(L.bag):"Semua bagian"} &nbsp;|&nbsp; APAR aktif ${tot.n}, diperiksa ${tot.done}, belum ${tot.n-tot.done}, tidak baik ${tot.bad} &nbsp;|&nbsp; Dicetak: ${fmt(todayISO())}</div></td></tr></table>
+   <p class="ksub" style="font-weight:700;margin:6px 0 3px">Rekap per bagian</p><table class="htb" style="width:auto;min-width:60%"><thead><tr><th>Bagian</th><th>PIC</th><th>APAR aktif</th><th>Diperiksa</th><th>Belum</th><th>Tidak baik</th></tr></thead><tbody>${sum.map(s=>`<tr><td>${esc(s.bag)}</td><td>${esc(s.pic||"")}</td><td class="c">${s.n}</td><td class="c">${s.done}</td><td class="c">${s.n-s.done}</td><td class="c">${s.bad}</td></tr>`).join("")}<tr><td><b>TOTAL</b></td><td></td><td class="c"><b>${tot.n}</b></td><td class="c"><b>${tot.done}</b></td><td class="c"><b>${tot.n-tot.done}</b></td><td class="c"><b>${tot.bad}</b></td></tr></tbody></table>
+   <p class="ksub" style="font-weight:700;margin:8px 0 3px">Rincian pemeriksaan (B = baik, X = tidak baik)</p><table class="htb"><colgroup>${W.map(w=>`<col style="width:${w}mm">`).join("")}</colgroup><thead><tr><th>No</th><th>Tanggal</th><th>Barcode</th><th>Bagian · no. · penempatan</th>${AP_POIN.map(([,l])=>`<th>${l}</th>`).join("")}<th>Pemeriksa</th><th>Catatan</th></tr></thead><tbody>
+   ${rows.map(({a,p},i)=>`<tr><td class="c">${i+1}</td><td class="c">${fmt(p.tgl)}</td><td>${esc(a.bc)}</td><td>${esc(apLabel(a))} · ${esc(a.penempatan||"")}</td>${AP_POIN.map(([k])=>`<td class="c ${p.cek[k]==="tidak"?"hl-Ekstrem":""}">${p.cek[k]==="tidak"?"X":p.cek[k]==="baik"?"B":"–"}</td>`).join("")}<td>${esc(p.pemeriksa||"")}</td><td>${esc([p.catatan,...Object.entries(p.ket||{}).map(([k,v])=>(AP_POIN.find(x=>x[0]===k)||[,k])[1]+": "+v)].filter(Boolean).join("; "))}</td></tr>`).join("")||`<tr><td colspan="${6+AP_POIN.length}" class="c">Belum ada pemeriksaan.</td></tr>`}</tbody></table>
+   <table class="hsg"><tr><td>Dibuat oleh,<br><br><br><br><b>( ____________________ )</b><br>Petugas K3</td><td></td><td>Mengetahui,<br><br><br><br><b>( ____________________ )</b><br>Ketua P2K3 / HRD</td></tr></table></div>`; }
+async function apLapGo(fmtX){ const L=S.apL, y=L.y||apMonth(), base=("Laporan-Pemeriksaan-APAR-"+(L.bag||"Semua")+"-"+y).replace(/[^\w.-]+/g,"_"); let st=null;
+  try{ if(fmtX==="print"){ const pa=$("#printArea"); pa.innerHTML=apLapHtml(); const ps=document.createElement("style"); ps.textContent="@page{size:A4 landscape;margin:10mm}"; document.head.appendChild(ps); document.body.classList.add("printing"); const done=()=>{ document.body.classList.remove("printing"); ps.remove(); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done); setTimeout(()=>{ window.print(); setTimeout(done,500); },60); return; }
+    toast("Menyiapkan file "+fmtX.toUpperCase()+"…");
+    if(fmtX==="pdf"){ st=xStage(apLapHtml()); st.style.width="277mm"; await new Promise(r=>setTimeout(r,30)); await saveBlob(base+".pdf",await pdfFromStage(st,{landscape:true,sel:".hdoc"}),"application/pdf"); }
+    else if(fmtX==="odt"){ const m=xModel(null,apLapHtml(),".hdoc",277); st=m.st; await saveBlob(base+".odt",buildOdtForm(m.model,[],"Laporan pemeriksaan APAR",{landscape:true}),"application/vnd.oasis.opendocument.text"); }
+    else { const rows=apLapRows(), sum=apLapSummary(); await saveBlob(base+".ods",buildSimpleOds([
+      {name:"Rekap",title:"LAPORAN PEMERIKSAAN APAR – REKAP PER BAGIAN",sub:`Periode: ${kxPeriod(y)}  |  ${L.bag||"Semua bagian"}`,head:["Bagian","PIC","APAR aktif","Diperiksa","Belum","Tidak baik"],widths:[5,6,2.2,2.2,2.2,2.2],rows:sum.map(s=>[s.bag,s.pic||"",s.n,s.done,s.n-s.done,s.bad])},
+      {name:"Rincian",title:"LAPORAN PEMERIKSAAN APAR – RINCIAN",sub:`Periode: ${kxPeriod(y)}  |  ${L.bag||"Semua bagian"}  |  B = baik, X = tidak baik`,head:["No","Tanggal","Barcode","Bagian","No. urut","Penempatan",...AP_POIN.map(x=>x[1]),"Hasil","Pemeriksa","PIC","Catatan"],widths:[0.9,2.2,2.6,4,1.4,4,...AP_POIN.map(()=>1.6),2.2,3.5,3.5,6],
+       rows:rows.map(({a,p},i)=>[i+1,fmt(p.tgl),a.bc,a.bagian||"",a.urut===""?"":+a.urut,a.penempatan||"",...AP_POIN.map(([k])=>p.cek[k]==="tidak"?"X":p.cek[k]==="baik"?"B":""),apBad(p).length?"Tidak baik":"Baik",p.pemeriksa||"",p.pic||"",[p.catatan,...Object.entries(p.ket||{}).map(([k,v])=>(AP_POIN.find(x=>x[0]===k)||[,k])[1]+": "+v)].filter(Boolean).join("; ")])}]),"application/vnd.oasis.opendocument.spreadsheet"); }
+  }catch(e){ console.error(e); toast("File gagal dibuat. "+(e.message||"")); } finally{ if(st) st.remove(); } }
+function apCsv(){ const out=[["Barcode","No. seri","Jenis bahan","Kapasitas","Satuan","Jenis APAR","Bagian","No. urut","Penempatan","Keterangan","Status","PIC","Tgl. expire","Pemeriksaan terakhir","Hasil terakhir"]];
+  apRows().forEach(a=>{ const p=apLast(a); out.push([a.bc,a.seri||"",a.bahan||"",a.kap||"",a.sat||"",a.jenis||"",a.bagian||"",a.urut??"",a.penempatan||"",a.ket||"",AP_ST[a.status||"aktif"][0],apPicTxt(a.bagian),a.tglExp?fmt(a.tglExp):"",p?fmt(p.tgl):"",p?(apBad(p).length?"Tidak baik: "+apBad(p).join(", "):"Baik"):""]); });
+  exportCsv("database-apar-"+todayISO()+".csv",out); }
+function apPick(inp,k){ const key=inp.dataset.pick, c=apCState(); if(key==="ap-pem"){ c.pemNrp=k.nrp; c.pem=k.nama; const n=document.querySelector('[data-apf="pem"]'); if(n) n.value=k.nama; } else if(key==="apic-nrp"){ const f=inp.closest("form"); if(f&&f.nama) f.nama.value=k.nama; } }
+document.addEventListener("click",ev=>{ const ck=ev.target.closest("[data-apcek]"); if(ck){ apOpenCek(ck.dataset.apcek); apCState().last=null; go("apar-cek"); return; }
+  const op=ev.target.closest("[data-apopen]"); if(op){ dlgApar(S.apar.get(op.dataset.apopen)); return; }
+  const tf=ev.target.closest("[data-aptile]"); if(tf){ const v=tf.dataset.aptile; Object.assign(S.apF,{st:v==="afkir"?"afkir":"aktif",cek:v==="belum"?"belum":v==="bad"?"bad":""}); render(); return; }
+  const pk=ev.target.closest("[data-apk]"); if(pk){ const c=apCState(); c.cek[pk.dataset.apk]=pk.dataset.v; const y=window.scrollY; render(); window.scrollTo(0,y); return; }
+  const t=ev.target.closest("[data-act]"); if(!t||!t.dataset.act.startsWith("ap-")) return;
+  switch(t.dataset.act){
+    case "ap-add": dlgApar(null); break; case "ap-imp": $("#apImp").click(); break; case "ap-csv": apCsv(); break; case "ap-more": S.apLim=(S.apLim||200)+200; render(); break;
+    case "ap-del": { const bc=t.dataset.bc; $("#dlg").close(); openDlg(`<header><h2>Hapus APAR ${esc(bc)}?</h2></header><div class="body"><p style="margin:0">Data dan riwayat pemeriksaan APAR ini dihapus permanen. Untuk APAR rusak, sebaiknya ubah statusnya menjadi afkir.</p></div>${foot("Hapus")}`, async ()=>{ await S.db.doc("apar/"+bc).delete(); toast("APAR dihapus."); }); break; }
+    case "ap-pic-add": dlgApPic(null); break; case "ap-pic-edit": dlgApPic(+t.dataset.i); break;
+    case "ap-pic-del": { const pics=clone(apPics()), p=pics[+t.dataset.i]; openDlg(`<header><h2>Hapus PIC ${esc(p.nama)}?</h2></header>${foot("Hapus")}`, async ()=>{ pics.splice(+t.dataset.i,1); await S.db.doc("pengaturan/aparpic").set({list:pics}); }); break; }
+    case "ap-cek-close": apCState().bc=""; render(); break;
+    case "ap-allok": { const c=apCState(); AP_POIN.forEach(([k])=>c.cek[k]="baik"); const y=window.scrollY; render(); window.scrollTo(0,y); break; }
+    case "ap-save": apSave(); break; case "ap-cam": apCam(); break; case "ap-lap": apLapGo(t.dataset.fmt); break; } });
+document.addEventListener("submit",ev=>{ if(ev.target.id!=="apScanF") return; ev.preventDefault(); const v=$("#apBc").value.trim(); if(!v) return; const ok=apScan(v); scanSound(ok); render(); const n=ok?document.querySelector('[data-act="ap-allok"]'):$("#apBc"); if(n) n.focus(); });
+document.addEventListener("input",ev=>{ const el=ev.target; const c=S.apC;
+  if(el.id==="apQ"){ S.apF.q=el.value; clearTimeout(S._apQt); S._apQt=setTimeout(()=>{ const pos=el.selectionStart; render(); const q=$("#apQ"); if(q){ q.focus(); try{q.setSelectionRange(pos,pos);}catch(e){} } },200); return; }
+  if(c&&el.dataset&&el.dataset.apf&&el.type!=="date") c[el.dataset.apf]=el.value;
+  if(c&&el.dataset&&el.dataset.apket) c.ket[el.dataset.apket]=el.value;
+  if(c&&el.dataset&&el.dataset.pick==="ap-pem") c.pemNrp=el.value.trim(); });
+document.addEventListener("change",ev=>{ const el=ev.target; const c=S.apC;
+  if(el.id==="apImp"&&el.files[0]){ const f=el.files[0]; el.value=""; apImportFile(f); return; }
+  const m={apBag:"bag",apJenis:"jenis",apBahan:"bahan",apSt:"st",apCek:"cek"}[el.id]; if(m){ S.apF[m]=el.value; S.apLim=200; render(); return; }
+  const l={apLy:"y",apLb:"bag",apLh:"hasil"}[el.id]; if(l){ S.apL[l]=el.value; render(); return; }
+  if(c&&el.dataset&&el.dataset.apf&&el.type==="date") c[el.dataset.apf]=el.value; });
 
 // ---------- penyimpanan lokal ----------
 let STORE={}; let STORAGE_LABEL="penyimpanan browser"; let idb=null;
@@ -4048,6 +4277,7 @@ function doRestore(file){
     const n=Object.keys(p.data).filter(k=>k.startsWith("karyawan/")).length, nk=Object.keys(p.data).filter(k=>k.startsWith("kecelakaan/")).length;
     const nb=Object.keys(p.data).filter(k=>k.startsWith("kotak/")||k==="pengaturan/p3k").length;
     if(p.jenis==="impor-hiradc"){ hImport(p); return; }
+    if(p.jenis==="impor-peta"){ ptImport(p); return; }
     if(p.jenis==="paket-lapangan"){ lapImportPaket(p); return; } if(p.jenis==="hasil-lapangan"){ lapImportHasil(p); return; }
     const nt=Object.keys(p.data).filter(k=>k.startsWith("track/")).length;
     if(!n&&!nk&&nt&&!Object.keys(p.data).some(k=>k.startsWith("kotak/"))){ tpImport(p); return; }
@@ -4078,6 +4308,8 @@ S.route=readRoute(); render();
   localDb.collection("kecelakaan").onSnapshot(snap=>{
     const m=new Map(); snap.docs.forEach(d=>{const v=Object.assign(normInc(d.data()),{_id:d.id}); m.set(d.id,v);}); S.inc=m; if(S.loaded) render();
   });
+  localDb.collection("apar").onSnapshot(snap=>{ const m=new Map(); snap.docs.forEach(d=>m.set(d.id,Object.assign({},d.data(),{_id:d.id}))); S.apar=m; if(S.loaded&&(S.route.startsWith("apar")||S.route==="peta")) render(); });
+  localDb.doc("pengaturan/aparpic").onSnapshot(s=>{ S.apPic=(s.exists&&s.data())||null; if(S.loaded&&S.route.startsWith("apar")) render(); });
   localDb.collection("peta").onSnapshot(snap=>{ const m=new Map(); snap.docs.forEach(d=>m.set(d.id,Object.assign({},d.data(),{_id:d.id}))); S.peta=m; if(S.loaded&&S.route==="peta") render(); });
   localDb.doc("pengaturan/peta").onSnapshot(s=>{ S.ptSet=(s.exists&&s.data())||null; if(S.loaded&&S.route==="peta") render(); });
   localDb.collection("pembagian").onSnapshot(snap=>{ const m=new Map(); snap.docs.forEach(d=>m.set(d.id,Object.assign({},d.data(),{_id:d.id}))); S.bagiLog=m; if(S.loaded&&S.route.startsWith("bagi")) render(); });
