@@ -451,6 +451,7 @@ dialog .camov{position:fixed;inset:0;z-index:5}
 @keyframes sypulse{to{opacity:.4}}
 dialog .syncb{width:auto;color:var(--text);background:var(--gray-bg);border-color:var(--line)}
 @media (max-width:900px){nav.side .syncb{width:auto;margin:0;order:1;padding:6px 8px}nav.side .syncb span{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+.lgmsg{margin-top:10px;font-size:13.5px;min-height:1px}.lgmsg:empty{display:none}.lgmsg{padding:8px 10px;border-radius:8px;background:var(--gray-bg)}.lgmsg.bad{background:var(--red-bg);color:var(--red);font-weight:600}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -862,7 +863,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.0 · 30/10/2026 (sinkronisasi online)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.1 · 31/10/2026 (perbaikan login)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -4372,11 +4373,22 @@ function syBadge(){ const b=document.getElementById("syncBadge"); if(!b) return;
 setInterval(syBadge,4000); window.addEventListener("online",()=>{ syBadge(); syBoot(); syKick(); }); window.addEventListener("offline",syBadge);
 // ---- memuat Firebase
 function syScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("gagal memuat "+src)); document.head.appendChild(s); }); }
-async function syBoot(){ if(SY.fb||SY._booting) return; SY._booting=true;
-  try{ if(!window.firebase){ for(const m of ["app","auth","firestore"]) await syScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-${m}-compat.js`); }
+function syBoot(){ if(SY.fb) return Promise.resolve(); if(SY._bootP) return SY._bootP; SY._bootP=syBoot2().finally(()=>{ SY._bootP=null; }); return SY._bootP; }
+async function syBoot2(){ SY._booting=true; SY.err="";
+  try{ if(!window.firebase||!window.firebase.auth||!window.firebase.firestore){ for(const m of ["app","auth","firestore"]) await Promise.race([syScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-${m}-compat.js`),new Promise((_,rej)=>setTimeout(()=>rej(new Error("Waktu habis saat memuat komponen Firebase ("+m+") dari www.gstatic.com")),20000))]); }
     SY.fb=window.firebase; const app=SY.fb.apps&&SY.fb.apps.length?SY.fb.app():SY.fb.initializeApp(FB_CFG); SY.auth=SY.fb.auth(); SY.db=SY.fb.firestore();
     SY.auth.onAuthStateChanged(u=>{ SY.user=u||null; syBadge(); if(u){ if(!SY.meta.joined) setTimeout(dlgSyncJoin,300); else sySubscribe(); } else syUnsub(); if(S.route==="backup") render(); });
-  }catch(e){ SY.err=e.message||String(e); } finally{ SY._booting=false; syBadge(); } }
+  }catch(e){ SY.fb=null; SY.err=e.message||String(e); } finally{ SY._booting=false; syBadge(); } }
+function syErrText(e){ const c=(e&&e.code)||"", m=(e&&e.message)||String(e||"");
+  if(/wrong-password|invalid-credential|user-not-found|invalid-login|invalid-email/.test(c)) return "Email atau kata sandi salah. Periksa kembali akun di Firebase → Authentication → Users.";
+  if(/operation-not-allowed/.test(c)) return "Login Email/Password belum diaktifkan. Buka Firebase → Authentication → Sign-in method → Email/Password → Enable → Save.";
+  if(/unauthorized-domain|requests-from-referer|referer/.test(c+m)) return "Alamat aplikasi ini belum diizinkan. Tambahkan "+location.hostname+" di Firebase → Authentication → Settings → Authorized domains.";
+  if(/api-key|API key/.test(c+m)) return "Kunci API Firebase ditolak ("+c+"). Periksa pembatasan API key di Google Cloud Console.";
+  if(/network/.test(c)) return "Tidak bisa menghubungi server Firebase. Periksa internet atau apakah jaringan kantor memblokir *.googleapis.com.";
+  if(/too-many/.test(c)) return "Terlalu banyak percobaan masuk. Tunggu beberapa menit lalu coba lagi.";
+  if(/user-disabled/.test(c)) return "Akun ini dinonaktifkan di Firebase.";
+  if(/not-supported|environment/.test(c)) return "Login tidak didukung di cara membuka ini ("+location.protocol+"). Buka aplikasi dari https://hrd-dewa.github.io/K3/.";
+  return "Gagal masuk: "+(c?c+" – ":"")+m; }
 function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; }
 function sySubscribe(){ syUnsub(); if(!SY.db||!SY.user||!SY.meta.joined) return;
   [...SYNC_COLS,"pengaturan"].forEach(col=>{ const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
@@ -4414,10 +4426,18 @@ async function syPush(){ if(!SY.db||!SY.user||!SY.meta.joined||!navigator.onLine
   }finally{ SY._pushing=false; SY.busy=0; syBadge(); if(syDirty()&&navigator.onLine) setTimeout(syKick,5000); } }
 // ---- dialog
 function dlgSyncLogin(){ openDlg(`<header><h2>Masuk sinkronisasi online</h2><p class="hint" style="margin:4px 0 0">Gunakan akun yang didaftarkan di Firebase (Authentication → Users).</p></header><div class="body"><div class="grid2">
-   <label class="f full"><span>Email</span><input type="email" name="email" required autocomplete="username"></label><label class="f full"><span>Kata sandi</span><input type="password" name="pw" required autocomplete="current-password"></label></div></div>${foot("Masuk")}`, async f=>{
-    if(!SY.auth){ await syBoot(); if(!SY.auth){ toast("Tidak bisa terhubung ke server. Periksa internet."); return false; } }
-    try{ await SY.auth.signInWithEmailAndPassword(f.email.value.trim(),f.pw.value); toast("Berhasil masuk."); }
-    catch(e){ const c=e.code||""; toast(/wrong-password|invalid-credential|user-not-found|invalid-login/.test(c)?"Email atau kata sandi salah.":/network/.test(c)?"Tidak ada koneksi internet.":/too-many/.test(c)?"Terlalu banyak percobaan, coba lagi nanti.":"Gagal masuk: "+(e.message||c)); return false; } }); }
+   <label class="f full"><span>Email</span><input type="email" name="email" required autocomplete="username"></label><label class="f full"><span>Kata sandi</span><input type="password" name="pw" required autocomplete="current-password"></label></div>
+   <div class="lgmsg" role="status" aria-live="polite"></div>
+   <p class="hint" style="margin:8px 0 0">Alamat: ${esc(location.protocol==="file:"?"file lokal (sinkronisasi tidak tersedia)":location.host+location.pathname)} · Internet: ${navigator.onLine?"tersambung":"tidak ada"} · Komponen Firebase: ${SY.fb?"siap":SY._bootP?"sedang dimuat…":SY.err?"gagal dimuat":"belum dimuat"}</p></div>${foot("Masuk")}`, async f=>{
+    const msg=f.querySelector(".lgmsg"), say=(t,c)=>{ msg.className="lgmsg "+(c||""); msg.textContent=t; };
+    if(location.protocol==="file:"&&!window.__fbmock){ say("Sinkronisasi hanya bisa dipakai dari aplikasi https://hrd-dewa.github.io/K3/. File HTML lokal tetap berjalan dalam mode lokal.","bad"); return false; }
+    if(!navigator.onLine){ say("Perangkat ini sedang tidak terhubung ke internet.","bad"); return false; }
+    say("Menghubungkan ke server Firebase…");
+    if(!SY.auth){ await syBoot(); if(!SY.auth){ say("Komponen Firebase gagal dimuat: "+(SY.err||"tidak diketahui")+". Pastikan internet tersambung dan www.gstatic.com tidak diblokir jaringan kantor.","bad"); return false; } }
+    say("Memeriksa email dan kata sandi…");
+    try{ const cr=await SY.auth.signInWithEmailAndPassword(f.email.value.trim(),f.pw.value); SY.user=cr&&cr.user||SY.auth.currentUser; syBadge(); toast("Berhasil masuk sebagai "+(SY.user&&SY.user.email||""));
+      if(!SY.meta.joined) setTimeout(dlgSyncJoin,400); else sySubscribe(); }
+    catch(e){ console.error(e); say(syErrText(e),"bad"); return false; } }); }
 function dlgSyncJoin(){ if(!SY.user||SY.meta.joined) return; const n=syncKeys().length;
   openDlg(`<header><h2>Sumber data perangkat ini</h2><p class="hint" style="margin:4px 0 0">Hanya ditanyakan sekali di setiap perangkat.</p></header><div class="body">
    <label class="cb" style="align-items:flex-start;margin-bottom:12px"><input type="radio" name="m" value="up" ${n>200?"checked":""}> <span><b>Perangkat utama (komputer kantor)</b><br><span class="muted">Data kotak P3K, APAR, peta, HIRADC, dan kecelakaan di perangkat ini (${n} data) dikirim ke server dan digabung dengan data yang sudah ada di server.</span></span></label>
