@@ -445,6 +445,12 @@ nav.side .foot{display:none!important}
 @media (max-width:640px){.approw .apexp{grid-column:1/-1}}
 .ptapcard{display:flex;flex-direction:column;gap:2px;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--green-bg);border-left:4px solid var(--green);font-size:13px}.ptapcard b{font-size:14px}
 dialog .camov{position:fixed;inset:0;z-index:5}
+.syncb{display:flex;align-items:center;gap:7px;width:100%;margin:0 0 8px;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;text-align:left}
+.syncb i{width:10px;height:10px;border-radius:50%;flex:none;background:#9ca3af;box-shadow:0 0 0 2px rgba(255,255,255,.2)}
+.syncb.green i{background:#22c55e}.syncb.amber i{background:#f59e0b;animation:sypulse 1s infinite alternate}.syncb.red i{background:#ef4444}
+@keyframes sypulse{to{opacity:.4}}
+dialog .syncb{width:auto;color:var(--text);background:var(--gray-bg);border-color:var(--line)}
+@media (max-width:900px){nav.side .syncb{width:auto;margin:0;order:1;padding:6px 8px}nav.side .syncb span{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -616,6 +622,7 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
 <div class="app">
   <nav class="side" aria-label="Menu utama">
     <div class="brand"><b>K3 Dewasutratex</b><span>PT. Dewasutratex · HSE</span></div>
+    <button type="button" id="syncBadge" class="syncb gray" aria-label="Status sinkronisasi"><i></i><span>Mode lokal</span></button>
     <button type="button" id="navToggle" class="navtog" aria-expanded="false" aria-label="Buka menu"><span aria-hidden="true">☰</span><span class="nt-l">Menu</span></button>
     <button type="button" id="themeBtn" class="themebtn"><span aria-hidden="true">◐</span><span class="tlbl">Tampilan: Otomatis</span></button>
     <a href="#ringkasan" data-nav="ringkasan">Ringkasan</a>
@@ -855,7 +862,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V7.3 · 30/10/2026 (gabung hasil banyak HP)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.0 · 30/10/2026 (sinkronisasi online)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2949,10 +2956,11 @@ function lapImportPaket(p){
   if(!kotak.length){ toast("File paket tidak berisi data kotak."); return; }
   openDlg(`<header><h2>Impor paket dari komputer?</h2></header><div class="body"><p style="margin:0 0 8px">Paket tanggal <b>${esc(fmt((p.dibuat||"").slice(0,10)))}</b> berisi ${kotak.length} kotak P3K dan ${kary.length.toLocaleString("id-ID")} karyawan (NRP & nama).</p>
     <p style="margin:0">Data kotak dan karyawan di perangkat ini akan diganti dengan isi paket.${belum.length?` <b>${belum.length} hasil pemeriksaan yang belum dikirim tetap disimpan</b> dan tetap bisa dikirim ke komputer.`:""}</p></div>${foot("Impor paket")}`, async ()=>{
+    const onl=typeof SY!=="undefined"&&SY.user&&SY.meta.joined, keep=k=>onl&&syncKey(k);
     const hasPeta=Object.keys(d).some(k=>/^peta\//.test(k));
-    Object.keys(STORE).forEach(k=>{ if(/^(kotak|karyawan)\/[^/]+$/.test(k)||(hasPeta&&/^peta\/[^/]+$/.test(k))) delete STORE[k]; });
-    const hasApar=Object.keys(d).some(k=>/^apar\//.test(k)); if(hasApar) Object.keys(STORE).forEach(k=>{ if(/^apar\/[^/]+$/.test(k)) delete STORE[k]; });
-    Object.keys(d).forEach(k=>{ if(/^(kotak|karyawan|peta|apar)\/[^/]+$/.test(k)||k==="pengaturan/p3k"||k==="pengaturan/peta"||k==="pengaturan/aparpic") STORE[k]=clone(d[k]); });
+    Object.keys(STORE).forEach(k=>{ if(keep(k)) return; if(/^(kotak|karyawan)\/[^/]+$/.test(k)||(hasPeta&&/^peta\/[^/]+$/.test(k))) delete STORE[k]; });
+    const hasApar=Object.keys(d).some(k=>/^apar\//.test(k)); if(hasApar) Object.keys(STORE).forEach(k=>{ if(!keep(k)&&/^apar\/[^/]+$/.test(k)) delete STORE[k]; });
+    Object.keys(d).forEach(k=>{ if(keep(k)) return; if(/^(kotak|karyawan|peta|apar)\/[^/]+$/.test(k)||k==="pengaturan/p3k"||k==="pengaturan/peta"||k==="pengaturan/aparpic") STORE[k]=clone(d[k]); });
     Object.keys(STORE).filter(k=>/^lapapar\//.test(k)&&!STORE[k].dikirim).forEach(k=>{ const h=STORE[k], a=STORE["apar/"+h.bc]; if(a&&!(a.pemeriksaan||[]).some(x=>x.id===h.id)){ (a.pemeriksaan=a.pemeriksaan||[]).push(h.pemeriksaan); if(h.tglExp) a.tglExp=h.tglExp; } });
     belum.forEach(h=>{ const b=STORE["kotak/"+h.kode]; if(b) lapApplyRemove(b,h); });
     STORE["pengaturan/lapangan"]=Object.assign({},STORE["pengaturan/lapangan"]||{},{peran:"hp",paket:p.dibuat||"",paketDari:p.dari||"",diimpor:new Date().toISOString()});
@@ -4319,6 +4327,116 @@ document.addEventListener("click",ev=>{ const t=ev.target.closest("#navToggle");
   if(nav.classList.contains("open")&&ev.target.closest("nav.side a")){ nav.classList.remove("open"); const b=$("#navToggle"); if(b){ b.setAttribute("aria-expanded","false"); b.querySelector(".nt-l").textContent="Menu"; } }
   else if(nav.classList.contains("open")&&!ev.target.closest("nav.side")){ nav.classList.remove("open"); const b=$("#navToggle"); if(b){ b.setAttribute("aria-expanded","false"); b.querySelector(".nt-l").textContent="Menu"; } } });
 
+// ---------- Sinkronisasi online (Firebase) dengan mode offline ----------
+// Data yang disinkronkan: kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, serta pengaturannya.
+// Tetap lokal: master karyawan (NIK dll), kartu APD, pembagian APD, track proses. Field "nik" tidak pernah dikirim.
+const FB_CFG={apiKey:"AIzaSyDO6zLuw8sMEWTExa1UuEFxeGvBSx6Pn8o",authDomain:"k3-dewasutratex.firebaseapp.com",projectId:"k3-dewasutratex",storageBucket:"k3-dewasutratex.firebasestorage.app",messagingSenderId:"864608893325",appId:"1:864608893325:web:f12a06b2a9d4506ce9e5c4"};
+const FB_VER="10.12.2", SYNC_COLS=["kotak","apar","peta","hira","kecelakaan"], SYNC_SET=["p3k","hira","peta","aparpic"], BLOB_MIN=40000, CHUNK=700000;
+const SY={fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
+function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
+function syncKeys(){ return Object.keys(STORE).filter(syncKey); }
+try{ SY.dev=localStorage.getItem("k3.dev")||(Math.random().toString(36).slice(2,10)); localStorage.setItem("k3.dev",SY.dev); }catch(e){ SY.dev="dev"; }
+// ---- penyimpanan meta sinkron (IndexedDB kv "syncmeta")
+function syIdbGet(){ return new Promise(res=>{ if(!idb) return res(null); try{ const t=idb.transaction("kv","readonly").objectStore("kv").get("syncmeta"); t.onsuccess=()=>res(t.result||null); t.onerror=()=>res(null); }catch(e){ res(null); } }); }
+let SY_SAVE_T=null; function syMetaSave(){ clearTimeout(SY_SAVE_T); SY_SAVE_T=setTimeout(()=>{ try{ if(idb){ const tx=idb.transaction("kv","readwrite"); tx.objectStore("kv").put(JSON.parse(JSON.stringify(SY.meta)),"syncmeta"); } else localStorage.setItem("k3.syncmeta",JSON.stringify(SY.meta)); }catch(e){} },300); }
+// ---- utilitas: hapus NIK, hash, blob (gambar/foto besar dipisah)
+function syStrip(o){ if(Array.isArray(o)) return o.map(syStrip); if(o&&typeof o==="object"){ const r={}; for(const k in o){ if(/^nik$/i.test(k)||k==="_id") continue; r[k]=syStrip(o[k]); } return r; } return o; }
+function syHash(s){ let h1=0xdeadbeef^s.length, h2=0x41c6ce57^s.length; for(let i=0;i<s.length;i++){ const c=s.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); } h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909); return (h2>>>0).toString(16).padStart(8,"0")+(h1>>>0).toString(16).padStart(8,"0")+s.length.toString(36); }
+const SY_BLOB=new Map();
+function syExt(o,out){ if(typeof o==="string"&&o.length>=BLOB_MIN){ const h=syHash(o); SY_BLOB.set(h,o); out&&out.add(h); return "@blob:"+h; } if(Array.isArray(o)) return o.map(x=>syExt(x,out)); if(o&&typeof o==="object"){ const r={}; for(const k in o) r[k]=syExt(o[k],out); return r; } return o; }
+function syLocalJson(k){ const v=STORE[k]; return v==null?null:JSON.stringify(syExt(syStrip(v))); }
+function syNeedBlobs(o,need){ if(typeof o==="string"&&o.startsWith("@blob:")){ if(!SY_BLOB.has(o.slice(6))) need.add(o.slice(6)); } else if(Array.isArray(o)) o.forEach(x=>syNeedBlobs(x,need)); else if(o&&typeof o==="object") for(const k in o) syNeedBlobs(o[k],need); }
+function syInt(o){ if(typeof o==="string"&&o.startsWith("@blob:")) return SY_BLOB.get(o.slice(6))??o; if(Array.isArray(o)) return o.map(syInt); if(o&&typeof o==="object"){ const r={}; for(const k in o) r[k]=syInt(o[k]); return r; } return o; }
+function syIndexLocalBlobs(){ const walk=o=>{ if(typeof o==="string"&&o.length>=BLOB_MIN) SY_BLOB.set(syHash(o),o); else if(Array.isArray(o)) o.forEach(walk); else if(o&&typeof o==="object") for(const k in o) walk(o[k]); }; syncKeys().forEach(k=>walk(STORE[k])); }
+// ---- penggabungan 3 arah (base, lokal, server) agar hasil dari banyak perangkat saling melengkapi
+const syEq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+function syKeyOf(x){ if(!x||typeof x!=="object") return null; if(x.id!=null) return "id:"+x.id; if(x.bc!=null) return "bc:"+x.bc+"|"+(x.pid||""); if(x.nrp!=null&&x.nama!=null) return "p:"+x.nrp+"|"+x.nama; return null; }
+function syMergeArr(b,l,r){ b=Array.isArray(b)?b:[]; if(![...l,...r].every(x=>syKeyOf(x))) return l;
+  const mb=new Map(b.map(x=>[syKeyOf(x),x])), ml=new Map(l.map(x=>[syKeyOf(x),x])), mr=new Map(r.map(x=>[syKeyOf(x),x])), out=[], seen=new Set();
+  const take=k=>{ if(seen.has(k)) return; seen.add(k); const xb=mb.get(k), xl=ml.get(k), xr=mr.get(k);
+    if(xl&&xr) out.push(syMerge(xb,xl,xr)); else if(xl&&!xr){ if(!xb) out.push(xl); else if(!syEq(xl,xb)) out.push(xl); } else if(xr&&!xl){ if(!xb) out.push(xr); else if(!syEq(xr,xb)) out.push(xr); } };
+  r.forEach(x=>take(syKeyOf(x))); l.forEach(x=>take(syKeyOf(x))); return out; }
+function syMerge(b,l,r){ if(syEq(l,r)) return l; if(b!==undefined&&syEq(l,b)) return r; if(b!==undefined&&syEq(r,b)) return l;
+  if(Array.isArray(l)&&Array.isArray(r)) return syMergeArr(b,l,r);
+  if(l&&r&&typeof l==="object"&&typeof r==="object"&&!Array.isArray(l)&&!Array.isArray(r)){ const out={}, B=(b&&typeof b==="object")?b:{}; new Set([...Object.keys(l),...Object.keys(r)]).forEach(k=>{
+      if(!(k in l)){ if(!(k in B)||!syEq(r[k],B[k])) out[k]=r[k]; return; } if(!(k in r)){ if(!(k in B)||!syEq(l[k],B[k])) out[k]=l[k]; return; } out[k]=syMerge(B[k],l[k],r[k]); }); return out; }
+  return l; }
+function syRestoreNik(r,l){ if(Array.isArray(r)&&Array.isArray(l)){ return r.map((x,i)=>{ const k=syKeyOf(x); const y=k?l.find(z=>syKeyOf(z)===k):l[i]; return syRestoreNik(x,y); }); }
+  if(r&&l&&typeof r==="object"&&typeof l==="object"){ const o=Object.assign({},r); for(const k in l){ if(/^nik$/i.test(k)&&!(k in r)) o[k]=l[k]; } for(const k in r) if(l[k]!==undefined) o[k]=syRestoreNik(r[k],l[k]); return o; } return r; }
+// ---- status
+function syDirty(){ const keys=new Set([...syncKeys(),...Object.keys(SY.meta.base)]); let n=0; keys.forEach(k=>{ if(syLocalJson(k)!==(SY.meta.base[k]??null)) n++; }); return n; }
+function syOnline(){ return navigator.onLine&&Object.values(SY.live).some(Boolean); }
+function syState(){ if(!SY.user) return {c:"gray",t:SY.loaded?"Belum masuk":"Mode lokal"}; if(!SY.meta.joined) return {c:"gray",t:"Pilih sumber data"}; const n=syDirty();
+  if(!navigator.onLine||!syOnline()) return {c:"red",t:"Offline"+(n?" · "+n+" menunggu":"")}; if(n||SY.busy) return {c:"amber",t:"Mengirim"+(n?" "+n:"")+"…"}; return {c:"green",t:"Online"}; }
+function syBadge(){ const b=document.getElementById("syncBadge"); if(!b) return; const s=syState(); b.className="syncb "+s.c; b.innerHTML=`<i></i><span>${esc(s.t)}</span>`; b.title=s.c==="green"?"Tersinkron"+(SY.lastOk?" · terakhir "+SY.lastOk:""):s.t; }
+setInterval(syBadge,4000); window.addEventListener("online",()=>{ syBadge(); syBoot(); syKick(); }); window.addEventListener("offline",syBadge);
+// ---- memuat Firebase
+function syScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("gagal memuat "+src)); document.head.appendChild(s); }); }
+async function syBoot(){ if(SY.fb||SY._booting) return; SY._booting=true;
+  try{ if(!window.firebase){ for(const m of ["app","auth","firestore"]) await syScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-${m}-compat.js`); }
+    SY.fb=window.firebase; const app=SY.fb.apps&&SY.fb.apps.length?SY.fb.app():SY.fb.initializeApp(FB_CFG); SY.auth=SY.fb.auth(); SY.db=SY.fb.firestore();
+    SY.auth.onAuthStateChanged(u=>{ SY.user=u||null; syBadge(); if(u){ if(!SY.meta.joined) setTimeout(dlgSyncJoin,300); else sySubscribe(); } else syUnsub(); if(S.route==="backup") render(); });
+  }catch(e){ SY.err=e.message||String(e); } finally{ SY._booting=false; syBadge(); } }
+function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; }
+function sySubscribe(){ syUnsub(); if(!SY.db||!SY.user||!SY.meta.joined) return;
+  [...SYNC_COLS,"pengaturan"].forEach(col=>{ const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
+    const un=q.onSnapshot({includeMetadataChanges:true},snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) syApply(col,ch.map(c=>c.doc)); syBadge(); },err=>{ SY.err=err.message; SY.live[col]=false; syBadge(); });
+    SY.unsub.push(un); });
+  syKick(); }
+const SY_PENDING=[];
+async function syApply(col,docs){ let changed=false, maxT=SY.meta.seen[col]||0;
+  for(const d of docs){ const data=d.data()||{}; const t=data._t&&data._t.toMillis?data._t.toMillis():0; if(t>maxT) maxT=t;
+    if(col==="pengaturan"&&!SYNC_SET.includes(d.id)) continue; const k=col+"/"+d.id, base=SY.meta.base[k]??null, lj=syLocalJson(k);
+    if(data._del){ if(lj===null){ delete SY.meta.base[k]; continue; } if(lj===base){ delete STORE[k]; delete SY.meta.base[k]; changed=true; } else delete SY.meta.base[k]; continue; }
+    const rj=data.j; if(typeof rj!=="string"||rj===base) continue; let R; try{ R=JSON.parse(rj); }catch(e){ continue; }
+    const need=new Set(); syNeedBlobs(R,need); if(need.size){ const ok=await syFetchBlobs([...need]); if(!ok){ SY_PENDING.push([col,d]); continue; } }
+    if(lj===rj){ SY.meta.base[k]=rj; continue; }
+    const local=STORE[k]; let merged;
+    if(lj===null||lj===base) merged=R; else merged=syMerge(base?JSON.parse(base):undefined,JSON.parse(lj),R);
+    STORE[k]=syRestoreNik(syInt(merged),local); SY.meta.base[k]=rj; changed=true; }
+  SY.meta.seen[col]=maxT; syMetaSave(); SY.lastOk=new Date().toTimeString().slice(0,5);
+  if(changed){ await persist(); notify(); } }
+async function syFetchBlobs(hs){ try{ for(const h of hs){ const snap=await SY.db.collection("blobs").where("h","==",h).get(); const parts=snap.docs.map(d=>d.data()).sort((a,b)=>a.i-b.i); if(!parts.length||parts.length!==parts[0].n) return false; SY_BLOB.set(h,parts.map(p=>p.d).join("")); SY.meta.blobs[h]=1; } return true; }catch(e){ return false; } }
+async function syPutBlob(h){ if(SY.meta.blobs[h]) return; const s=SY_BLOB.get(h); if(s==null) return; const n=Math.ceil(s.length/CHUNK);
+  for(let i=0;i<n;i++) await SY.db.collection("blobs").doc(h+"_"+i).set({h,i,n,d:s.slice(i*CHUNK,(i+1)*CHUNK)}); SY.meta.blobs[h]=1; syMetaSave(); }
+function syKick(){ clearTimeout(SY.timer); SY.timer=setTimeout(syPush,600); syBadge(); }
+async function syPush(){ if(!SY.db||!SY.user||!SY.meta.joined||!navigator.onLine||SY._pushing) return; SY._pushing=true; SY.busy=1; syBadge();
+  try{ const keys=[...new Set([...syncKeys(),...Object.keys(SY.meta.base)])], now=Date.now(); let n=0;
+    for(const k of keys){ const lj=syLocalJson(k), base=SY.meta.base[k]??null; if(lj===base) continue; if(SY.inflight[k]&&now-SY.inflight[k]<30000) continue;
+      const [col,id]=k.split("/"); SY.inflight[k]=now;
+      const work=(async()=>{ if(lj===null){ await SY.db.collection(col).doc(id).set({_del:true,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); delete SY.meta.base[k]; return; }
+        if(lj.length>950000){ SY.err="Data "+k+" terlalu besar untuk disinkronkan"; return; }
+        const hs=new Set(); syExt(syStrip(STORE[k]),hs); for(const h of hs) await syPutBlob(h);
+        await SY.db.collection(col).doc(id).set({j:lj,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); SY.meta.base[k]=lj; })();
+      await Promise.race([work,new Promise(r=>setTimeout(r,20000))]).catch(e=>{ SY.err=e.message||String(e); }); delete SY.inflight[k]; n++; if(n%20===0){ syMetaSave(); syBadge(); } }
+    syMetaSave(); if(SY_PENDING.length){ const p=SY_PENDING.splice(0); for(const [col,d] of p) await syApply(col,[d]); }
+    if(!syDirty()) SY.lastOk=new Date().toTimeString().slice(0,5);
+  }finally{ SY._pushing=false; SY.busy=0; syBadge(); if(syDirty()&&navigator.onLine) setTimeout(syKick,5000); } }
+// ---- dialog
+function dlgSyncLogin(){ openDlg(`<header><h2>Masuk sinkronisasi online</h2><p class="hint" style="margin:4px 0 0">Gunakan akun yang didaftarkan di Firebase (Authentication → Users).</p></header><div class="body"><div class="grid2">
+   <label class="f full"><span>Email</span><input type="email" name="email" required autocomplete="username"></label><label class="f full"><span>Kata sandi</span><input type="password" name="pw" required autocomplete="current-password"></label></div></div>${foot("Masuk")}`, async f=>{
+    if(!SY.auth){ await syBoot(); if(!SY.auth){ toast("Tidak bisa terhubung ke server. Periksa internet."); return false; } }
+    try{ await SY.auth.signInWithEmailAndPassword(f.email.value.trim(),f.pw.value); toast("Berhasil masuk."); }
+    catch(e){ const c=e.code||""; toast(/wrong-password|invalid-credential|user-not-found|invalid-login/.test(c)?"Email atau kata sandi salah.":/network/.test(c)?"Tidak ada koneksi internet.":/too-many/.test(c)?"Terlalu banyak percobaan, coba lagi nanti.":"Gagal masuk: "+(e.message||c)); return false; } }); }
+function dlgSyncJoin(){ if(!SY.user||SY.meta.joined) return; const n=syncKeys().length;
+  openDlg(`<header><h2>Sumber data perangkat ini</h2><p class="hint" style="margin:4px 0 0">Hanya ditanyakan sekali di setiap perangkat.</p></header><div class="body">
+   <label class="cb" style="align-items:flex-start;margin-bottom:12px"><input type="radio" name="m" value="up" ${n>200?"checked":""}> <span><b>Perangkat utama (komputer kantor)</b><br><span class="muted">Data kotak P3K, APAR, peta, HIRADC, dan kecelakaan di perangkat ini (${n} data) dikirim ke server dan digabung dengan data yang sudah ada di server.</span></span></label>
+   <label class="cb" style="align-items:flex-start"><input type="radio" name="m" value="down" ${n>200?"":"checked"}> <span><b>Perangkat tambahan (HP tim)</b><br><span class="muted">Data tersebut di perangkat ini diganti dengan data dari server. Kirim dulu hasil pemeriksaan yang belum terkirim lewat Mode lapangan bila ada.</span></span></label>
+   <p class="hint" style="margin:12px 0 0">Data karyawan, kartu APD, dan track proses tidak pernah dikirim ke server.</p></div>${foot("Lanjutkan")}`, async f=>{
+    const m=f.querySelector("[name=m]:checked").value; if(m==="down"){ syncKeys().forEach(k=>delete STORE[k]); SY.meta.base={}; SY.meta.seen={}; await persist(); notify(); } else { SY.meta.base={}; SY.meta.seen={}; }
+    SY.meta.joined=m; syMetaSave(); sySubscribe(); toast(m==="down"?"Mengambil data dari server…":"Mengirim data ke server…"); }); }
+function dlgSync(){ const s=syState(), n=syDirty();
+  openDlg(`<header><h2>Sinkronisasi online</h2></header><div class="body"><p style="margin:0 0 10px"><span class="syncb ${s.c}" style="display:inline-flex"><i></i><span>${esc(s.t)}</span></span></p>
+   <dl class="kv"><dt>Akun</dt><dd>${SY.user?esc(SY.user.email||""):"belum masuk"}</dd><dt>Internet</dt><dd>${navigator.onLine?"tersambung":"tidak ada"}</dd><dt>Belum terkirim</dt><dd>${n} data</dd><dt>Sinkron terakhir</dt><dd>${esc(SY.lastOk||"–")}</dd><dt>Peran perangkat</dt><dd>${SY.meta.joined==="up"?"perangkat utama":SY.meta.joined==="down"?"perangkat tambahan":"–"}</dd></dl>
+   ${SY.err?`<p class="hint" style="color:var(--amber);margin:8px 0 0">Catatan: ${esc(SY.err)}</p>`:""}
+   <p class="hint" style="margin:10px 0 0">Yang disinkronkan: kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi. Data karyawan (termasuk NIK), kartu APD, dan track proses tetap hanya di perangkat ini. Saat offline, program tetap bisa dipakai dan perubahan dikirim otomatis begitu internet kembali.</p>
+   <div class="row" style="margin-top:12px;gap:6px">${SY.user?`<button type="button" class="btn" data-act="sy-now">Sinkronkan sekarang</button><button type="button" class="btn" data-act="sy-out">Keluar</button>`:`<button type="button" class="btn primary" data-act="sy-in">Masuk</button>`}</div></div><footer><button class="btn" value="cancel">Tutup</button></footer>`, async ()=>{}); }
+document.addEventListener("click",ev=>{ if(ev.target.closest("#syncBadge")){ if(!SY.user) dlgSyncLogin(); else if(!SY.meta.joined) dlgSyncJoin(); else dlgSync(); return; }
+  const t=ev.target.closest("[data-act]"); if(!t) return;
+  if(t.dataset.act==="sy-in"){ $("#dlg").close(); dlgSyncLogin(); } else if(t.dataset.act==="sy-now"){ $("#dlg").close(); sySubscribe(); syKick(); toast("Sinkronisasi dijalankan."); }
+  else if(t.dataset.act==="sy-out"){ $("#dlg").close(); syUnsub(); SY.auth&&SY.auth.signOut(); toast("Keluar dari sinkronisasi. Data tetap tersimpan di perangkat ini."); } });
+async function syInit(){ const m=await syIdbGet()||(()=>{ try{ return JSON.parse(localStorage.getItem("k3.syncmeta")||"null"); }catch(e){ return null; } })(); if(m) SY.meta=Object.assign(SY.meta,m); SY.loaded=true; syIndexLocalBlobs(); syBadge(); if(navigator.onLine) syBoot(); }
+
 // ---------- penyimpanan lokal ----------
 let STORE={}; let STORAGE_LABEL="penyimpanan browser"; let idb=null;
 const subs=new Set();
@@ -4330,6 +4448,7 @@ async function persist(){
   const v=JSON.parse(JSON.stringify(STORE));
   if(idb){ await idbPut(v); }
   else { try{ localStorage.setItem("kartuAPD.store",JSON.stringify(v)); }catch(e){ throw {code:"quota_exceeded",message:"Penyimpanan penuh. Simpan backup lalu hubungi IT."}; } }
+  if(typeof syKick==="function") syKick();
 }
 const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
 const localDb={
@@ -4393,6 +4512,7 @@ S.route=readRoute(); render();
   catch(e){ idb=null; try{ STORE=JSON.parse(localStorage.getItem("kartuAPD.store")||"{}"); STORAGE_LABEL="localStorage browser"; }catch(e2){ STORE={}; STORAGE_LABEL="memori sementara – data hilang saat ditutup, segera simpan backup"; } }
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
   try{ S.uid=localStorage.getItem("kartuAPD.petugas")||""; }catch(e){}
+  setTimeout(()=>{ try{ syInit(); }catch(e){} },0);
   S.db=localDb; S.downloads=localDownloads; S.canWrite=true; S.isAdmin=true;
   localDb.doc("pengaturan/masaPakai").onSnapshot(s=>{ S.settings=(s.exists&&s.data().items)||{}; });
   localDb.doc("pengaturan/apd").onSnapshot(s=>{ S.customApd=(s.exists&&s.data().items)||[]; });
