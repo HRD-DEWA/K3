@@ -453,7 +453,7 @@ dialog .syncb{width:auto;color:var(--text);background:var(--gray-bg);border-colo
 @media (max-width:900px){nav.side .syncb{width:auto;margin:0;order:1;padding:6px 8px}nav.side .syncb span{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 .lgmsg{margin-top:10px;font-size:13.5px;min-height:1px}.lgmsg:empty{display:none}.lgmsg{padding:8px 10px;border-radius:8px;background:var(--gray-bg)}.lgmsg.bad{background:var(--red-bg);color:var(--red);font-weight:600}
 body.hprole .nikc{display:none}
-body.hprole [data-navg="track"],body.hprole #ng-track{display:none!important}
+body.hprole nav.side [data-navg="track"],body.hprole nav.side .navgrp[data-navg="track"],body.hprole nav.side #ng-track{display:none!important}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -865,7 +865,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.2 · 31/10/2026 (karyawan & APD tersinkron)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.3 · 31/10/2026 (menu HP tanpa Track proses)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
