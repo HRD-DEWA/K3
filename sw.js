@@ -1,6 +1,6 @@
 // Service worker K3 Dewasutratex: program tetap bisa dibuka tanpa internet.
 // Saat ada internet, versi terbaru diambil otomatis; tanpa internet, dipakai salinan terakhir.
-const CACHE = "k3-dst-v8-2";
+const CACHE = "k3-dst-v8-3";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-512-maskable.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== "k3-firebase-sdk").map(k => caches.delete(k)))).then(() => self.clients.claim())); });

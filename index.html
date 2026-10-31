@@ -452,6 +452,8 @@ dialog .camov{position:fixed;inset:0;z-index:5}
 dialog .syncb{width:auto;color:var(--text);background:var(--gray-bg);border-color:var(--line)}
 @media (max-width:900px){nav.side .syncb{width:auto;margin:0;order:1;padding:6px 8px}nav.side .syncb span{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 .lgmsg{margin-top:10px;font-size:13.5px;min-height:1px}.lgmsg:empty{display:none}.lgmsg{padding:8px 10px;border-radius:8px;background:var(--gray-bg)}.lgmsg.bad{background:var(--red-bg);color:var(--red);font-weight:600}
+body.hprole .nikc{display:none}
+body.hprole [data-navg="track"],body.hprole #ng-track{display:none!important}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -863,7 +865,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.1 · 31/10/2026 (perbaikan login)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.2 · 31/10/2026 (karyawan & APD tersinkron)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -913,7 +915,7 @@ function viewList(){
     const miss=missingWajib(k).length; const nW=Object.values(k.wajib||{}).filter(w=>w&&w.on).length;
     let st = k.aktif===false?`<span class="chip gray">Tidak aktif</span>`:
       red?`<span class="chip red">${red} habis</span>`: miss?`<span class="chip amber">${miss} APD wajib belum diterima</span>`: amb?`<span class="chip amber">${amb} segera habis</span>`: !nW?`<span class="chip gray">APD wajib belum ditentukan</span>`:`<span class="chip green">Lengkap</span>`;
-    return `<tr class="click" data-open="${esc(k._id)}" tabindex="0"><td><b>${esc(k.nama)}</b></td><td class="num">${esc(k.nik)}</td><td class="num">${esc(k.nrp||"–")}</td><td>${esc(k.bagian||"–")}</td><td>${esc(k.status||"–")}</td><td>${st}</td></tr>`;
+    return `<tr class="click" data-open="${esc(k._id)}" tabindex="0"><td><b>${esc(k.nama)}</b></td><td class="num nikc">${esc(k.nik)}</td><td class="num">${esc(k.nrp||"–")}</td><td>${esc(k.bagian||"–")}</td><td>${esc(k.status||"–")}</td><td>${st}</td></tr>`;
   }).join("");
   return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Karyawan</h1>
    <div class="row">${S.canWrite?`<button class="btn primary" data-act="add-k">Tambah karyawan</button>`:""}<button class="btn" data-act="export-all">Ekspor CSV</button></div></div>
@@ -921,7 +923,7 @@ function viewList(){
    <div class="toolbar"><input type="search" id="q" placeholder="Cari nama, NIK, atau NRP" value="${esc(S.q)}" aria-label="Cari karyawan">
    <select id="fBagian" aria-label="Filter bagian"><option value="">Semua bagian</option>${bagianList().map(b=>`<option ${b===S.fBagian?"selected":""}>${esc(b)}</option>`).join("")}</select>
    <select id="fAktif" aria-label="Filter status"><option value="aktif" ${S.fAktif==="aktif"?"selected":""}>Aktif</option><option value="nonaktif" ${S.fAktif==="nonaktif"?"selected":""}>Tidak aktif</option><option value="semua" ${S.fAktif==="semua"?"selected":""}>Semua</option></select></div>
-   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>Nama</th><th>NIK</th><th>NRP</th><th>Bagian</th><th>Status</th><th>Kondisi APD</th></tr></thead>
+   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>Nama</th><th class="nikc">NIK</th><th>NRP</th><th>Bagian</th><th>Status</th><th>Kondisi APD</th></tr></thead>
    <tbody>${body||`<tr><td colspan="6" class="empty">${S.list.size?"Tidak ada karyawan yang cocok dengan pencarian.":"Belum ada data karyawan."}</td></tr>`}</tbody></table></div></div>`;
 }
 
@@ -955,11 +957,11 @@ function viewKaryawan(route){
     ${(m.items||[]).length?`<div class="tablewrap"><table><thead><tr><th>APD dikembalikan</th><th>Jml</th><th>Kondisi</th><th>Tindak lanjut Gudang</th></tr></thead><tbody>${m.items.map(i=>`<tr><td>${esc(jenisOf(i.jenis).nama)}</td><td class="num">${esc(i.jml)}</td><td>${i.kondisi==="layak"?"Layak":"Tidak layak"}</td><td>${esc(TINDAK[i.tindak]||"Belum ditentukan")}</td></tr>`).join("")}</tbody></table></div>${S.canWrite?`<button class="btn small" data-act="tindak" data-mi="${mi}" style="margin-top:8px">Ubah tindak lanjut Gudang</button>`:""}`:`<p class="muted" style="margin:0">Tidak ada APD yang dikembalikan.</p>`}
     ${m.catatan?`<p class="muted" style="margin:6px 0 0">${esc(m.catatan)}</p>`:""}</div>`).join("");
   return `<button class="back" data-go="karyawan">‹ Daftar karyawan</button>
-  <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>${esc(k.nama)}</h1><p class="sub">NIK ${esc(k.nik)}${k.nrp?" · NRP "+esc(k.nrp):""} · ${esc(k.bagian||"–")}${k.aktif===false?` · <span class="chip gray">Tidak aktif</span>`:""}</p></div>
+  <div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>${esc(k.nama)}</h1><p class="sub">${S.noNik?"":"NIK "+esc(k.nik)}${k.nrp?(S.noNik?"NRP ":" · NRP ")+esc(k.nrp):""} · ${esc(k.bagian||"–")}${k.aktif===false?` · <span class="chip gray">Tidak aktif</span>`:""}</p></div>
   <div class="row">${S.canWrite&&k.aktif!==false?`<button class="btn primary" data-act="add-r">Catat penerimaan APD</button>`:""}<button class="btn" data-act="export-one">Ekspor CSV</button></div></div>
   <div class="cols"><div>
    <section class="panel"><div class="row" style="justify-content:space-between"><h2>Data karyawan</h2>${S.canWrite?`<button class="btn small" data-act="edit-k">Ubah</button>`:""}</div>
-    <dl class="kv"><dt>NIK</dt><dd class="num">${esc(k.nik||"–")}</dd><dt>NRP</dt><dd class="num">${esc(k.nrp||"–")}</dd><dt>Jabatan</dt><dd>${esc(k.jabatan||"–")}</dd><dt>Shift / group</dt><dd>${esc(k.shift||"–")}</dd><dt>Tgl. masuk kerja</dt><dd class="num">${fmt(k.tglMasuk)}</dd>
+    <dl class="kv">${S.noNik?"":`<dt>NIK</dt><dd class="num">${esc(k.nik||"–")}</dd>`}<dt>NRP</dt><dd class="num">${esc(k.nrp||"–")}</dd><dt>Jabatan</dt><dd>${esc(k.jabatan||"–")}</dd><dt>Shift / group</dt><dd>${esc(k.shift||"–")}</dd><dt>Tgl. masuk kerja</dt><dd class="num">${fmt(k.tglMasuk)}</dd>
     <dt>Status</dt><dd>${esc(k.status||"–")}${k.status==="Kontrak"?" s.d. "+fmt(k.kontrakAkhir):""}</dd></dl>${S.canWrite?`<button class="btn small danger" data-act="del-k" style="margin-top:14px">Hapus data karyawan</button>`:""}</section>
    <section class="panel"><div class="row" style="justify-content:space-between"><h2>APD wajib</h2>${S.canWrite?`<button class="btn small" data-act="edit-w">Ubah</button>`:""}</div><div class="wajib">${wajibHtml}</div>${(()=>{const row=matRow(k.bagian); if(row===null||k.aktif===false) return ""; if(setKey(row)===setKey(wajibKeys(k.wajib))) return `<p class="hint" style="margin:10px 0 0">Sesuai Matriks APD bagian ${esc(k.bagian)}.</p>`;
       return `<p class="hint" style="margin:10px 0 0">Berbeda dari Matriks APD bagian ${esc(k.bagian)}.${S.canWrite?` <button class="linkbtn" data-act="sync-w" style="color:var(--accent)">Samakan dengan matriks</button>`:""}</p>`;})()}
@@ -1046,7 +1048,7 @@ function dlgKaryawan(k){
   const isNew=!k; k=k||{status:"Tetap"};
   openDlg(`<header><h2>${isNew?"Tambah karyawan":"Ubah data karyawan"}</h2></header><div class="body"><div class="grid2">
    <label class="f full"><span>Nama karyawan</span><input type="text" name="nama" required value="${esc(k.nama||"")}"></label>
-   <label class="f"><span>NIK</span><input type="text" name="nik" required value="${esc(k.nik||"")}"></label>
+   ${S.noNik?"":`<label class="f"><span>NIK</span><input type="text" name="nik" required value="${esc(k.nik||"")}"></label>`}
    <label class="f"><span>NRP</span><input type="text" name="nrp" value="${esc(k.nrp||"")}"></label>
    <label class="f"><span>Bagian / seksi</span><input type="text" name="bagian" list="bagianDL" value="${esc(k.bagian||"")}"><datalist id="bagianDL">${bagianList().map(b=>`<option value="${esc(b)}">`).join("")}</datalist></label>
    <label class="f"><span>Jabatan</span><input type="text" name="jabatan" value="${esc(k.jabatan||"")}"></label>
@@ -1055,9 +1057,9 @@ function dlgKaryawan(k){
    <label class="f"><span>Status karyawan</span><select name="status"><option ${k.status==="Tetap"?"selected":""}>Tetap</option><option ${k.status==="Kontrak"?"selected":""}>Kontrak</option></select></label>
    <label class="f"><span>Kontrak berakhir (bila kontrak)</span><input type="date" name="kontrakAkhir" value="${esc(k.kontrakAkhir||"")}"></label>
   </div></div>${foot(isNew?"Tambah karyawan":"Simpan perubahan")}`, async f=>{
-    const v=Object.fromEntries(new FormData(f)); v.nama=v.nama.trim(); v.nik=v.nik.trim(); v.nrp=(v.nrp||"").trim();
+    const v=Object.fromEntries(new FormData(f)); v.nama=v.nama.trim(); v.nik=String(v.nik||"").trim(); if(S.noNik) delete v.nik; v.nrp=(v.nrp||"").trim();
     if(v.status!=="Kontrak") v.kontrakAkhir="";
-    const dup=[...S.list.values()].find(x=>x.nik===v.nik && (!k._id || x._id!==k._id));
+    const dup=v.nik&&[...S.list.values()].find(x=>x.nik===v.nik && (!k._id || x._id!==k._id));
     if(dup){ toast("NIK "+v.nik+" sudah terdaftar atas nama "+dup.nama+"."); return false; }
     const dupR=v.nrp && [...S.list.values()].find(x=>x.nrp===v.nrp && (!k._id || x._id!==k._id));
     if(dupR){ toast("NRP "+v.nrp+" sudah terdaftar atas nama "+dupR.nama+"."); return false; }
@@ -1089,7 +1091,7 @@ function dlgRiwayat(id,preJenis,preKet){
   const opts=jenisList().map(j=>`<option value="${j.key}" ${j.key===preJenis?"selected":""}>${esc(j.nama)}</option>`).join("");
   const hasJenis=jk=>(k.riwayat||[]).some(e=>e.jenis===jk);
   const defKet=preKet||(preJenis&&hasJenis(preJenis)?"MP":"B");
-  const f=openDlg(`<header><h2>Catat penerimaan APD</h2><p class="hint" style="margin:4px 0 0">${esc(k.nama)} · NIK ${esc(k.nik)}${k.nrp?" · NRP "+esc(k.nrp):""}</p></header><div class="body"><div class="grid2">
+  const f=openDlg(`<header><h2>Catat penerimaan APD</h2><p class="hint" style="margin:4px 0 0">${esc(k.nama)}${S.noNik?"":" · NIK "+esc(k.nik)}${k.nrp?" · NRP "+esc(k.nrp):""}</p></header><div class="body"><div class="grid2">
    <label class="f"><span>Jenis APD</span><select name="jenis" required>${opts}</select></label>
    <label class="f"><span>Keterangan</span><select name="ket">${Object.entries(KET).map(([c,t])=>`<option value="${c}" ${c===defKet?"selected":""}>${c} – ${t}</option>`).join("")}</select></label>
    <label class="f"><span>Tanggal terima</span><input type="date" name="tgl" required value="${todayISO()}"></label>
@@ -1183,11 +1185,11 @@ function dlgReturn(id){
 function dlgHapusK(id){
   const k=S.list.get(id); if(!k) return;
   const f=openDlg(`<header><h2>Hapus data karyawan?</h2></header><div class="body">
-   <p style="margin-top:0">Kartu APD <b>${esc(k.nama)}</b> (NIK ${esc(k.nik)}${k.nrp?", NRP "+esc(k.nrp):""}) beserta seluruh riwayat penerimaan dan pengembaliannya akan dihapus permanen dan tidak dapat dikembalikan.</p>
+   <p style="margin-top:0">Kartu APD <b>${esc(k.nama)}</b> (${S.noNik?"":"NIK "+esc(k.nik)+", "}${k.nrp?"NRP "+esc(k.nrp):""}) beserta seluruh riwayat penerimaan dan pengembaliannya akan dihapus permanen dan tidak dapat dikembalikan.</p>
    <p class="hint">Untuk karyawan yang resign, habis kontrak, atau tidak aktif, gunakan “Catat pengembalian APD” agar riwayatnya tetap tersimpan. Hapus hanya untuk data yang salah input atau ganda.</p>
-   <label class="f" style="margin-top:12px"><span>Ketik NIK ${esc(k.nik)} untuk konfirmasi</span><input type="text" name="konf" autocomplete="off" required></label>
+   <label class="f" style="margin-top:12px"><span>Ketik ${S.noNik?"NRP "+esc(k.nrp||k.nama):"NIK "+esc(k.nik)} untuk konfirmasi</span><input type="text" name="konf" autocomplete="off" required></label>
   </div><footer><button class="btn" value="cancel" formnovalidate>Batal</button><button class="btn primary" value="ok" style="background:var(--red);border-color:var(--red)">Hapus permanen</button></footer>`, async f=>{
-    if(f.konf.value.trim()!==String(k.nik)){ toast("NIK yang diketik tidak sesuai."); return false; }
+    if(f.konf.value.trim()!==String(S.noNik?(k.nrp||k.nama):k.nik)){ toast((S.noNik?"NRP":"NIK")+" yang diketik tidak sesuai."); return false; }
     await S.db.doc("karyawan/"+id).delete(); toast("Data "+k.nama+" dihapus."); go("karyawan");
   });
 }
@@ -2781,7 +2783,7 @@ function dlgMaster(k){
    <div class="body"><div class="grid3">
     <label class="f"><span>NRP</span><input type="text" name="nrp" value="${esc(k.nrp||"")}" inputmode="numeric"></label>
     <label class="f span2"><span>Nama karyawan</span><input type="text" name="nama" required value="${esc(k.nama||"")}"></label>
-    <label class="f"><span>NIK (KTP)</span><input type="text" name="nik" value="${esc(k.nik||"")}" inputmode="numeric"></label>
+    ${S.noNik?"":`<label class="f"><span>NIK (KTP)</span><input type="text" name="nik" value="${esc(k.nik||"")}" inputmode="numeric"></label>`}
     <label class="f"><span>Jenis kelamin</span><select name="jk">${o("","–",k.jk||"")}${o("L","Laki-laki",k.jk)}${o("P","Perempuan",k.jk)}</select></label>
     <label class="f"><span>Tanggal lahir</span><input type="date" name="tglLahir" value="${esc(k.tglLahir||"")}"></label>
     <label class="f"><span>Kode bagian</span><input type="text" name="kodeBagian" value="${esc(k.kodeBagian||"")}" placeholder="Misal M091N" style="text-transform:uppercase"></label>
@@ -2797,7 +2799,7 @@ function dlgMaster(k){
     <label class="f"><span>Tanggal keluar</span><input type="date" name="tglKeluar" value="${esc(k.tglKeluar||"")}"></label>
     <label class="f full"><span>Keterangan keluar</span><input type="text" name="ketKeluar" value="${esc(k.ketKeluar||"")}" placeholder="Misal: resign, habis kontrak, PHK"></label>
    </div><p class="hint" style="margin:10px 0 0">Kode bagian otomatis mengisi KU, shift, dan nama bagian bila kolomnya masih kosong.${keluar||isNew?"":" Pengembalian APD karyawan yang keluar tetap dicatat dari Kartu APD."}</p></div>${foot(isNew?"Tambah karyawan":"Simpan perubahan")}`, async f=>{
-    const v=Object.fromEntries(new FormData(f)); ["nama","nik","nrp","kodeBagian","bagian","jabatan","shift","ku","hp","ketKeluar"].forEach(x=>v[x]=String(v[x]||"").trim());
+    const v=Object.fromEntries(new FormData(f)); ["nama","nik","nrp","kodeBagian","bagian","jabatan","shift","ku","hp","ketKeluar"].forEach(x=>v[x]=String(v[x]||"").trim()); if(S.noNik) delete v.nik;
     v.nrp=msNrp(v.nrp); v.kodeBagian=v.kodeBagian.toUpperCase();
     const kb=kbParse(v.kodeBagian); if(kb){ if(!v.ku) v.ku=kb.ku; if(!v.shift) v.shift=kbShift(kb.sh); if(!v.bagian&&deptMap()[kb.dept]) v.bagian=deptMap()[kb.dept]; }
     if(v.status!=="Kontrak") v.kontrakAkhir="";
@@ -4329,11 +4331,11 @@ document.addEventListener("click",ev=>{ const t=ev.target.closest("#navToggle");
   else if(nav.classList.contains("open")&&!ev.target.closest("nav.side")){ nav.classList.remove("open"); const b=$("#navToggle"); if(b){ b.setAttribute("aria-expanded","false"); b.querySelector(".nt-l").textContent="Menu"; } } });
 
 // ---------- Sinkronisasi online (Firebase) dengan mode offline ----------
-// Data yang disinkronkan: kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, serta pengaturannya.
-// Tetap lokal: master karyawan (NIK dll), kartu APD, pembagian APD, track proses. Field "nik" tidak pernah dikirim.
+// Disinkronkan: karyawan & kartu APD, pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, beserta pengaturannya.
+// Tetap lokal: track proses. Field "nik" tidak pernah dikirim ke server (NIK hanya ada di komputer kantor).
 const FB_CFG={apiKey:"AIzaSyDO6zLuw8sMEWTExa1UuEFxeGvBSx6Pn8o",authDomain:"k3-dewasutratex.firebaseapp.com",projectId:"k3-dewasutratex",storageBucket:"k3-dewasutratex.firebasestorage.app",messagingSenderId:"864608893325",appId:"1:864608893325:web:f12a06b2a9d4506ce9e5c4"};
-const FB_VER="10.12.2", SYNC_COLS=["kotak","apar","peta","hira","kecelakaan"], SYNC_SET=["p3k","hira","peta","aparpic"], BLOB_MIN=40000, CHUNK=700000;
-const SY={fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
+const FB_VER="10.12.2", SYNC_COLS=["karyawan","pembagian","kotak","apar","peta","hira","kecelakaan"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
+const SY={ready:{},fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
 function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
 function syncKeys(){ return Object.keys(STORE).filter(syncKey); }
 try{ SY.dev=localStorage.getItem("k3.dev")||(Math.random().toString(36).slice(2,10)); localStorage.setItem("k3.dev",SY.dev); }catch(e){ SY.dev="dev"; }
@@ -4389,10 +4391,10 @@ function syErrText(e){ const c=(e&&e.code)||"", m=(e&&e.message)||String(e||"");
   if(/user-disabled/.test(c)) return "Akun ini dinonaktifkan di Firebase.";
   if(/not-supported|environment/.test(c)) return "Login tidak didukung di cara membuka ini ("+location.protocol+"). Buka aplikasi dari https://hrd-dewa.github.io/K3/.";
   return "Gagal masuk: "+(c?c+" – ":"")+m; }
-function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; }
+function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; SY.ready={}; }
 function sySubscribe(){ syUnsub(); if(!SY.db||!SY.user||!SY.meta.joined) return;
   [...SYNC_COLS,"pengaturan"].forEach(col=>{ const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
-    const un=q.onSnapshot({includeMetadataChanges:true},snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) syApply(col,ch.map(c=>c.doc)); syBadge(); },err=>{ SY.err=err.message; SY.live[col]=false; syBadge(); });
+    const un=q.onSnapshot({includeMetadataChanges:true},async snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) await syApply(col,ch.map(c=>c.doc)); if(!snap.metadata.fromCache&&!SY.ready[col]){ SY.ready[col]=true; syKick(); } syBadge(); },err=>{ SY.err=err.message; SY.live[col]=false; syBadge(); });
     SY.unsub.push(un); });
   syKick(); }
 const SY_PENDING=[];
@@ -4415,7 +4417,7 @@ function syKick(){ clearTimeout(SY.timer); SY.timer=setTimeout(syPush,600); syBa
 async function syPush(){ if(!SY.db||!SY.user||!SY.meta.joined||!navigator.onLine||SY._pushing) return; SY._pushing=true; SY.busy=1; syBadge();
   try{ const keys=[...new Set([...syncKeys(),...Object.keys(SY.meta.base)])], now=Date.now(); let n=0;
     for(const k of keys){ const lj=syLocalJson(k), base=SY.meta.base[k]??null; if(lj===base) continue; if(SY.inflight[k]&&now-SY.inflight[k]<30000) continue;
-      const [col,id]=k.split("/"); SY.inflight[k]=now;
+      const [col,id]=k.split("/"); if(!SY.ready[col]) continue; SY.inflight[k]=now;
       const work=(async()=>{ if(lj===null){ await SY.db.collection(col).doc(id).set({_del:true,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); delete SY.meta.base[k]; return; }
         if(lj.length>950000){ SY.err="Data "+k+" terlalu besar untuk disinkronkan"; return; }
         const hs=new Set(); syExt(syStrip(STORE[k]),hs); for(const h of hs) await syPutBlob(h);
@@ -4440,22 +4442,30 @@ function dlgSyncLogin(){ openDlg(`<header><h2>Masuk sinkronisasi online</h2><p c
     catch(e){ console.error(e); say(syErrText(e),"bad"); return false; } }); }
 function dlgSyncJoin(){ if(!SY.user||SY.meta.joined) return; const n=syncKeys().length;
   openDlg(`<header><h2>Sumber data perangkat ini</h2><p class="hint" style="margin:4px 0 0">Hanya ditanyakan sekali di setiap perangkat.</p></header><div class="body">
-   <label class="cb" style="align-items:flex-start;margin-bottom:12px"><input type="radio" name="m" value="up" ${n>200?"checked":""}> <span><b>Perangkat utama (komputer kantor)</b><br><span class="muted">Data kotak P3K, APAR, peta, HIRADC, dan kecelakaan di perangkat ini (${n} data) dikirim ke server dan digabung dengan data yang sudah ada di server.</span></span></label>
+   <label class="cb" style="align-items:flex-start;margin-bottom:12px"><input type="radio" name="m" value="up" ${n>200?"checked":""}> <span><b>Perangkat utama (komputer kantor)</b><br><span class="muted">Data karyawan & kartu APD (tanpa NIK), kotak P3K, APAR, peta, HIRADC, dan kecelakaan di perangkat ini (${n} data) dikirim ke server dan digabung dengan data yang sudah ada di server.</span></span></label>
    <label class="cb" style="align-items:flex-start"><input type="radio" name="m" value="down" ${n>200?"":"checked"}> <span><b>Perangkat tambahan (HP tim)</b><br><span class="muted">Data tersebut di perangkat ini diganti dengan data dari server. Kirim dulu hasil pemeriksaan yang belum terkirim lewat Mode lapangan bila ada.</span></span></label>
-   <p class="hint" style="margin:12px 0 0">Data karyawan, kartu APD, dan track proses tidak pernah dikirim ke server.</p></div>${foot("Lanjutkan")}`, async f=>{
+   <p class="hint" style="margin:12px 0 0">NIK karyawan dan track proses tidak pernah dikirim ke server. Di perangkat tambahan, NIK dan menu Track proses tidak ditampilkan.</p></div>${foot("Lanjutkan")}`, async f=>{
     const m=f.querySelector("[name=m]:checked").value; if(m==="down"){ syncKeys().forEach(k=>delete STORE[k]); SY.meta.base={}; SY.meta.seen={}; await persist(); notify(); } else { SY.meta.base={}; SY.meta.seen={}; }
-    SY.meta.joined=m; syMetaSave(); sySubscribe(); toast(m==="down"?"Mengambil data dari server…":"Mengirim data ke server…"); }); }
+    SY.meta.joined=m; SY.meta.v=SY_VER; syMetaSave(); syRole(); sySubscribe(); toast(m==="down"?"Mengambil data dari server…":"Mengirim data ke server…"); }); }
 function dlgSync(){ const s=syState(), n=syDirty();
   openDlg(`<header><h2>Sinkronisasi online</h2></header><div class="body"><p style="margin:0 0 10px"><span class="syncb ${s.c}" style="display:inline-flex"><i></i><span>${esc(s.t)}</span></span></p>
    <dl class="kv"><dt>Akun</dt><dd>${SY.user?esc(SY.user.email||""):"belum masuk"}</dd><dt>Internet</dt><dd>${navigator.onLine?"tersambung":"tidak ada"}</dd><dt>Belum terkirim</dt><dd>${n} data</dd><dt>Sinkron terakhir</dt><dd>${esc(SY.lastOk||"–")}</dd><dt>Peran perangkat</dt><dd>${SY.meta.joined==="up"?"perangkat utama":SY.meta.joined==="down"?"perangkat tambahan":"–"}</dd></dl>
    ${SY.err?`<p class="hint" style="color:var(--amber);margin:8px 0 0">Catatan: ${esc(SY.err)}</p>`:""}
-   <p class="hint" style="margin:10px 0 0">Yang disinkronkan: kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi. Data karyawan (termasuk NIK), kartu APD, dan track proses tetap hanya di perangkat ini. Saat offline, program tetap bisa dipakai dan perubahan dikirim otomatis begitu internet kembali.</p>
+   <p class="hint" style="margin:10px 0 0">Yang disinkronkan: karyawan & kartu APD (tanpa NIK), pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi. NIK dan track proses tetap hanya di komputer kantor. Saat offline, program tetap bisa dipakai dan perubahan dikirim otomatis begitu internet kembali.</p>
    <div class="row" style="margin-top:12px;gap:6px">${SY.user?`<button type="button" class="btn" data-act="sy-now">Sinkronkan sekarang</button><button type="button" class="btn" data-act="sy-out">Keluar</button>`:`<button type="button" class="btn primary" data-act="sy-in">Masuk</button>`}</div></div><footer><button class="btn" value="cancel">Tutup</button></footer>`, async ()=>{}); }
 document.addEventListener("click",ev=>{ if(ev.target.closest("#syncBadge")){ if(!SY.user) dlgSyncLogin(); else if(!SY.meta.joined) dlgSyncJoin(); else dlgSync(); return; }
   const t=ev.target.closest("[data-act]"); if(!t) return;
   if(t.dataset.act==="sy-in"){ $("#dlg").close(); dlgSyncLogin(); } else if(t.dataset.act==="sy-now"){ $("#dlg").close(); sySubscribe(); syKick(); toast("Sinkronisasi dijalankan."); }
   else if(t.dataset.act==="sy-out"){ $("#dlg").close(); syUnsub(); SY.auth&&SY.auth.signOut(); toast("Keluar dari sinkronisasi. Data tetap tersimpan di perangkat ini."); } });
-async function syInit(){ const m=await syIdbGet()||(()=>{ try{ return JSON.parse(localStorage.getItem("k3.syncmeta")||"null"); }catch(e){ return null; } })(); if(m) SY.meta=Object.assign(SY.meta,m); SY.loaded=true; syIndexLocalBlobs(); syBadge(); if(navigator.onLine) syBoot(); }
+async function syInit(){ const m=await syIdbGet()||(()=>{ try{ return JSON.parse(localStorage.getItem("k3.syncmeta")||"null"); }catch(e){ return null; } })(); if(m) SY.meta=Object.assign(SY.meta,m); SY.loaded=true;
+  if(SY.meta.joined&&(SY.meta.v||1)<SY_VER){ const isNew=k=>/^(karyawan|pembagian)\//.test(k)||["pengaturan/apd","pengaturan/masaPakai","pengaturan/matriks"].includes(k);
+    if(SY.meta.joined==="down"){ Object.keys(STORE).filter(isNew).forEach(k=>delete STORE[k]); await persist(); notify(); }
+    Object.keys(SY.meta.base).filter(isNew).forEach(k=>delete SY.meta.base[k]); ["karyawan","pembagian"].forEach(c=>delete SY.meta.seen[c]); delete SY.meta.seen.pengaturan; SY.meta.v=SY_VER; syMetaSave(); }
+  syRole(); syIndexLocalBlobs(); syBadge(); if(navigator.onLine) syBoot(); }
+
+// ---- perangkat tambahan (HP): NIK disembunyikan, menu Track proses tidak tersedia
+function syRole(){ const hp=SY.meta.joined==="down"; S.noNik=hp; document.body.classList.toggle("hprole",hp); if(hp&&String(location.hash).startsWith("#track")){ location.hash="#ringkasan"; } if(S.loaded) render(); }
+window.addEventListener("hashchange",()=>{ if(S.noNik&&String(location.hash).startsWith("#track")){ toast("Track proses hanya tersedia di komputer kantor."); location.hash="#ringkasan"; } });
 
 // ---------- penyimpanan lokal ----------
 let STORE={}; let STORAGE_LABEL="penyimpanan browser"; let idb=null;
