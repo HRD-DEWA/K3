@@ -865,7 +865,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.3 · 31/10/2026 (menu HP tanpa Track proses)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.4 · 31/10/2026 (ganti peran perangkat)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -4402,7 +4402,7 @@ async function syApply(col,docs){ let changed=false, maxT=SY.meta.seen[col]||0;
   for(const d of docs){ const data=d.data()||{}; const t=data._t&&data._t.toMillis?data._t.toMillis():0; if(t>maxT) maxT=t;
     if(col==="pengaturan"&&!SYNC_SET.includes(d.id)) continue; const k=col+"/"+d.id, base=SY.meta.base[k]??null, lj=syLocalJson(k);
     if(data._del){ if(lj===null){ delete SY.meta.base[k]; continue; } if(lj===base){ delete STORE[k]; delete SY.meta.base[k]; changed=true; } else delete SY.meta.base[k]; continue; }
-    const rj=data.j; if(typeof rj!=="string"||rj===base) continue; let R; try{ R=JSON.parse(rj); }catch(e){ continue; }
+    const rj=data.j; if(typeof rj!=="string"||rj===base) continue; if(SY.force){ SY.meta.base[k]=rj; continue; } let R; try{ R=JSON.parse(rj); }catch(e){ continue; }
     const need=new Set(); syNeedBlobs(R,need); if(need.size){ const ok=await syFetchBlobs([...need]); if(!ok){ SY_PENDING.push([col,d]); continue; } }
     if(lj===rj){ SY.meta.base[k]=rj; continue; }
     const local=STORE[k]; let merged;
@@ -4424,7 +4424,7 @@ async function syPush(){ if(!SY.db||!SY.user||!SY.meta.joined||!navigator.onLine
         await SY.db.collection(col).doc(id).set({j:lj,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); SY.meta.base[k]=lj; })();
       await Promise.race([work,new Promise(r=>setTimeout(r,20000))]).catch(e=>{ SY.err=e.message||String(e); }); delete SY.inflight[k]; n++; if(n%20===0){ syMetaSave(); syBadge(); } }
     syMetaSave(); if(SY_PENDING.length){ const p=SY_PENDING.splice(0); for(const [col,d] of p) await syApply(col,[d]); }
-    if(!syDirty()) SY.lastOk=new Date().toTimeString().slice(0,5);
+    if(!syDirty()){ SY.lastOk=new Date().toTimeString().slice(0,5); if(SY.force&&[...SYNC_COLS,"pengaturan"].every(c=>SY.ready[c])){ SY.force=false; toast("Data server sudah disamakan dengan perangkat ini."); } }
   }finally{ SY._pushing=false; SY.busy=0; syBadge(); if(syDirty()&&navigator.onLine) setTimeout(syKick,5000); } }
 // ---- dialog
 function dlgSyncLogin(){ openDlg(`<header><h2>Masuk sinkronisasi online</h2><p class="hint" style="margin:4px 0 0">Gunakan akun yang didaftarkan di Firebase (Authentication → Users).</p></header><div class="body"><div class="grid2">
@@ -4452,10 +4452,13 @@ function dlgSync(){ const s=syState(), n=syDirty();
    <dl class="kv"><dt>Akun</dt><dd>${SY.user?esc(SY.user.email||""):"belum masuk"}</dd><dt>Internet</dt><dd>${navigator.onLine?"tersambung":"tidak ada"}</dd><dt>Belum terkirim</dt><dd>${n} data</dd><dt>Sinkron terakhir</dt><dd>${esc(SY.lastOk||"–")}</dd><dt>Peran perangkat</dt><dd>${SY.meta.joined==="up"?"perangkat utama":SY.meta.joined==="down"?"perangkat tambahan":"–"}</dd></dl>
    ${SY.err?`<p class="hint" style="color:var(--amber);margin:8px 0 0">Catatan: ${esc(SY.err)}</p>`:""}
    <p class="hint" style="margin:10px 0 0">Yang disinkronkan: karyawan & kartu APD (tanpa NIK), pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi. NIK dan track proses tetap hanya di komputer kantor. Saat offline, program tetap bisa dipakai dan perubahan dikirim otomatis begitu internet kembali.</p>
-   <div class="row" style="margin-top:12px;gap:6px">${SY.user?`<button type="button" class="btn" data-act="sy-now">Sinkronkan sekarang</button><button type="button" class="btn" data-act="sy-out">Keluar</button>`:`<button type="button" class="btn primary" data-act="sy-in">Masuk</button>`}</div></div><footer><button class="btn" value="cancel">Tutup</button></footer>`, async ()=>{}); }
+   <div class="row" style="margin-top:12px;gap:6px">${SY.user?`<button type="button" class="btn" data-act="sy-now">Sinkronkan sekarang</button><button type="button" class="btn" data-act="sy-role">Ganti peran perangkat</button><button type="button" class="btn" data-act="sy-out">Keluar</button>`:`<button type="button" class="btn primary" data-act="sy-in">Masuk</button>`}</div>
+   ${SY.user&&SY.meta.joined==="up"?`<p style="margin:14px 0 0"><button type="button" class="linkbtn" data-act="sy-force" style="color:var(--red)">Timpa data server dengan data perangkat ini…</button></p>`:""}</div><footer><button class="btn" value="cancel">Tutup</button></footer>`, async ()=>{}); }
 document.addEventListener("click",ev=>{ if(ev.target.closest("#syncBadge")){ if(!SY.user) dlgSyncLogin(); else if(!SY.meta.joined) dlgSyncJoin(); else dlgSync(); return; }
   const t=ev.target.closest("[data-act]"); if(!t) return;
   if(t.dataset.act==="sy-in"){ $("#dlg").close(); dlgSyncLogin(); } else if(t.dataset.act==="sy-now"){ $("#dlg").close(); sySubscribe(); syKick(); toast("Sinkronisasi dijalankan."); }
+  else if(t.dataset.act==="sy-role"){ $("#dlg").close(); dlgSyncRole(); }
+  else if(t.dataset.act==="sy-force"){ $("#dlg").close(); dlgSyncForce(); }
   else if(t.dataset.act==="sy-out"){ $("#dlg").close(); syUnsub(); SY.auth&&SY.auth.signOut(); toast("Keluar dari sinkronisasi. Data tetap tersimpan di perangkat ini."); } });
 async function syInit(){ const m=await syIdbGet()||(()=>{ try{ return JSON.parse(localStorage.getItem("k3.syncmeta")||"null"); }catch(e){ return null; } })(); if(m) SY.meta=Object.assign(SY.meta,m); SY.loaded=true;
   if(SY.meta.joined&&(SY.meta.v||1)<SY_VER){ const isNew=k=>/^(karyawan|pembagian)\//.test(k)||["pengaturan/apd","pengaturan/masaPakai","pengaturan/matriks"].includes(k);
@@ -4466,6 +4469,19 @@ async function syInit(){ const m=await syIdbGet()||(()=>{ try{ return JSON.parse
 // ---- perangkat tambahan (HP): NIK disembunyikan, menu Track proses tidak tersedia
 function syRole(){ const hp=SY.meta.joined==="down"; S.noNik=hp; document.body.classList.toggle("hprole",hp); if(hp&&String(location.hash).startsWith("#track")){ location.hash="#ringkasan"; } if(S.loaded) render(); }
 window.addEventListener("hashchange",()=>{ if(S.noNik&&String(location.hash).startsWith("#track")){ toast("Track proses hanya tersedia di komputer kantor."); location.hash="#ringkasan"; } });
+
+function dlgSyncRole(){ const cur=SY.meta.joined;
+  openDlg(`<header><h2>Ganti peran perangkat</h2><p class="hint" style="margin:4px 0 0">Sekarang: ${cur==="up"?"perangkat utama (komputer kantor)":"perangkat tambahan (HP tim)"}</p></header><div class="body">
+   <label class="cb" style="align-items:flex-start;margin-bottom:12px"><input type="radio" name="r" value="down" ${cur!=="down"?"checked":""}> <span><b>Perangkat tambahan (HP tim)</b><br><span class="muted">NIK dan menu Track proses tidak ditampilkan. NIK dan data track proses yang tersimpan di perangkat ini dihapus dari perangkat ini saja. Data lain tetap tersinkron.</span></span></label>
+   <label class="cb" style="align-items:flex-start"><input type="radio" name="r" value="up" ${cur==="down"?"checked":""}> <span><b>Perangkat utama (komputer kantor)</b><br><span class="muted">NIK dan Track proses ditampilkan. Gunakan hanya untuk komputer di ruang HRD.</span></span></label></div>${foot("Simpan peran")}`, async f=>{
+    const r=f.querySelector("[name=r]:checked").value; if(r===cur) return;
+    if(r==="down"){ Object.keys(STORE).forEach(k=>{ if(/^track\//.test(k)||k==="pengaturan/track") delete STORE[k]; else if(/^karyawan\//.test(k)&&STORE[k]&&"nik" in STORE[k]) delete STORE[k].nik; }); await persist(); }
+    SY.meta.joined=r; syMetaSave(); syRole(); notify(); toast("Peran perangkat: "+(r==="down"?"perangkat tambahan (HP tim)":"perangkat utama")+"."); }); }
+function dlgSyncForce(){ openDlg(`<header><h2>Timpa data server?</h2></header><div class="body"><p style="margin:0 0 8px">Semua data tersinkron di server (karyawan & APD, kotak P3K, APAR, peta, HIRADC, kecelakaan) akan <b>disamakan persis</b> dengan data di perangkat ini. Data di server yang tidak ada di perangkat ini akan dihapus, dan perangkat lain akan ikut menerima versi ini.</p>
+   <p class="hint" style="margin:0">Gunakan bila data di server tercampur, misalnya setelah HP terlanjur didaftarkan sebagai perangkat utama. Pastikan data di perangkat ini sudah benar (bila perlu pulihkan dulu dari file backup).</p>
+   <label class="f" style="margin-top:12px"><span>Ketik TIMPA untuk konfirmasi</span><input type="text" name="k" autocomplete="off" required></label></div>${foot("Timpa data server")}`, async f=>{
+    if(f.k.value.trim().toUpperCase()!=="TIMPA"){ toast("Ketik TIMPA untuk konfirmasi."); return false; }
+    SY.force=true; SY.meta.base={}; SY.meta.seen={}; syMetaSave(); sySubscribe(); toast("Menyamakan data server dengan perangkat ini…"); }); }
 
 // ---------- penyimpanan lokal ----------
 let STORE={}; let STORAGE_LABEL="penyimpanan browser"; let idb=null;
