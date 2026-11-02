@@ -475,6 +475,10 @@ body.hprole nav.side [data-navg="track"],body.hprole nav.side .navgrp[data-navg=
 @media (max-width:700px){.p2prev{padding:6mm;font-size:90%}}
 .p2doc .p2kv td,.p2doc .p2hd td,.p2doc .p2sg td,.p2doc .p2kop td{border:0!important;background:none!important}
 .p2doc td,.p2doc th{color:#000}
+.p2orow{display:grid;grid-template-columns:180px 1fr 1fr auto;gap:8px 12px;align-items:end;padding:8px 0;border-bottom:1px dashed var(--line)}
+.p2orow .p2onum{display:none}
+@media (max-width:760px){.p2orow{grid-template-columns:1fr}}
+.p2doc .p2c{text-align:center;margin:2mm 0 4mm}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -869,8 +873,8 @@ function render(){
   else if(S.route==="peta") m.innerHTML=ro+viewPeta();
   else if(S.route==="apar") m.innerHTML=ro+viewApar();
   else if(S.route==="p2k3") m.innerHTML=ro+viewP2k3();
-  else if(S.route==="p2k3-org") m.innerHTML=viewP2Info("org");
-  else if(S.route==="p2k3-keg") m.innerHTML=viewP2Info("keg");
+  else if(S.route==="p2k3-org") m.innerHTML=viewP2Org();
+  else if(S.route==="p2k3-keg") m.innerHTML=viewP2Keg();
   else if(S.route==="p2k3-set") m.innerHTML=ro+viewP2Set();
   else if(S.route.startsWith("p2k3-e-")) m.innerHTML=ro+viewP2Edit(S.route);
   else if(S.route.startsWith("p2k3-r-")) m.innerHTML=ro+viewP2Review(S.route);
@@ -898,7 +902,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.6 · 02/11/2026 (P2K3)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.7 · 02/11/2026 (struktur & kegiatan P2K3)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -1628,6 +1632,7 @@ function pickDone(inp,k){ const key=inp.dataset.pick; inp.parentElement.querySel
   if(key.startsWith("lk-")||key.startsWith("lku-")) return lkPick(inp,k);
   if(key==="pme-pem"||key==="pme-pic"){ const f=inp.closest("form"), n=f&&f.elements[key==="pme-pem"?"pemeriksa":"pic"]; if(n) n.value=k.nama; return; }
   if(key==="ap-pem"||key==="ap-pic"||key==="apic-nrp") return apPick(inp,k);
+  if(key.startsWith("p2o-")) return p2OrgPick(inp,k);
   if(key==="kx-nrp"){ const f=inp.closest("form"); if(f&&f.pengguna) f.pengguna.value=k.nama; return; }
   if(key.startsWith("cku-")){ const bc=key.slice(4), v=S.ck&&S.ck.st[bc]; if(!v) return; v.nrp=k.nrp; v.nama=k.nama; const n=document.querySelector(`[data-cku="${CSS.escape(bc)}"][data-f="nama"]`); if(n) n.value=k.nama; return; }
   if(key==="box-pic"){ const f=inp.closest("form"); if(f&&f.picNama) f.picNama.value=k.nama; return; }
@@ -3590,7 +3595,7 @@ document.addEventListener("DOMContentLoaded",()=>dmyScan(document)); setTimeout(
 
 // ---------- Saran nama karyawan pada kolom Nama (pasangan kolom NRP) ----------
 function nameKey(el){ if(!el||el.tagName!=="INPUT"||el.type!=="text") return null; const d=el.dataset;
-  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.apf==="pem") return "ap-pem"; if(d.apf==="pic"&&document.querySelector('[data-pick="ap-pic"]')) return "ap-pic"; if(el.name==="nama"&&el.form&&el.form.querySelector('[data-pick="apic-nrp"]')) return "apic-nrp"; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
+  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.p2on) return "p2o-"+d.p2on; if(d.apf==="pem") return "ap-pem"; if(d.apf==="pic"&&document.querySelector('[data-pick="ap-pic"]')) return "ap-pic"; if(el.name==="nama"&&el.form&&el.form.querySelector('[data-pick="apic-nrp"]')) return "apic-nrp"; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
   if(d.cku&&d.f==="nama") return "cku-"+d.cku; if(d.lku&&d.f==="nama") return "lku-"+d.lku;
   if(d.p==="pelapor.nama") return "pelapor"; if(d.p==="korban.nama") return "korban"; const sm=(d.p||"").match(/^saksi\.(\d)\.nama$/); if(sm) return "saksi"+sm[1];
   if(el.name==="picNama"&&el.form&&el.form.querySelector('[data-pick="box-pic"]')) return "box-pic"; if(el.name==="pengguna"&&el.form&&el.form.querySelector('[data-pick="kx-nrp"]')) return "kx-nrp";
@@ -4382,7 +4387,7 @@ function p2Put(o,path,v){ const ks=path.split("."); let x=o; ks.slice(0,-1).forE
 function p2Bulan(ym){ return ym?BULAN[+ym.slice(5)-1]+" "+ym.slice(0,4):"…"; }
 function p2Blank(){ const s=p2Set(), last=[...S.p2.values()].sort((a,b)=>(b.dibuat||"").localeCompare(a.dibuat||""))[0], y=todayISO().slice(0,4), h1=+todayISO().slice(5,7)<=6;
   const per=h1?{dari:(+y-1)+"-07",sampai:(+y-1)+"-12"}:{dari:y+"-01",sampai:y+"-06"};
-  const r={status:"draft",no:"",lampiran:s.lampiran,perihal:"Laporan Kegiatan P2K3",kepada:s.kepada,di:s.di,kota:s.kota,tgl:todayISO(),periode:per,ketua:s.ketua,tembusan:s.tembusan.map(t=>({id:p2id(),t})),
+  const r={status:"draft",no:"",lampiran:s.lampiran,perihal:"Laporan Kegiatan P2K3",kepada:s.kepada,di:s.di,kota:s.kota,tgl:todayISO(),periode:per,ketua:s.ketua||p2Org().ketua.nama||"",tembusan:s.tembusan.map(t=>({id:p2id(),t})),
     A:Object.assign({},s.A,{jmlTK:"",jmlL:"",jmlP:""}),B:{personil:[],lembaga:[],sarana:[],kk:[],pak:"",kkUraian:""},C:{rapat:[]},D:[{id:p2id(),t:""}],E:[{id:p2id(),t:""}]};
   P2_C.forEach(([k])=>{ if(k!=="rapat") r.C[k]=""; });
   if(last){ ["personil","lembaga"].forEach(k=>r.B[k]=clone(last.B[k]||[]).map(x=>Object.assign(x,{id:p2id()}))); ["kebijakan","program"].forEach(k=>r.C[k]=last.C[k]||""); }
@@ -4428,7 +4433,7 @@ function viewP2Edit(route){ const id=route.slice(7), r0=S.p2.get(id); if(!r0) re
     <h3 class="p2h">2. Data kelembagaan/unit/organisasi K3 (selain P2K3)</h3>${p2Tbl(r,"B.lembaga",P2_TBL.lembaga)}
     <h3 class="p2h">3. Data sarana dan prasarana K3</h3>${p2Tbl(r,"B.sarana",P2_TBL.sarana,"sarana")}
     <h3 class="p2h">4. Data kecelakaan kerja dan penyakit akibat kerja</h3>${p2Tbl(r,"B.kk",P2_TBL.kk,"kk")}<div class="grid2" style="margin-top:8px">${inp("B.pak","Penyakit akibat kerja (PAK)",null,"Misal: Nihil")}<span></span>${ta("B.kkUraian","Uraian singkat kecelakaan & tindak lanjut","",3)}</div></section>
-   <section class="panel" id="p2-sC"><h2>C. Kegiatan K3</h2>
+   <section class="panel" id="p2-sC"><div class="row" style="justify-content:space-between"><h2 style="margin:0">C. Kegiatan K3</h2><button type="button" class="btn small primary" data-p2auto="keg">Ambil dari menu Kegiatan K3</button></div><p class="hint" style="margin:4px 0 8px">Kegiatan berstatus selesai pada periode laporan dimasukkan ke butir yang sesuai. Isinya tetap bisa diedit di sini.</p>
     <h3 class="p2h">1. Rapat P2K3</h3>${p2Tbl(r,"C.rapat",P2_TBL.rapat)}
     ${P2_C.slice(1).map(([k,l],i)=>`<h3 class="p2h">${i+2}. ${l}</h3>${ta("C."+k,"Uraian","",k==="kebijakan"?3:4)}${["pemeriksaan","hira","kesehatan"].includes(k)?`<button type="button" class="btn small" data-p2auto="${k}" style="margin-top:6px">Isi otomatis dari data program</button>`:""}`).join("")}</section>
    <section class="panel" id="p2-sD"><h2>D. Hambatan</h2>${list("D","Hambatan")}<h2 style="margin-top:16px">E. Rekomendasi</h2>${list("E","Rekomendasi")}</section>
@@ -4436,7 +4441,7 @@ function viewP2Edit(route){ const id=route.slice(7), r0=S.p2.get(id); if(!r0) re
     <div class="row" style="margin-top:14px"><button class="btn primary" data-go="p2k3-r-${esc(id)}">Tinjau & cetak ›</button></div></section>`; }
 // ---- isi otomatis dari data program
 function p2InPer(t,r){ const a=(r.periode.dari||"0000-00")+"-01", b=(r.periode.sampai||"9999-12")+"-31"; return t&&t>=a&&t<=b; }
-function p2Auto(r,k){ const per=`${p2Bulan(r.periode.dari)} – ${p2Bulan(r.periode.sampai)}`;
+function p2Auto(r,k){ if(k==="keg") return p2AutoKeg(r); const per=`${p2Bulan(r.periode.dari)} – ${p2Bulan(r.periode.sampai)}`;
   if(k==="tk"){ const ak=[...S.list.values()].filter(x=>x.aktif!==false&&x.status!=="Keluar"); r.A.jmlTK=String(ak.length); const L=ak.filter(x=>(x.jk||"")==="L").length, P=ak.filter(x=>(x.jk||"")==="P").length; r.A.jmlL=L?String(L):""; r.A.jmlP=P?String(P):""; return "Jumlah tenaga kerja aktif: "+ak.length+" orang."; }
   if(k==="sarana"){ const ap=apList().filter(a=>(a.status||"aktif")!=="afkir"), by=j=>ap.filter(a=>(a.jenis||"Ringan")===j), bad=xs=>xs.filter(a=>apBad(apLast(a)).length).length, rows=[];
     [["Ringan","APAR"],["Beroda","APAB (APAR beroda)"],["Thermatic","APAR thermatic"]].forEach(([j,l])=>{ const xs=by(j); if(xs.length) rows.push({jenis:l,jumlah:String(xs.length),kondisi:bad(xs)?bad(xs)+" unit hasil pemeriksaan terakhir tidak baik":"Baik"}); });
@@ -4515,11 +4520,112 @@ document.addEventListener("click",ev=>{ const c=p2Cur(), keep=()=>{ const y=wind
     case "p2-final": { const r=S.p2.get(t.dataset.id); r.status=r.status==="final"?"draft":"final"; p2Save(t.dataset.id,r,true); setTimeout(()=>{ notify(); },600); toast(r.status==="final"?"Laporan ditandai final.":"Laporan dikembalikan ke draf."); keep(); break; }
     case "p2-out": p2Out(t.dataset.fmt); break; } });
 
+// ---------- P2K3: Struktur & anggota, Kegiatan K3 ----------
+function p2Org(){ const d=STORE["pengaturan/p2k3org"]||{}; return {skNo:d.skNo||"",skTgl:d.skTgl||"",masa:d.masa||"",ketua:Object.assign({nrp:"",nama:"",jab:""},d.ketua||{}),sekretaris:Object.assign({nrp:"",nama:"",jab:""},d.sekretaris||{}),anggota:(d.anggota||[]).map(a=>Object.assign({id:p2id(),nrp:"",nama:"",jab:""},a)),diubah:d.diubah||""}; }
+function p2KopHtml(){ const K=p2Set().kop||{}; return `<table class="p2kop"><tr><td class="p2kl"><svg class="smooth" viewBox="0 0 285 190" style="width:34mm;height:22.7mm"><image href="${P2_LOGO}" x="0" y="0" width="285" height="190"/></svg></td><td class="p2kt"><div class="p2kn">${esc(K.nama||"")}</div>${[K.l1,K.l2,K.l3].filter(Boolean).map(x=>`<div class="p2ka">${esc(x)}</div>`).join("")}</td></tr></table><p class="p2line"><svg class="smooth" viewBox="0 0 1700 22" preserveAspectRatio="none" style="width:100%;height:2.2mm"><rect x="0" y="0" width="1700" height="8" fill="#000"/><rect x="0" y="14" width="1700" height="4" fill="#000"/></svg></p>`; }
+function p2TglPanjang(t){ if(!t) return ""; const d=new Date(t+"T00:00:00"); return d.getDate()+" "+BULAN[d.getMonth()]+" "+d.getFullYear(); }
+async function p2DocOut(html,base,fmtX,title){ let st=null;
+  try{ if(fmtX==="print"){ const pa=$("#printArea"); pa.innerHTML=html; const ps=document.createElement("style"); ps.textContent="@page{size:A4 portrait;margin:15mm 18mm}"; document.head.appendChild(ps); document.body.classList.add("printing"); const done=()=>{ document.body.classList.remove("printing"); ps.remove(); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done); setTimeout(()=>{ window.print(); setTimeout(done,500); },80); return; }
+    toast("Menyiapkan file "+(fmtX==="docx"?"Word":fmtX.toUpperCase())+"…");
+    if(fmtX==="pdf"){ st=xStage(html); st.style.width="174mm"; await new Promise(z=>setTimeout(z,60)); await saveBlob(base+".pdf",await pdfFromStage(st,{sel:".p2doc"}),"application/pdf"); }
+    else { const m=xModel(null,html,".p2doc",174); st=m.st; await new Promise(z=>setTimeout(z,60)); const imgs=await xImages(m.model);
+      if(fmtX==="docx") await saveBlob(base+".docx",buildDocx(m.model,imgs,title),"application/vnd.openxmlformats-officedocument.wordprocessingml.document"); else await saveBlob(base+".odt",buildOdtForm(m.model,imgs,title),"application/vnd.oasis.opendocument.text"); }
+  }catch(e){ console.error(e); toast("File gagal dibuat. "+(e.message||"")); } finally{ if(st) st.remove(); } }
+const p2OutBtns=(act,extra)=>`<div class="row" style="gap:6px"><button class="btn primary" data-act="${act}" data-fmt="print"${extra||""}>Cetak</button><span class="dlrow"><span>Unduh</span><button class="btn" data-act="${act}" data-fmt="pdf"${extra||""}>PDF</button><button class="btn" data-act="${act}" data-fmt="docx"${extra||""}>Word</button><button class="btn" data-act="${act}" data-fmt="odt"${extra||""}>ODT</button></span></div>`;
+// ---- Struktur & anggota
+function p2OrgRows(o){ return [["Ketua",o.ketua],["Sekretaris",o.sekretaris],...o.anggota.map(a=>["Anggota",a])].filter(([,p])=>p&&(p.nama||p.nrp)); }
+function p2KInfo(nrp){ const k=nrp&&kByNrp(nrp); return k?[k.jabatan,k.bagian].filter(Boolean).join(" · "):""; }
+function viewP2Org(){ const ed=!!S.p2oEdit, o=ed?S.p2oDraft:p2Org();
+  if(!ed){ const rows=p2OrgRows(o);
+    return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Struktur & anggota P2K3</h1>${S.canWrite?`<button class="btn primary" data-act="p2o-edit">Ubah</button>`:""}</div>
+     <p class="sub">${o.skNo?"SK penetapan "+esc(o.skNo)+(o.skTgl?" tanggal "+esc(p2TglPanjang(o.skTgl)):""):"SK penetapan belum diisi"}${o.masa?" · masa bakti "+esc(o.masa):""}${o.diubah?" · diperbarui "+esc(fmt(o.diubah.slice(0,10))):""}</p>
+     <section class="panel hdl">${p2OutBtns("p2o-out")}</section>
+     <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>No</th><th>Jabatan dalam P2K3</th><th>Nama</th><th>NRP</th><th>Jabatan / bagian</th></tr></thead><tbody>
+      ${rows.map(([j,p],i)=>`<tr><td class="num">${i+1}</td><td><b>${j}</b></td><td>${esc(p.nama||"–")}</td><td class="num">${esc(p.nrp||"–")}</td><td>${esc(p.jab||p2KInfo(p.nrp)||"–")}</td></tr>`).join("")||`<tr><td colspan="5" class="empty">Belum ada susunan P2K3. Klik Ubah untuk mengisi Ketua, Sekretaris, dan anggota.</td></tr>`}</tbody></table></div></div>`; }
+  const person=(key,label,p)=>`<div class="p2orow">${picker("p2o-"+key,"NRP "+label,p.nrp)}<label class="f"><span>Nama ${label}</span><input type="text" data-p2on="${key}" value="${esc(p.nama)}"></label><label class="f"><span>Jabatan / bagian</span><input type="text" data-p2oj="${key}" value="${esc(p.jab)}" placeholder="Otomatis dari Master karyawan"></label></div>`;
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Ubah struktur & anggota P2K3</h1><div class="row" style="gap:6px"><button class="btn" data-act="p2o-cancel">Batal</button><button class="btn primary" data-act="p2o-done">Selesai</button></div></div>
+   <section class="panel"><h2>SK penetapan</h2><div class="grid3"><label class="f"><span>Nomor SK</span><input type="text" data-p2of="skNo" value="${esc(o.skNo)}"></label><label class="f"><span>Tanggal SK</span><input type="date" data-p2of="skTgl" value="${esc(o.skTgl)}"></label><label class="f"><span>Masa bakti</span><input type="text" data-p2of="masa" value="${esc(o.masa)}" placeholder="Misal: 2026–2028"></label></div></section>
+   <section class="panel"><h2>Pengurus</h2>${person("ketua","Ketua",o.ketua)}${person("sekretaris","Sekretaris",o.sekretaris)}</section>
+   <section class="panel"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Anggota (${o.anggota.length})</h2><button class="btn small" data-act="p2o-add">+ Tambah anggota</button></div>
+    ${o.anggota.map((a,i)=>`<div class="p2orow"><span class="num p2onum">${i+1}.</span>${picker("p2o-a"+i,"NRP anggota",a.nrp)}<label class="f"><span>Nama anggota</span><input type="text" data-p2on="a${i}" value="${esc(a.nama)}"></label><label class="f"><span>Jabatan / bagian</span><input type="text" data-p2oj="a${i}" value="${esc(a.jab)}" placeholder="Otomatis dari Master karyawan"></label><button class="btn small danger" data-act="p2o-del" data-i="${i}" aria-label="Hapus anggota">✕</button></div>`).join("")||`<p class="muted" style="margin:10px 0 0">Belum ada anggota.</p>`}
+    <p class="hint" style="margin:10px 0 0">Ketik NRP atau nama: saran karyawan muncul, dan nama, jabatan, serta bagian terisi otomatis.</p></section>
+   <div class="row" style="justify-content:flex-end;gap:6px"><button class="btn" data-act="p2o-cancel">Batal</button><button class="btn primary" data-act="p2o-done">Selesai</button></div>`; }
+function p2oSlot(key){ const o=S.p2oDraft; if(!o) return null; if(key==="ketua"||key==="sekretaris") return o[key]; const m=key.match(/^a(\d+)$/); return m?o.anggota[+m[1]]:null; }
+function p2OrgPick(inp,k){ const key=inp.dataset.pick.slice(4), p=p2oSlot(key); if(!p) return; p.nrp=k.nrp; p.nama=k.nama; p.jab=[k.jabatan,k.bagian].filter(Boolean).join(" · ");
+  const n=document.querySelector(`[data-p2on="${key}"]`), j=document.querySelector(`[data-p2oj="${key}"]`); if(n) n.value=p.nama; if(j) j.value=p.jab; }
+function p2OrgHtml(){ const o=p2Org(), rows=p2OrgRows(o), s=p2Set();
+  return `<div class="p2doc">${p2KopHtml()}<p class="p2c"><b>SUSUNAN PANITIA PEMBINA KESELAMATAN DAN KESEHATAN KERJA (P2K3)</b><br><b>${esc((s.A&&s.A.nama)||"PT. Dewasutratex")}</b></p>
+   ${o.skNo||o.masa?`<p class="p2c">${o.skNo?"Berdasarkan SK Penetapan No. "+esc(o.skNo)+(o.skTgl?" tanggal "+esc(p2TglPanjang(o.skTgl)):""):""}${o.masa?(o.skNo?"<br>":"")+"Masa bakti "+esc(o.masa):""}</p>`:""}
+   <table class="p2t"><thead><tr><th style="width:10mm">No</th><th style="width:34mm">Jabatan dalam P2K3</th><th style="width:52mm">Nama</th><th style="width:22mm">NRP</th><th>Jabatan / bagian</th></tr></thead><tbody>
+   ${rows.map(([j,p],i)=>`<tr><td class="ctr">${i+1}</td><td>${j}</td><td>${esc(p.nama||"")}</td><td class="ctr">${esc(p.nrp||"")}</td><td>${esc(p.jab||p2KInfo(p.nrp)||"")}</td></tr>`).join("")||`<tr><td colspan="5" class="ctr">–</td></tr>`}</tbody></table>
+   <table class="p2sg"><tr><td></td><td>${esc(s.kota||"Cimahi")}, ${esc(p2TglPanjang(todayISO()))}<br>Ketua P2K3<br><br><br><br><br><b><u>${esc(o.ketua.nama||"………………………")}</u></b></td></tr></table></div>`; }
+// ---- Kegiatan K3
+const P2_KEGJ=[...P2_C.map(([k,l])=>[k,l]),["lain","Kegiatan K3 lainnya"]];
+const P2_KEGT={rapat:"Agenda:\n- \nHasil / keputusan:\n- ",kebijakan:"Kebijakan yang ditetapkan / disosialisasikan:\n- ",program:"Program / rencana kerja:\n- \nTarget dan jadwal:\n- ",pelaksanaan:"Program yang dilaksanakan:\n- \nRealisasi / capaian:\n- ",
+  pemeriksaan:"Objek yang diperiksa / diuji:\n- \nPelaksana (internal / PJK3):\nHasil:\n- ",pembinaan:"Materi:\n- \nPemateri:\nJumlah peserta:",hira:"Area / aktivitas:\n- \nBahaya utama:\n- \nPengendalian:\n- ",kesehatan:"Kegiatan (MCU / klinik / penyuluhan kesehatan / lainnya):\n- \nHasil:\n- ",lain:"Uraian kegiatan:\n- "};
+function p2KegList(){ return Object.keys(STORE).filter(k=>/^p2k3keg\/[^/]+$/.test(k)).map(k=>Object.assign({_id:k.slice(8)},STORE[k])).sort((a,b)=>(b.tgl||"").localeCompare(a.tgl||"")); }
+function p2KegNama(k){ return (P2_KEGJ.find(x=>x[0]===k)||[k,k])[1]; }
+function p2KegRows(){ const F=S.p2kF||(S.p2kF={dari:todayISO().slice(0,4)+"-01",sampai:todayISO().slice(0,4)+"-12",jenis:""}); return p2KegList().filter(x=>(!F.dari||(x.tgl||"").slice(0,7)>=F.dari)&&(!F.sampai||(x.tgl||"").slice(0,7)<=F.sampai)&&(!F.jenis||x.jenis===F.jenis)); }
+function viewP2Keg(){ const F=S.p2kF||(S.p2kF={dari:todayISO().slice(0,4)+"-01",sampai:todayISO().slice(0,4)+"-12",jenis:""}), rows=p2KegRows(), cnt={}; rows.forEach(x=>cnt[x.jenis]=(cnt[x.jenis]||0)+1);
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Kegiatan K3</h1>${S.canWrite?`<button class="btn primary" data-act="p2k-add">Tambah kegiatan</button>`:""}</div>
+   <p class="sub">Catat setiap kegiatan K3. Kegiatan bisa langsung diambil ke bagian <b>C. Kegiatan K3</b> di Laporan P2K3 sesuai periodenya, lalu tetap bisa diedit di laporan.</p>
+   <div class="toolbar"><label class="f" style="width:auto"><span>Dari bulan</span><input type="month" id="p2kDari" value="${esc(F.dari)}"></label><label class="f" style="width:auto"><span>Sampai bulan</span><input type="month" id="p2kSampai" value="${esc(F.sampai)}"></label>
+    <label class="f" style="width:auto"><span>Jenis</span><select id="p2kJenis"><option value="">Semua jenis</option>${P2_KEGJ.map(([k,l])=>`<option value="${k}" ${F.jenis===k?"selected":""}>${esc(l)}</option>`).join("")}</select></label></div>
+   <div class="row" style="gap:6px;margin:0 0 10px">${P2_KEGJ.filter(([k])=>cnt[k]).map(([k,l])=>`<span class="chip">${esc(l.replace(/^Pelaksanaan /,""))}: ${cnt[k]}</span>`).join("")||`<span class="muted">Belum ada kegiatan pada periode ini.</span>`}</div>
+   <section class="panel hdl">${p2OutBtns("p2k-out")}<p class="hint" style="margin:6px 0 0">Rekap mengikuti filter periode dan jenis di atas.</p></section>
+   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Kegiatan</th><th>Tempat</th><th>Peserta / PJ</th><th>Status</th><th></th></tr></thead><tbody>
+   ${rows.map(x=>`<tr><td class="num">${fmt(x.tgl)}</td><td style="font-size:13px">${esc(p2KegNama(x.jenis))}</td><td><b>${esc(x.judul||"–")}</b>${x.hasil?`<div class="muted" style="font-size:12.5px">${esc(String(x.hasil).split("\n").filter(z=>z.trim()&&!/:\s*$/.test(z)).slice(0,2).join(" · ").slice(0,140))}</div>`:""}</td><td>${esc(x.tempat||"–")}</td><td style="font-size:13px">${esc([x.peserta,x.pj].filter(Boolean).join(" · ")||"–")}</td><td><span class="chip ${x.status==="rencana"?"amber":"green"}">${x.status==="rencana"?"Rencana":"Selesai"}</span></td>
+    <td>${S.canWrite?`<div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn small" data-act="p2k-edit" data-id="${esc(x._id)}">Ubah</button><button class="btn small danger" data-act="p2k-del" data-id="${esc(x._id)}">Hapus</button></div>`:""}</td></tr>`).join("")||`<tr><td colspan="7" class="empty">Belum ada kegiatan. Klik Tambah kegiatan.</td></tr>`}</tbody></table></div></div>`; }
+function dlgP2Keg(id){ const x=id?Object.assign({},STORE["p2k3keg/"+id]):{tgl:todayISO(),jenis:"rapat",judul:"",tempat:"",peserta:"",pj:"",hasil:P2_KEGT.rapat,tindak:"",status:"selesai"};
+  openDlg(`<header><h2>${id?"Ubah kegiatan K3":"Tambah kegiatan K3"}</h2></header><div class="body"><div class="grid3">
+   <label class="f"><span>Tanggal</span><input type="date" name="tgl" value="${esc(x.tgl||"")}" required></label>
+   <label class="f span2"><span>Jenis kegiatan (sesuai butir laporan P2K3)</span><select name="jenis">${P2_KEGJ.map(([k,l])=>`<option value="${k}" ${x.jenis===k?"selected":""}>${esc(l)}</option>`).join("")}</select></label>
+   <label class="f full"><span>Nama kegiatan</span><input type="text" name="judul" value="${esc(x.judul||"")}" required placeholder="Misal: Rapat rutin P2K3 Triwulan III, Simulasi tanggap darurat kebakaran"></label>
+   <label class="f"><span>Tempat</span><input type="text" name="tempat" value="${esc(x.tempat||"")}"></label><label class="f"><span>Peserta</span><input type="text" name="peserta" value="${esc(x.peserta||"")}" placeholder="Misal: 15 orang anggota P2K3"></label><label class="f"><span>Penanggung jawab / pemateri</span><input type="text" name="pj" value="${esc(x.pj||"")}"></label>
+   <label class="f full"><span>Uraian / hasil</span><textarea name="hasil" rows="6">${esc(x.hasil||"")}</textarea></label>
+   <label class="f full"><span>Tindak lanjut</span><textarea name="tindak" rows="2">${esc(x.tindak||"")}</textarea></label>
+   <label class="f"><span>Status</span><select name="status"><option value="selesai" ${x.status!=="rencana"?"selected":""}>Selesai</option><option value="rencana" ${x.status==="rencana"?"selected":""}>Rencana</option></select></label></div>
+   <p class="hint" style="margin:8px 0 0">Kolom uraian berisi template sesuai jenis kegiatan. Lengkapi atau hapus bagian yang tidak perlu.</p></div>${foot(id?"Simpan":"Tambah kegiatan")}`, async f=>{
+    const v=Object.fromEntries(new FormData(f)); ["judul","tempat","peserta","pj","hasil","tindak"].forEach(k=>v[k]=String(v[k]||"").trim()); if(!v.judul){ toast("Isi nama kegiatan."); return false; }
+    const kid=id||uidGen("kg"); STORE["p2k3keg/"+kid]=Object.assign(id?STORE["p2k3keg/"+id]:{dibuat:new Date().toISOString(),oleh:S.uid||""},v,{diubah:new Date().toISOString()}); await persist(); render(); toast("Kegiatan K3 disimpan."); });
+  const f=$("#dlg form"), tpl=()=>Object.values(P2_KEGT).includes(f.hasil.value)||!f.hasil.value.trim(); f.jenis.addEventListener("change",()=>{ if(tpl()) f.hasil.value=P2_KEGT[f.jenis.value]||""; }); }
+function p2KegHtml(){ const F=S.p2kF, rows=p2KegRows().slice().reverse(), s=p2Set(), per=(F.dari?p2Bulan(F.dari):"…")+" s.d. "+(F.sampai?p2Bulan(F.sampai):"…");
+  return `<div class="p2doc">${p2KopHtml()}<p class="p2c"><b>REKAP KEGIATAN K3</b><br>Periode ${esc(per)}${F.jenis?" · "+esc(p2KegNama(F.jenis)):""}</p>
+   <table class="p2t"><thead><tr><th style="width:8mm">No</th><th style="width:20mm">Tanggal</th><th style="width:30mm">Jenis</th><th style="width:44mm">Kegiatan / tempat</th><th style="width:28mm">Peserta / PJ</th><th>Uraian, hasil & tindak lanjut</th></tr></thead><tbody>
+   ${rows.map((x,i)=>`<tr><td class="ctr">${i+1}</td><td class="ctr">${fmt(x.tgl)}</td><td>${esc(p2KegNama(x.jenis))}${x.status==="rencana"?" (rencana)":""}</td><td><b>${esc(x.judul||"")}</b>${x.tempat?"<br>"+esc(x.tempat):""}</td><td>${esc([x.peserta,x.pj].filter(Boolean).join("; "))}</td><td>${esc(x.hasil||"").replace(/\n/g,"<br>")}${x.tindak?"<br><b>Tindak lanjut:</b> "+esc(x.tindak):""}</td></tr>`).join("")||`<tr><td colspan="6" class="ctr">Tidak ada kegiatan.</td></tr>`}</tbody></table>
+   <table class="p2sg"><tr><td></td><td>${esc(s.kota||"Cimahi")}, ${esc(p2TglPanjang(todayISO()))}<br>Sekretaris P2K3<br><br><br><br><br><b><u>${esc(p2Org().sekretaris.nama||"………………………")}</u></b></td></tr></table></div>`; }
+// tautan ke Laporan P2K3: isi bagian C dari Kegiatan K3 pada periode laporan
+function p2AutoKeg(r){ const xs=p2KegList().filter(x=>p2InPer(x.tgl,r)&&x.status!=="rencana").sort((a,b)=>(a.tgl||"").localeCompare(b.tgl||"")); if(!xs.length) return "Tidak ada kegiatan K3 berstatus selesai pada periode laporan ini.";
+  const line=x=>{ const h=String(x.hasil||"").split("\n").map(z=>z.replace(/^\s*-\s*/,"").trim()).filter(z=>z&&!/:\s*$/.test(z)).join("; ");
+    return `${fmt(x.tgl)} – ${x.judul}${x.tempat?" ("+x.tempat+")":""}${x.peserta?", peserta: "+x.peserta:""}${h?". "+h:""}${x.tindak?". Tindak lanjut: "+x.tindak:""}.`.replace(/\.\./g,"."); };
+  let n=0; r.C=r.C||{};
+  xs.filter(x=>x.jenis==="rapat").forEach(x=>{ const rows=r.C.rapat||(r.C.rapat=[]); if(rows.some(y=>y.kegId===x._id)) return; rows.push({id:p2id(),kegId:x._id,tgl:x.tgl,agenda:x.judul+(x.hasil?": "+String(x.hasil).split("\n").map(z=>z.replace(/^\s*-\s*/,"").trim()).filter(z=>z&&!/:\s*$/.test(z)).join("; "):""),peserta:x.peserta||""}); n++; });
+  P2_C.filter(([k])=>k!=="rapat").forEach(([k])=>{ const add=xs.filter(x=>x.jenis===k||(k==="pelaksanaan"&&x.jenis==="lain")).map(line).filter(l=>!String(r.C[k]||"").includes(l)); if(add.length){ r.C[k]=[String(r.C[k]||"").trim(),...add].filter(Boolean).join("\n"); n+=add.length; } });
+  return n?n+" kegiatan K3 dimasukkan ke bagian C. Isinya tetap bisa diedit.":"Semua kegiatan K3 pada periode ini sudah ada di laporan."; }
+document.addEventListener("click",ev=>{ const t=ev.target.closest("[data-act]"); if(!t) return; const a=t.dataset.act;
+  if(a==="p2o-edit"){ S.p2oDraft=clone(p2Org()); S.p2oEdit=true; render(); }
+  else if(a==="p2o-cancel"){ S.p2oEdit=false; S.p2oDraft=null; render(); }
+  else if(a==="p2o-done"){ const o=S.p2oDraft; o.anggota=o.anggota.filter(x=>x.nama||x.nrp); STORE["pengaturan/p2k3org"]=Object.assign(clone(o),{diubah:new Date().toISOString()});
+    if(o.ketua.nama){ const s=STORE["pengaturan/p2k3"]; if(s&&!s.ketua){ s.ketua=o.ketua.nama; } }
+    persist().then(()=>{ S.p2oEdit=false; S.p2oDraft=null; render(); toast("Struktur & anggota P2K3 disimpan."); }); }
+  else if(a==="p2o-add"){ S.p2oDraft.anggota.push({id:p2id(),nrp:"",nama:"",jab:""}); const y=window.scrollY; render(); window.scrollTo(0,y); const n=document.querySelector(`[data-pick="p2o-a${S.p2oDraft.anggota.length-1}"]`); if(n) n.focus(); }
+  else if(a==="p2o-del"){ S.p2oDraft.anggota.splice(+t.dataset.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); }
+  else if(a==="p2o-out") p2DocOut(p2OrgHtml(),"Struktur-P2K3",t.dataset.fmt,"Susunan P2K3");
+  else if(a==="p2k-add") dlgP2Keg(null); else if(a==="p2k-edit") dlgP2Keg(t.dataset.id);
+  else if(a==="p2k-del"){ const x=STORE["p2k3keg/"+t.dataset.id]; openDlg(`<header><h2>Hapus kegiatan ${esc(x.judul||"")}?</h2></header>${foot("Hapus")}`, async ()=>{ delete STORE["p2k3keg/"+t.dataset.id]; await persist(); render(); }); }
+  else if(a==="p2k-out"){ const F=S.p2kF; p2DocOut(p2KegHtml(),("Kegiatan-K3-"+(F.dari||"")+"_sd_"+(F.sampai||"")).replace(/[^\w.-]+/g,"_"),t.dataset.fmt,"Rekap kegiatan K3"); } });
+document.addEventListener("input",ev=>{ const el=ev.target, o=S.p2oDraft; if(!o||!S.p2oEdit) return;
+  if(el.dataset.p2of) o[el.dataset.p2of]=el.value; else if(el.dataset.p2on){ const p=p2oSlot(el.dataset.p2on); if(p) p.nama=el.value; } else if(el.dataset.p2oj){ const p=p2oSlot(el.dataset.p2oj); if(p) p.jab=el.value; }
+  else if(el.dataset.pick&&el.dataset.pick.startsWith("p2o-")){ const p=p2oSlot(el.dataset.pick.slice(4)); if(p) p.nrp=el.value.trim(); } });
+document.addEventListener("change",ev=>{ const el=ev.target;
+  if(S.p2oEdit&&el.dataset&&el.dataset.p2of&&el.type==="date") S.p2oDraft[el.dataset.p2of]=el.value;
+  const F=S.p2kF; if(!F) return; if(el.id==="p2kDari"){ F.dari=el.value; render(); } else if(el.id==="p2kSampai"){ F.sampai=el.value; render(); } else if(el.id==="p2kJenis"){ F.jenis=el.value; render(); } });
+
 // ---------- Sinkronisasi online (Firebase) dengan mode offline ----------
 // Disinkronkan: karyawan & kartu APD, pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, beserta pengaturannya.
 // Tetap lokal: track proses. Field "nik" tidak pernah dikirim ke server (NIK hanya ada di komputer kantor).
 const FB_CFG={apiKey:"AIzaSyDO6zLuw8sMEWTExa1UuEFxeGvBSx6Pn8o",authDomain:"k3-dewasutratex.firebaseapp.com",projectId:"k3-dewasutratex",storageBucket:"k3-dewasutratex.firebasestorage.app",messagingSenderId:"864608893325",appId:"1:864608893325:web:f12a06b2a9d4506ce9e5c4"};
-const FB_VER="10.12.2", SYNC_COLS=["karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
+const FB_VER="10.12.2", SYNC_COLS=["karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
 const SY_OWNER="adrisatriaputra3@gmail.com";
 const SY={ready:{},admins:null,fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
 function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
