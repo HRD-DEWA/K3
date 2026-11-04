@@ -518,6 +518,14 @@ body.hprole nav.side [data-navg="track"],body.hprole nav.side .navgrp[data-navg=
 .pgdoc .pgt th{background:#d9e1f2;text-align:center;font-weight:700}.pgdoc .pgt td.pgm.on{background:#e7ecf7}.pgdoc .pgt td.pgm.s-selesai{background:#c6efce}.pgdoc .pgt td.pgm.s-tunda{background:#ffeb9c}.pgdoc .pgt td.pgm.s-batal{background:#ffc7ce}
 .pgdoc .pgt tr{break-inside:avoid}.pgdoc .pglg{font-size:7.5pt;margin:2mm 0 0}.pgdoc .ctr{text-align:center}
 .pgdoc .pgsg td{width:50%}
+.ntrow{display:grid;grid-template-columns:28px 1fr 1.4fr auto;gap:8px 12px;align-items:start;padding:10px 0;border-bottom:1px dashed var(--line)}.ntrow .ntno{padding-top:30px;font-weight:700}.ntrow .ntact{display:flex;gap:4px;padding-top:24px}
+@media (max-width:760px){.ntrow{grid-template-columns:1fr}.ntrow .ntno,.ntrow .ntact{padding-top:0}}
+.ntdoc{font-family:"Times New Roman",Times,serif;font-size:11pt;line-height:1.35}
+.ntdoc .ntkop{width:100%;border-collapse:collapse}.ntdoc .ntkop td{border:0!important;padding:0;vertical-align:middle}.ntdoc .ntkop .l{width:32mm}.ntdoc .ntkop .r{width:30mm;text-align:center}
+.ntdoc .ntkop .m{text-align:center}.ntdoc .k1{font-size:15pt;font-weight:700;line-height:1.15}.ntdoc .ka{font-size:9.5pt;line-height:1.25}.ntdoc .kc{font-size:5pt;font-weight:700;line-height:1.1}
+.ntdoc .nttitle{text-align:center;margin:3mm 0 4mm}.ntdoc .ntkv{border-collapse:collapse}.ntdoc .ntkv td{border:0!important;padding:0 2mm 0 0;vertical-align:top}
+.ntdoc .ntlab{margin:4mm 0 1mm}.ntdoc .ntt th{font-weight:400;background:none!important}.ntdoc .ntt td{text-align:justify;vertical-align:top}
+.ntdoc .ntclose{margin:4mm 0 8mm}.ntdoc .ntsg td{border:0!important;vertical-align:top}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -730,6 +738,7 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
     <button type="button" class="navgrp" data-navg="p2k3" aria-expanded="false" aria-controls="ng-p2k3">P2K3</button>
     <div class="navsub" id="ng-p2k3" data-navgs="p2k3" hidden>
      <a class="nsub" href="#p2k3-org" data-nav="p2k3-org">Struktur & anggota</a>
+     <a class="nsub" href="#p2k3-rapat" data-nav="p2k3-rapat">Rapat P2K3</a>
      <a class="nsub" href="#p2k3-keg" data-nav="p2k3-keg">Kegiatan K3</a>
      <a class="nsub" href="#p2k3" data-nav="p2k3">Laporan P2K3</a>
      <a class="nsub" href="#p2k3-set" data-nav="p2k3-set">Data umum perusahaan</a></div>
@@ -878,8 +887,8 @@ function writeErr(e){
 // ---------- routing ----------
 function readRoute(){
   const h=(location.hash||"").replace(/^#/,"");
-  if(["k-","inv-","box-","itm-","cek-","prt-","lap-","hira-","bagi-","p2k3-e-","p2k3-r-","ptr-","ptrv-"].some(p=>h.startsWith(p))) return h;
-  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi","peta","apar","apar-cek","apar-lap","apar-pic","patroli","progk3","p2k3","p2k3-org","p2k3-keg","p2k3-set"].includes(h)?h:"ringkasan";
+  if(["k-","inv-","box-","itm-","cek-","prt-","lap-","hira-","bagi-","p2k3-e-","p2k3-r-","ptr-","ptrv-","p2k3-n-","p2k3-nv-"].some(p=>h.startsWith(p))) return h;
+  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi","peta","apar","apar-cek","apar-lap","apar-pic","patroli","progk3","p2k3-rapat","p2k3","p2k3-org","p2k3-keg","p2k3-set"].includes(h)?h:"ringkasan";
 }
 window.addEventListener("hashchange",()=>{S.route=readRoute(); render(); window.scrollTo(0,0);});
 function go(r){ if(location.hash!=="#"+r) location.hash=r; else {S.route=r; render();} }
@@ -888,7 +897,7 @@ function go(r){ if(location.hash!=="#"+r) location.hash=r; else {S.route=r; rend
 function render(){
   document.querySelectorAll("[data-nav]").forEach(a=>{
     const on = a.dataset.nav===S.route || (a.dataset.nav==="karyawan" && S.route.startsWith("k-")) || (a.dataset.nav==="investigasi" && S.route.startsWith("inv-")) || (a.dataset.nav==="p3k" && /^(box|cek|prt)-/.test(S.route)) || (a.dataset.nav==="p3k-item" && S.route.startsWith("itm-"));
-    if(on||(a.dataset.nav==="patroli"&&/^ptrv?-/.test(S.route))||(a.dataset.nav==="p2k3"&&/^p2k3-[er]-/.test(S.route))||(a.dataset.nav==="bagi"&&S.route.startsWith("bagi-"))||(a.dataset.nav==="lapangan"&&S.route.startsWith("lap-"))||(a.dataset.nav==="hira"&&S.route.startsWith("hira-")&&S.route!=="hira-rekap")) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
+    if(on||(a.dataset.nav==="patroli"&&/^ptrv?-/.test(S.route))||(a.dataset.nav==="p2k3"&&/^p2k3-[er]-/.test(S.route))||(a.dataset.nav==="p2k3-rapat"&&/^p2k3-nv?-/.test(S.route))||(a.dataset.nav==="bagi"&&S.route.startsWith("bagi-"))||(a.dataset.nav==="lapangan"&&S.route.startsWith("lap-"))||(a.dataset.nav==="hira"&&S.route.startsWith("hira-")&&S.route!=="hira-rekap")) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
   });
   navApply(); document.body.classList.toggle("laproute",S.route.startsWith("lap-")); if(typeof ptAfterRender==="function") queueMicrotask(ptAfterRender);
   const m=$("#main");
@@ -918,6 +927,9 @@ function render(){
   else if(S.route==="peta") m.innerHTML=ro+viewPeta();
   else if(S.route==="patroli") m.innerHTML=ro+viewPatroli();
   else if(S.route==="progk3") m.innerHTML=ro+viewProgK3();
+  else if(S.route==="p2k3-rapat") m.innerHTML=ro+viewNtList();
+  else if(S.route.startsWith("p2k3-nv-")) m.innerHTML=ro+viewNtView(S.route);
+  else if(S.route.startsWith("p2k3-n-")) m.innerHTML=ro+viewNtEdit(S.route);
   else if(S.route.startsWith("ptrv-")) m.innerHTML=ro+viewPtrView(S.route);
   else if(S.route.startsWith("ptr-")) m.innerHTML=ro+viewPtrOne(S.route);
   else if(S.route==="apar") m.innerHTML=ro+viewApar();
@@ -951,7 +963,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.9 · 03/11/2026 (program K3)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.10 · 03/11/2026 (rapat P2K3)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -1682,6 +1694,7 @@ function pickDone(inp,k){ const key=inp.dataset.pick; inp.parentElement.querySel
   if(key==="pme-pem"||key==="pme-pic"){ const f=inp.closest("form"), n=f&&f.elements[key==="pme-pem"?"pemeriksa":"pic"]; if(n) n.value=k.nama; return; }
   if(key==="ap-pem"||key==="ap-pic"||key==="apic-nrp") return apPick(inp,k);
   if(key.startsWith("p2o-")) return p2OrgPick(inp,k);
+  if(key==="ntp-pim"||key==="ntp-sek") return ntPick(inp,k);
   if(key.startsWith("ptrx-")){ const n=document.querySelector(`[data-ptrx="${key.slice(5)}"]`); if(n) n.value=k.nama; return; }
   if(key==="kx-nrp"){ const f=inp.closest("form"); if(f&&f.pengguna) f.pengguna.value=k.nama; return; }
   if(key.startsWith("cku-")){ const bc=key.slice(4), v=S.ck&&S.ck.st[bc]; if(!v) return; v.nrp=k.nrp; v.nama=k.nama; const n=document.querySelector(`[data-cku="${CSS.escape(bc)}"][data-f="nama"]`); if(n) n.value=k.nama; return; }
@@ -3645,7 +3658,7 @@ document.addEventListener("DOMContentLoaded",()=>dmyScan(document)); setTimeout(
 
 // ---------- Saran nama karyawan pada kolom Nama (pasangan kolom NRP) ----------
 function nameKey(el){ if(!el||el.tagName!=="INPUT"||el.type!=="text") return null; const d=el.dataset;
-  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.p2on) return "p2o-"+d.p2on; if(d.ptrx!=null) return "ptrx-"+d.ptrx; if(d.apf==="pem") return "ap-pem"; if(d.apf==="pic"&&document.querySelector('[data-pick="ap-pic"]')) return "ap-pic"; if(el.name==="nama"&&el.form&&el.form.querySelector('[data-pick="apic-nrp"]')) return "apic-nrp"; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
+  if(d.ckf==="pem"||d.ckf==="pic") return "ck-"+d.ckf; if(d.p2on) return "p2o-"+d.p2on; if(d.nt==="pimpinan") return "ntp-pim"; if(d.nt==="sekretaris") return "ntp-sek"; if(d.ptrx!=null) return "ptrx-"+d.ptrx; if(d.apf==="pem") return "ap-pem"; if(d.apf==="pic"&&document.querySelector('[data-pick="ap-pic"]')) return "ap-pic"; if(el.name==="nama"&&el.form&&el.form.querySelector('[data-pick="apic-nrp"]')) return "apic-nrp"; if(d.prf==="pem"||d.prf==="pic") return "pr-"+d.prf; if(d.lkf==="pem"||d.lkf==="pic") return "lk-"+d.lkf;
   if(d.cku&&d.f==="nama") return "cku-"+d.cku; if(d.lku&&d.f==="nama") return "lku-"+d.lku;
   if(d.p==="pelapor.nama") return "pelapor"; if(d.p==="korban.nama") return "korban"; const sm=(d.p||"").match(/^saksi\.(\d)\.nama$/); if(sm) return "saksi"+sm[1];
   if(el.name==="picNama"&&el.form&&el.form.querySelector('[data-pick="box-pic"]')) return "box-pic"; if(el.name==="pengguna"&&el.form&&el.form.querySelector('[data-pick="kx-nrp"]')) return "kx-nrp";
@@ -4483,7 +4496,7 @@ function viewP2Edit(route){ const id=route.slice(7), r0=S.p2.get(id); if(!r0) re
     <h3 class="p2h">2. Data kelembagaan/unit/organisasi K3 (selain P2K3)</h3>${p2Tbl(r,"B.lembaga",P2_TBL.lembaga)}
     <h3 class="p2h">3. Data sarana dan prasarana K3</h3>${p2Tbl(r,"B.sarana",P2_TBL.sarana,"sarana")}
     <h3 class="p2h">4. Data kecelakaan kerja dan penyakit akibat kerja</h3>${p2Tbl(r,"B.kk",P2_TBL.kk,"kk")}<div class="grid2" style="margin-top:8px">${inp("B.pak","Penyakit akibat kerja (PAK)",null,"Misal: Nihil")}<span></span>${ta("B.kkUraian","Uraian singkat kecelakaan & tindak lanjut","",3)}</div></section>
-   <section class="panel" id="p2-sC"><div class="row" style="justify-content:space-between"><h2 style="margin:0">C. Kegiatan K3</h2><div class="row" style="gap:6px"><button type="button" class="btn small primary" data-p2auto="prog">Ambil dari menu Program K3</button><button type="button" class="btn small primary" data-p2auto="keg">Ambil dari menu Kegiatan K3</button></div></div><p class="hint" style="margin:4px 0 8px">Program K3 mengisi butir 3 (program) dan 4 (pelaksanaan) sesuai jadwal dan realisasi pada periode laporan; Kegiatan K3 mengisi butir lainnya. Isinya tetap bisa diedit di sini.</p>
+   <section class="panel" id="p2-sC"><div class="row" style="justify-content:space-between"><h2 style="margin:0">C. Kegiatan K3</h2><div class="row" style="gap:6px"><button type="button" class="btn small primary" data-p2auto="rapat">Ambil dari Rapat P2K3</button><button type="button" class="btn small primary" data-p2auto="prog">Ambil dari menu Program K3</button><button type="button" class="btn small primary" data-p2auto="keg">Ambil dari menu Kegiatan K3</button></div></div><p class="hint" style="margin:4px 0 8px">Rapat P2K3 mengisi tabel butir 1 dari notulen; Program K3 mengisi butir 3 (program) dan 4 (pelaksanaan) sesuai jadwal dan realisasi pada periode laporan; Kegiatan K3 mengisi butir lainnya. Isinya tetap bisa diedit di sini.</p>
     <h3 class="p2h">1. Rapat P2K3</h3>${p2Tbl(r,"C.rapat",P2_TBL.rapat)}
     ${P2_C.slice(1).map(([k,l],i)=>`<h3 class="p2h">${i+2}. ${l}</h3>${ta("C."+k,"Uraian","",k==="kebijakan"?3:4)}${["pemeriksaan","hira","kesehatan"].includes(k)?`<button type="button" class="btn small" data-p2auto="${k}" style="margin-top:6px">Isi otomatis dari data program</button>`:""}`).join("")}</section>
    <section class="panel" id="p2-sD"><h2>D. Hambatan</h2>${list("D","Hambatan")}<h2 style="margin-top:16px">E. Rekomendasi</h2>${list("E","Rekomendasi")}</section>
@@ -4491,7 +4504,7 @@ function viewP2Edit(route){ const id=route.slice(7), r0=S.p2.get(id); if(!r0) re
     <div class="row" style="margin-top:14px"><button class="btn primary" data-go="p2k3-r-${esc(id)}">Tinjau & cetak ›</button></div></section>`; }
 // ---- isi otomatis dari data program
 function p2InPer(t,r){ const a=(r.periode.dari||"0000-00")+"-01", b=(r.periode.sampai||"9999-12")+"-31"; return t&&t>=a&&t<=b; }
-function p2Auto(r,k){ if(k==="keg") return p2AutoKeg(r); if(k==="prog") return p2AutoProg(r); const per=`${p2Bulan(r.periode.dari)} – ${p2Bulan(r.periode.sampai)}`;
+function p2Auto(r,k){ if(k==="rapat") return p2AutoRapat(r); if(k==="keg") return p2AutoKeg(r); if(k==="prog") return p2AutoProg(r); const per=`${p2Bulan(r.periode.dari)} – ${p2Bulan(r.periode.sampai)}`;
   if(k==="tk"){ const ak=[...S.list.values()].filter(x=>x.aktif!==false&&x.status!=="Keluar"); r.A.jmlTK=String(ak.length); const L=ak.filter(x=>(x.jk||"")==="L").length, P=ak.filter(x=>(x.jk||"")==="P").length; r.A.jmlL=L?String(L):""; r.A.jmlP=P?String(P):""; return "Jumlah tenaga kerja aktif: "+ak.length+" orang."; }
   if(k==="sarana"){ const ap=apList().filter(a=>(a.status||"aktif")!=="afkir"), by=j=>ap.filter(a=>(a.jenis||"Ringan")===j), bad=xs=>xs.filter(a=>apBad(apLast(a)).length).length, rows=[];
     [["Ringan","APAR"],["Beroda","APAB (APAR beroda)"],["Thermatic","APAR thermatic"]].forEach(([j,l])=>{ const xs=by(j); if(xs.length) rows.push({jenis:l,jumlah:String(xs.length),kondisi:bad(xs)?bad(xs)+" unit hasil pemeriksaan terakhir tidak baik":"Baik"}); });
@@ -4912,11 +4925,99 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.id==="pgTh"){ if(el.value==="baru"){ const y=prompt("Tahun program K3:",String(S.pg.th+1)); if(y&&/^\d{4}$/.test(y)) S.pg.th=+y; } else S.pg.th=+el.value; S.pg.edit=false; render(); return; }
   if(el.id==="pgImp"&&el.files[0]){ const f=el.files[0]; el.value=""; pgImport(f); } });
 
+// ---------- P2K3: Rapat / notulen pertemuan ----------
+const NT_HARI=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+function ntList(){ return Object.keys(STORE).filter(k=>/^p2k3rapat\/[^/]+$/.test(k)).map(k=>Object.assign({_id:k.slice(10)},STORE[k])).sort((a,b)=>(b.tgl||"").localeCompare(a.tgl||"")||(b.no||"").localeCompare(a.no||"")); }
+function ntKop(){ const s=STORE["pengaturan/p2k3"]||{}, k=s.kopRapat||{}; return {t1:k.t1||"PANITIA PEMBINA KESELAMATAN DAN",t2:k.t2||"KESEHATAN KERJA (P2K3)",t3:k.t3||"PT. DEWASUTRATEX",a1:k.a1||"Jalan Cibaligo No.76 Telp. Hunting 62-22-6038618-6035668-6035688",a2:k.a2||"Jalan Cibaligo KM 2.8 Cimahi – Tlp. 022 6036388",a3:k.a3||"JAWA BARAT - INDONESIA"}; }
+function ntHariTgl(t){ if(!t) return ""; const d=new Date(t+"T00:00:00"); return NT_HARI[d.getDay()]+" / "+String(d.getDate()).padStart(2,"0")+" "+BULAN[d.getMonth()]+" "+d.getFullYear(); }
+const NT_ROM=["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"];
+function ntNextNo(){ const L=ntList(), last=L[0]; if(!last||!last.no) return "001/DST/P2K3/N.P/I/"+todayISO().slice(0,4);
+  const m=last.no.match(/^(\d+)(\/.*\/)([IVXLC]+)\/(\d{4})$/); if(!m) return last.no; const n=String(+m[1]+1).padStart(m[1].length,"0"), ri=NT_ROM.indexOf(m[3]), y=todayISO().slice(0,4);
+  return n+m[2]+(ri>=0&&ri<NT_ROM.length-1?NT_ROM[ri+1]:m[3])+"/"+y; }
+function ntBlank(){ const o=p2Org(); return {no:ntNextNo(),tgl:todayISO(),jam1:"09.00",jam2:"11.00",agenda:"Pertemuan Rutin dan Pembahasan Norma K3 di Perusahaan",tempat:"",peserta:"",pimpinan:o.ketua.nama||"",pimNrp:o.ketua.nrp||"",sekretaris:o.sekretaris.nama||"",sekNrp:o.sekretaris.nrp||"",bahas:[{tema:"",ket:""}],dibuat:new Date().toISOString(),oleh:S.uid||""}; }
+S.ntSel=new Set();
+function viewNtList(){ const L=ntList(), n=[...S.ntSel].filter(id=>STORE["p2k3rapat/"+id]).length;
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Rapat P2K3</h1><div class="row" style="gap:6px">${S.canWrite?`<button class="btn" data-act="nt-kop">Kop notulen</button><button class="btn primary" data-act="nt-new">+ Notulen baru</button>`:""}</div></div>
+   <p class="sub">Notulen pertemuan / rapat P2K3. Setiap notulen bisa ditinjau, dicetak, atau diunduh sendiri-sendiri, dan otomatis bisa ditarik ke tabel Rapat P2K3 di Laporan P2K3.</p>
+   ${L.length?`<section class="panel hdl"><div class="row" style="justify-content:space-between;gap:8px"><b>${n?n+" notulen dipilih":"Semua notulen ("+L.length+")"}</b>${p2OutBtns("nt-multi")}</div><p class="hint" style="margin:6px 0 0">${n?"Hanya notulen yang dicentang yang dicetak/diunduh, masing-masing di halaman sendiri. <button class='linkbtn' data-act='nt-clear'>Batalkan pilihan</button>":"Centang notulen untuk memilih; tanpa pilihan, semua notulen dicetak/diunduh dalam satu file (satu notulen per halaman)."}</p></section>`:""}
+   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th class="c"><input type="checkbox" class="selbox" id="ntAll" ${L.length&&L.every(x=>S.ntSel.has(x._id))?"checked":""} aria-label="Pilih semua"></th><th>Hari / tanggal</th><th>No</th><th>Agenda</th><th>Tema</th><th></th></tr></thead><tbody>
+   ${L.map(x=>`<tr class="${S.ntSel.has(x._id)?"selrow":""}"><td class="c"><input type="checkbox" class="selbox" data-ntsel="${esc(x._id)}" ${S.ntSel.has(x._id)?"checked":""} aria-label="Pilih notulen"></td><td class="num">${esc(ntHariTgl(x.tgl))}</td><td style="font-size:13px">${esc(x.no||"–")}</td><td>${esc(x.agenda||"")}</td><td class="num">${(x.bahas||[]).filter(b=>b.tema).length}</td>
+    <td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn small primary" data-go="p2k3-n-${esc(x._id)}">Isi / ubah</button><button class="btn small" data-go="p2k3-nv-${esc(x._id)}">Tinjau & cetak</button>${S.canWrite?`<button class="btn small danger" data-act="nt-del" data-id="${esc(x._id)}">Hapus</button>`:""}</div></td></tr>`).join("")||`<tr><td colspan="6" class="empty">Belum ada notulen. Klik + Notulen baru setelah rapat selesai.</td></tr>`}</tbody></table></div></div>`; }
+function viewNtEdit(route){ const id=route.slice(7), x=STORE["p2k3rapat/"+id]; if(!x) return `<button class="back" data-go="p2k3-rapat">‹ Rapat P2K3</button><div class="panel">Notulen tidak ditemukan.</div>`;
+  const f=(k,l,o)=>{ o=o||{}; return `<label class="f${o.full?" full":""}"><span>${l}</span><input type="${o.type||"text"}" data-nt="${k}" value="${esc(x[k]||"")}" placeholder="${esc(o.ph||"")}"></label>`; };
+  return `<button class="back" data-go="p2k3-rapat">‹ Rapat P2K3</button><div class="row" style="justify-content:space-between;align-items:flex-end;gap:10px"><div><h1 style="margin:0">Notulen ${esc(ntHariTgl(x.tgl))}</h1><p class="sub" style="margin:2px 0 0">Tersimpan otomatis saat diketik</p></div><button class="btn primary" data-go="p2k3-nv-${esc(id)}">Tinjau & cetak ›</button></div>
+   <section class="panel ntpane" data-ntid="${esc(id)}"><h2>Data rapat</h2><div class="grid3">${f("no","No")}${f("tgl","Tanggal",{type:"date"})}<div class="f"><span class="lbl">Jam</span><div class="row" style="gap:6px;flex-wrap:nowrap"><input type="text" data-nt="jam1" value="${esc(x.jam1||"")}" placeholder="09.00" style="flex:1"><span>s/d</span><input type="text" data-nt="jam2" value="${esc(x.jam2||"")}" placeholder="11.00" style="flex:1"><span>WIB</span></div></div>
+     ${f("agenda","Agenda",{full:true})}
+     ${picker("ntp-pim","NRP pimpinan rapat",x.pimNrp)}<label class="f span2"><span>Pimpinan rapat</span><input type="text" data-nt="pimpinan" value="${esc(x.pimpinan||"")}"></label>
+     ${picker("ntp-sek","NRP sekretaris",x.sekNrp)}<label class="f span2"><span>Sekretaris</span><input type="text" data-nt="sekretaris" value="${esc(x.sekretaris||"")}"></label>
+     ${f("tempat","Tempat (opsional, tidak dicetak bila kosong)")}${f("peserta","Peserta / jumlah hadir (opsional)",{ph:"Misal: 12 anggota P2K3"})}</div></section>
+   <section class="panel ntpane" data-ntid="${esc(id)}"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Pembahasan</h2><button class="btn small" data-act="nt-add">+ Tambah tema</button></div>
+    <div class="ntb">${(x.bahas||[]).map((b,i)=>`<div class="ntrow"><span class="num ntno">${i+1}</span><label class="f"><span>Tema</span><textarea data-ntb="${i}|tema" rows="2">${esc(b.tema||"")}</textarea></label><label class="f"><span>Keterangan / tindakan</span><textarea data-ntb="${i}|ket" rows="3">${esc(b.ket||"")}</textarea></label>
+      <div class="ntact"><button class="btn small" data-ntmv="${i}|-1" aria-label="Naik">↑</button><button class="btn small" data-ntmv="${i}|1" aria-label="Turun">↓</button><button class="btn small danger" data-ntdel="${i}" aria-label="Hapus tema">✕</button></div></div>`).join("")||`<p class="muted">Belum ada tema.</p>`}</div></section>
+   <div class="row" style="justify-content:flex-end"><button class="btn primary" data-go="p2k3-nv-${esc(id)}">Tinjau & cetak ›</button></div>`; }
+function ntHtml(x){ const K=ntKop(), B=(x.bahas||[]).filter(b=>b.tema||b.ket);
+  return `<div class="p2doc ntdoc"><table class="ntkop"><tr><td class="l"><svg class="smooth" viewBox="0 0 285 190" style="width:28mm;height:18.7mm"><image href="${P2_LOGO}" x="0" y="0" width="285" height="190"/></svg></td>
+    <td class="m"><div class="k1">${esc(K.t1)}</div><div class="k1">${esc(K.t2)}</div><div class="k1">${esc(K.t3)}</div>${[K.a1,K.a2,K.a3].filter(Boolean).map(a=>`<div class="ka">${esc(a)}</div>`).join("")}</td>
+    <td class="r"><svg class="smooth" viewBox="0 0 240 230" style="width:17mm;height:16.3mm"><image href="${K3_LOGO}" x="0" y="0" width="240" height="230"/></svg><div class="kc">KESELAMATAN DAN KESEHATAN KERJA</div></td></tr></table>
+   <p class="p2line"><svg class="smooth" viewBox="0 0 1700 10" preserveAspectRatio="none" style="width:100%;height:1mm"><rect x="0" y="2" width="1700" height="5" fill="#000"/></svg></p>
+   <p class="nttitle"><b>NOTULEN PERTEMUAN / RAPAT P2K3</b></p>
+   <table class="ntkv"><tr><td style="width:24mm">No</td><td>: ${esc(x.no||"")}</td></tr><tr><td>Hari / Tgl</td><td>: ${esc(ntHariTgl(x.tgl))}</td></tr><tr><td>Jam</td><td>: ${esc(x.jam1||"")}${x.jam2?" s/d "+esc(x.jam2):""} WIB</td></tr>${x.tempat?`<tr><td>Tempat</td><td>: ${esc(x.tempat)}</td></tr>`:""}<tr><td>Agenda</td><td>: ${esc(x.agenda||"")}</td></tr><tr><td>Pimpinan</td><td>: ${esc(x.pimpinan||"")}</td></tr><tr><td>Sekretaris</td><td>: ${esc(x.sekretaris||"")}</td></tr>${x.peserta?`<tr><td>Peserta</td><td>: ${esc(x.peserta)}</td></tr>`:""}</table>
+   <p class="ntlab">Pembahasan :</p>
+   <table class="p2t ntt"><colgroup><col style="width:9mm"><col style="width:68mm"><col></colgroup><thead><tr><th>No</th><th>TEMA</th><th>KETERANGAN / TINDAKAN</th></tr></thead><tbody>
+   ${B.map((b,i)=>`<tr><td class="ctr">${i+1}</td><td>${esc(b.tema||"").replace(/\n/g,"<br>")}</td><td>${esc(b.ket||"").replace(/\n/g,"<br>")}</td></tr>`).join("")||`<tr><td class="ctr">1</td><td></td><td></td></tr>`}</tbody></table>
+   <p class="ntclose">Demikian notulen laporan ini dibuat dan untuk diketahui bersama</p>
+   <table class="ntsg"><tr><td style="width:22mm"></td><td>Sekretaris P2K3<br><br><br><br><br>${esc(x.sekretaris||"……………………")}</td></tr></table></div>`; }
+function viewNtView(route){ const id=route.slice(8), x=STORE["p2k3rapat/"+id]; if(!x) return `<button class="back" data-go="p2k3-rapat">‹ Rapat P2K3</button><div class="panel">Notulen tidak ditemukan.</div>`;
+  return `<button class="back" data-go="p2k3-n-${esc(id)}">‹ Kembali mengisi</button><div class="row" style="justify-content:space-between;align-items:center;gap:10px"><h1 style="margin:0">Tinjau notulen</h1>${p2OutBtns("nt-out",` data-id="${esc(id)}"`)}</div><div class="p2paper">${ntHtml(x)}</div>`; }
+const ntBase=x=>("Notulen-Rapat-P2K3-"+(x.tgl||"")).replace(/[^\w.-]+/g,"_");
+async function ntMulti(ids,fmtX){ const L=ids.map(id=>STORE["p2k3rapat/"+id]).filter(Boolean).sort((a,b)=>(a.tgl||"").localeCompare(b.tgl||"")); if(!L.length) return;
+  if(L.length===1) return p2DocOut(ntHtml(L[0]),ntBase(L[0]),fmtX,"Notulen rapat P2K3");
+  const base=("Notulen-Rapat-P2K3-"+L[0].tgl+"_sd_"+L[L.length-1].tgl).replace(/[^\w.-]+/g,"_"); let st=null;
+  try{ if(fmtX==="print"){ const pa=$("#printArea"); pa.innerHTML=L.map((x,i)=>(i?`<div class="pgbrk"></div>`:"")+ntHtml(x)).join(""); const ps=document.createElement("style"); ps.textContent="@page{size:A4 portrait;margin:15mm 18mm}"; document.head.appendChild(ps); document.body.classList.add("printing"); const done=()=>{ document.body.classList.remove("printing"); ps.remove(); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done); setTimeout(()=>{ window.print(); setTimeout(done,500); },150); return; }
+    if(fmtX==="pdf"){ const pages=[]; for(let i=0;i<L.length;i++){ toast(`Menyiapkan PDF: notulen ${i+1} dari ${L.length}…`); st=xStage(ntHtml(L[i])); st.style.width="174mm"; await new Promise(z=>setTimeout(z,60)); pages.push(...await pdfPages(st,{sel:".p2doc"})); st.remove(); st=null; } await saveBlob(base+".pdf",buildPdf(pages),"application/pdf"); }
+    else { let model=[]; for(let i=0;i<L.length;i++){ const m=xModel(null,ntHtml(L[i]),".p2doc",174); st=m.st; await new Promise(z=>setTimeout(z,40)); if(i) model.push({t:"pb"}); model=model.concat(m.model); st.remove(); st=null; }
+      const imgs=await xImages(model); if(fmtX==="docx") await saveBlob(base+".docx",buildDocx(model,imgs,"Notulen rapat P2K3"),"application/vnd.openxmlformats-officedocument.wordprocessingml.document"); else await saveBlob(base+".odt",buildOdtForm(model,imgs,"Notulen rapat P2K3"),"application/vnd.oasis.opendocument.text"); }
+    toast(L.length+" notulen disimpan dalam satu file.");
+  }catch(e){ console.error(e); toast("File gagal dibuat. "+(e.message||"")); } finally{ if(st) st.remove(); } }
+function dlgNtKop(){ const K=ntKop(), i=(n,l)=>`<label class="f full"><span>${l}</span><input type="text" name="${n}" value="${esc(K[n])}"></label>`;
+  openDlg(`<header><h2>Kop notulen P2K3</h2><p class="hint" style="margin:4px 0 0">Logo perusahaan di kiri dan logo K3 di kanan, seperti format notulen Anda.</p></header><div class="body">${i("t1","Judul baris 1")}${i("t2","Judul baris 2")}${i("t3","Judul baris 3")}${i("a1","Alamat baris 1")}${i("a2","Alamat baris 2")}${i("a3","Alamat baris 3")}</div>${foot("Simpan kop")}`, async f=>{
+    const s=STORE["pengaturan/p2k3"]=STORE["pengaturan/p2k3"]||{}; s.kopRapat=Object.fromEntries(["t1","t2","t3","a1","a2","a3"].map(k=>[k,String(f[k].value||"").trim()])); await persist(); render(); toast("Kop notulen disimpan."); }); }
+// tautan ke Laporan P2K3: tabel Rapat P2K3
+function p2AutoRapat(r){ const a=r.periode.dari, b=r.periode.sampai, xs=ntList().filter(x=>x.tgl&&x.tgl.slice(0,7)>=a&&x.tgl.slice(0,7)<=b).sort((p,q)=>p.tgl.localeCompare(q.tgl)); if(!xs.length) return "Tidak ada notulen rapat P2K3 pada periode laporan ini.";
+  r.C=r.C||{}; const rows=r.C.rapat||(r.C.rapat=[]); let n=0;
+  xs.forEach(x=>{ const ag=[x.agenda,...(x.bahas||[]).filter(t=>t.tema).map((t,i)=>(i+1)+") "+t.tema.replace(/\s+/g," ").trim()+(t.ket?" – "+t.ket.replace(/\s+/g," ").trim():""))].filter(Boolean).join("; ");
+    const ex=rows.find(y=>y.rapId===x._id); if(ex){ Object.assign(ex,{tgl:x.tgl,agenda:ag,peserta:x.peserta||ex.peserta||""}); return; }
+    rows.push({id:p2id(),rapId:x._id,tgl:x.tgl,agenda:ag,peserta:x.peserta||[x.pimpinan?"Pimpinan: "+x.pimpinan:"",x.sekretaris?"Sekretaris: "+x.sekretaris:""].filter(Boolean).join("; ")}); n++; });
+  rows.sort((p,q)=>(p.tgl||"").localeCompare(q.tgl||"")); return (n?n+" notulen rapat ditambahkan":"Notulen rapat diperbarui")+" ke tabel Rapat P2K3. Isinya tetap bisa diedit."; }
+// ---- event
+let NT_T=null; const ntSave=id=>{ const x=STORE["p2k3rapat/"+id]; if(!x) return; x.diubah=new Date().toISOString(); clearTimeout(NT_T); NT_T=setTimeout(()=>persist(),500); };
+function ntPick(inp,k){ const pane=document.querySelector(".ntpane"), id=pane&&pane.dataset.ntid, x=id&&STORE["p2k3rapat/"+id]; if(!x) return; const pim=inp.dataset.pick==="ntp-pim";
+  x[pim?"pimpinan":"sekretaris"]=k.nama; x[pim?"pimNrp":"sekNrp"]=k.nrp; const n=document.querySelector(`[data-nt="${pim?"pimpinan":"sekretaris"}"]`); if(n) n.value=k.nama; ntSave(id); }
+document.addEventListener("input",ev=>{ const el=ev.target, pane=el.closest&&el.closest(".ntpane"); if(!pane) return; const id=pane.dataset.ntid, x=STORE["p2k3rapat/"+id]; if(!x) return;
+  if(el.dataset.nt&&el.type!=="date"){ x[el.dataset.nt]=el.value; ntSave(id); }
+  else if(el.dataset.ntb){ const [i,f]=el.dataset.ntb.split("|"); x.bahas[+i][f]=el.value; ntSave(id); }
+  else if(el.dataset.pick==="ntp-pim"){ x.pimNrp=el.value.trim(); ntSave(id); } else if(el.dataset.pick==="ntp-sek"){ x.sekNrp=el.value.trim(); ntSave(id); } });
+document.addEventListener("change",ev=>{ const el=ev.target;
+  const pane=el.closest&&el.closest(".ntpane"); if(pane&&el.dataset.nt&&el.type==="date"){ const id=pane.dataset.ntid; STORE["p2k3rapat/"+id][el.dataset.nt]=el.value; ntSave(id); return; }
+  if(el.dataset&&el.dataset.ntsel){ if(el.checked) S.ntSel.add(el.dataset.ntsel); else S.ntSel.delete(el.dataset.ntsel); render(); return; }
+  if(el.id==="ntAll"){ ntList().forEach(x=>{ if(el.checked) S.ntSel.add(x._id); else S.ntSel.delete(x._id); }); render(); } });
+document.addEventListener("click",ev=>{ const t=ev.target, pane=document.querySelector(".ntpane"), id=pane&&pane.dataset.ntid, x=id&&STORE["p2k3rapat/"+id];
+  const mv=t.closest("[data-ntmv]"); if(mv&&x){ const [i,d]=mv.dataset.ntmv.split("|").map(Number), j=i+d; if(j<0||j>=x.bahas.length) return; [x.bahas[i],x.bahas[j]]=[x.bahas[j],x.bahas[i]]; ntSave(id); const y=window.scrollY; render(); window.scrollTo(0,y); return; }
+  const dl=t.closest("[data-ntdel]"); if(dl&&x){ x.bahas.splice(+dl.dataset.ntdel,1); ntSave(id); const y=window.scrollY; render(); window.scrollTo(0,y); return; }
+  const a=t.closest("[data-act]"); if(!a||!a.dataset.act.startsWith("nt-")) return;
+  switch(a.dataset.act){
+    case "nt-new": { const nid=uidGen("nt"); STORE["p2k3rapat/"+nid]=ntBlank(); persist().then(()=>go("p2k3-n-"+nid)); break; }
+    case "nt-add": if(x){ x.bahas=x.bahas||[]; x.bahas.push({tema:"",ket:""}); ntSave(id); const y=window.scrollY; render(); window.scrollTo(0,y); const ts=document.querySelectorAll('[data-ntb$="|tema"]'); if(ts.length) ts[ts.length-1].focus(); } break;
+    case "nt-del": { const z=STORE["p2k3rapat/"+a.dataset.id]; openDlg(`<header><h2>Hapus notulen ${esc(ntHariTgl(z.tgl))}?</h2></header>${foot("Hapus")}`, async ()=>{ delete STORE["p2k3rapat/"+a.dataset.id]; S.ntSel.delete(a.dataset.id); await persist(); render(); }); break; }
+    case "nt-kop": dlgNtKop(); break; case "nt-clear": S.ntSel.clear(); render(); break;
+    case "nt-out": { const z=STORE["p2k3rapat/"+a.dataset.id]; if(z) p2DocOut(ntHtml(z),ntBase(z),a.dataset.fmt,"Notulen rapat P2K3"); break; }
+    case "nt-multi": { const sel=[...S.ntSel].filter(i=>STORE["p2k3rapat/"+i]); ntMulti(sel.length?sel:ntList().map(z=>z._id),a.dataset.fmt); break; } } });
+
 // ---------- Sinkronisasi online (Firebase) dengan mode offline ----------
 // Disinkronkan: karyawan & kartu APD, pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, beserta pengaturannya.
 // Tetap lokal: track proses. Field "nik" tidak pernah dikirim ke server (NIK hanya ada di komputer kantor).
 const FB_CFG={apiKey:"AIzaSyDO6zLuw8sMEWTExa1UuEFxeGvBSx6Pn8o",authDomain:"k3-dewasutratex.firebaseapp.com",projectId:"k3-dewasutratex",storageBucket:"k3-dewasutratex.firebasestorage.app",messagingSenderId:"864608893325",appId:"1:864608893325:web:f12a06b2a9d4506ce9e5c4"};
-const FB_VER="10.12.2", SYNC_COLS=["karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
+const FB_VER="10.12.2", SYNC_COLS=["karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3","p2k3rapat"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
 const SY_OWNER="adrisatriaputra3@gmail.com";
 const SY={ready:{},admins:null,fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
 function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
