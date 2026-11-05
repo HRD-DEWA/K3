@@ -526,6 +526,12 @@ body.hprole nav.side [data-navg="track"],body.hprole nav.side .navgrp[data-navg=
 .ntdoc .nttitle{text-align:center;margin:3mm 0 4mm}.ntdoc .ntkv{border-collapse:collapse}.ntdoc .ntkv td{border:0!important;padding:0 2mm 0 0;vertical-align:top}
 .ntdoc .ntlab{margin:4mm 0 1mm}.ntdoc .ntt th{font-weight:400;background:none!important}.ntdoc .ntt td{text-align:justify;vertical-align:top}
 .ntdoc .ntclose{margin:4mm 0 8mm}.ntdoc .ntsg td{border:0!important;vertical-align:top}
+.rwbody{max-height:65vh;overflow:auto}
+.rwc{border:1px solid var(--line);border-radius:8px;margin:0 0 8px;background:var(--surface)}
+.rwc summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;cursor:pointer;list-style:none}.rwc summary::-webkit-details-marker{display:none}
+.rwc summary::before{content:"▸";color:var(--muted)}.rwc[open] summary::before{content:"▾"}
+.rwchips{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.rwb{padding:0 12px 10px}.rwt{width:100%;margin-top:6px;font-size:13px;table-layout:fixed}.rwt td,.rwt th{padding:4px 6px;overflow-wrap:anywhere;white-space:normal}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -963,7 +969,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.10 · 03/11/2026 (rapat P2K3)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V8.11 · 04/11/2026 (riwayat saat pemeriksaan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2083,7 +2089,7 @@ function viewCek(route){
      <td style="min-width:200px">${sel}</td>
      <td>${s==="terpakai"?`<div class="ckuse"><div class="pick"><input type="search" data-pick="cku-${esc(x.bc)}" value="${esc(v.nrp||"")}" placeholder="NRP pengguna" autocomplete="off" aria-label="NRP pengguna"><div class="picklist" hidden></div></div><input type="text" data-cku="${esc(x.bc)}" data-f="nama" value="${esc(v.nama||"")}" placeholder="Nama pengguna" aria-label="Nama pengguna"><input type="text" data-cku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Alasan penggunaan (opsional)" aria-label="Alasan"><label class="cktgl"><span>Tgl. terpakai</span><input type="date" data-cku="${esc(x.bc)}" data-f="tglPakai" value="${esc(v.tglPakai||"")}" max="${todayISO()}" aria-label="Tanggal terpakai"></label></div>`
        :KELUAR[s]?`<input type="text" data-cku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Keterangan (opsional)" aria-label="Keterangan">`:""}</td></tr>`; }).join("");
-  return `<button class="back" data-go="box-${esc(kode)}">‹ ${esc(kode)}</button><h1>Pemeriksaan ${esc(kode)}</h1><p class="sub">${esc(b.bagian)} · ${esc(b.penempatan)} · ${isi.length} item tercatat di kotak</p>
+  return `<button class="back" data-go="box-${esc(kode)}">‹ ${esc(kode)}</button><div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h1 style="margin:0">Pemeriksaan ${esc(kode)}</h1><button type="button" class="btn" data-rwbox="${esc(kode)}">🕘 Riwayat pemeriksaan${(b.pemeriksaan||[]).length?" ("+(b.pemeriksaan||[]).length+")":""}</button></div><p class="sub">${esc(b.bagian)} · ${esc(b.penempatan)} · ${isi.length} item tercatat di kotak</p>
    <section class="panel"><div class="grid3"><label class="f"><span>Tanggal pemeriksaan</span><input type="date" id="ckTgl" value="${ck.tgl}" max="${todayISO()}"></label>
     <span></span><span></span>
     ${picker("ck-pem","NRP personil pemeriksa",ck.pemNrp)}
@@ -3137,7 +3143,7 @@ function viewLapBox(route){
       ${s==="terpakai"?`<div class="lkuse">${picker("lku-"+x.bc,"NRP pengguna",v.nrp||"")}<label class="f"><span>Nama pengguna</span><input type="text" data-lku="${esc(x.bc)}" data-f="nama" value="${esc(v.nama||"")}"></label><label class="f"><span>Tanggal terpakai</span><input type="date" data-lku="${esc(x.bc)}" data-f="tglPakai" value="${esc(v.tglPakai||"")}" max="${todayISO()}"></label><label class="f"><span>Alasan penggunaan</span><input type="text" data-lku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Opsional"></label></div>`
         :KELUAR[s]?`<div class="lkuse"><label class="f lkfull"><span>Keterangan</span><input type="text" data-lku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Opsional"></label></div>`:""}</div>`; }).join("");
   const pct=isi.length?Math.round(nDone/isi.length*100):0;
-  return `<div class="lkhead"><button class="back" data-go="lapangan">‹ Daftar kotak</button><div class="row" style="justify-content:space-between;align-items:baseline"><h1 style="margin:0">${esc(kode)}</h1><span class="num"><b>${nDone}</b><span class="muted">/${isi.length} diperiksa</span></span></div>
+  return `<div class="lkhead"><button class="back" data-go="lapangan">‹ Daftar kotak</button><div class="row" style="justify-content:space-between;align-items:baseline"><h1 style="margin:0;display:flex;align-items:center;gap:8px">${esc(kode)}<button type="button" class="btn small" data-rwbox="${esc(kode)}" aria-label="Riwayat pemeriksaan">🕘 Riwayat</button></h1><span class="num"><b>${nDone}</b><span class="muted">/${isi.length} diperiksa</span></span></div>
     <p class="muted" style="margin:0 0 8px">${esc(b.bagian||"")}${b.penempatan?" · "+esc(b.penempatan):""}</p><div class="life lkprog"><i style="width:${pct}%"></i></div>
     <div class="lkscan">${lapCanScan()?`<button class="btn primary lkcam" data-act="lap-cam">Pindai dengan kamera</button>`:""}<form id="lkManual" class="lkman" autocomplete="off"><input type="text" id="lkBc" data-bcsug="lk" data-bcsubmit autocomplete="off" placeholder="Ketik barcode lalu Enter" aria-label="Ketik barcode" inputmode="text" autocapitalize="characters"><button class="btn" type="submit">OK</button></form>
     ${lapCanPhoto()?`<label class="btn lkfoto">Foto barcode<input type="file" accept="image/*" capture="environment" id="lkPhoto" hidden></label>`:""}</div>
@@ -4299,7 +4305,7 @@ function apScan(v){ const c=apCState(), bc=String(v||"").trim().toUpperCase(); c
 function viewAparCek(){
   if(!S.loaded) return `<h1>Pemeriksaan APAR</h1><p class="muted">Memuat data…</p>`;
   const c=apCState(), a=c.bc?S.apar.get(c.bc):null, ym=apMonth(), akt=apList().filter(x=>(x.status||"aktif")==="aktif"), done=akt.filter(x=>apChecked(x,ym)).length;
-  const form=a?`<section class="panel apform"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">APAR ${esc(apLabel(a))}</h2><p class="muted" style="margin:2px 0 0">${esc(a.bc)} · ${esc(a.penempatan||"–")} · ${esc(a.bahan||"")} ${esc(a.kap||"")} ${esc(a.sat||"")} · ${esc(a.jenis||"")}</p></div><button class="btn small" data-act="ap-cek-close">Batal</button></div>
+  const form=a?`<section class="panel apform"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">APAR ${esc(apLabel(a))}</h2><p class="muted" style="margin:2px 0 0">${esc(a.bc)} · ${esc(a.penempatan||"–")} · ${esc(a.bahan||"")} ${esc(a.kap||"")} ${esc(a.sat||"")} · ${esc(a.jenis||"")}</p></div><div class="row" style="gap:6px;flex-wrap:nowrap"><button type="button" class="btn small" data-rwapar="${esc(a.bc)}">🕘 Riwayat${(a.pemeriksaan||[]).length?" ("+(a.pemeriksaan||[]).length+")":""}</button><button class="btn small" data-act="ap-cek-close">Batal</button></div></div>
      <div class="row" style="margin:12px 0 6px;justify-content:space-between"><b>Poin pemeriksaan</b><button type="button" class="btn small" data-act="ap-allok">✓ Semua baik</button></div>
      <div class="appoin">${AP_POIN.map(([k,l])=>`<div class="approw ${c.cek[k]==="tidak"?"bad":c.cek[k]==="baik"?"ok":""}"><span class="apl">${l}</span><div class="seg" role="group" aria-label="${l}"><button type="button" data-apk="${k}" data-v="baik" aria-pressed="${c.cek[k]==="baik"}">Baik</button><button type="button" data-apk="${k}" data-v="tidak" aria-pressed="${c.cek[k]==="tidak"}">Tidak baik</button></div>
        <input type="text" data-apket="${k}" value="${esc(c.ket[k]||"")}" placeholder="${c.cek[k]==="tidak"?"Kondisi & rekomendasi tindakan":"Keterangan / rekomendasi (opsional)"}" aria-label="Keterangan ${l}">${k==="expire"?`<label class="apexp"><span>Tgl. expire</span><input type="date" data-apf="tglExp" value="${esc(c.tglExp||"")}"></label>`:""}</div>`).join("")}</div>
@@ -4924,6 +4930,26 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.dataset&&el.dataset.pgf&&el.tagName==="SELECT"){ const [ri,f]=el.dataset.pgf.split("|"); pgDoc(S.pg.th).items[+ri][f]=el.value; pgSave(); return; }
   if(el.id==="pgTh"){ if(el.value==="baru"){ const y=prompt("Tahun program K3:",String(S.pg.th+1)); if(y&&/^\d{4}$/.test(y)) S.pg.th=+y; } else S.pg.th=+el.value; S.pg.edit=false; render(); return; }
   if(el.id==="pgImp"&&el.files[0]){ const f=el.files[0]; el.value=""; pgImport(f); } });
+
+// ---------- Riwayat pemeriksaan saat sedang memeriksa (tanpa meninggalkan pemeriksaan) ----------
+function rwAgo(t){ if(!t) return ""; const d=daysBetween(t,todayISO()); return d<=0?"hari ini":d===1?"kemarin":d+" hari lalu"; }
+function dlgBoxHist(kode){ const b=S.kotak.get(kode); if(!b) return; const pem=(b.pemeriksaan||[]).slice().sort((x,y)=>(y.tgl||"").localeCompare(x.tgl||"")||(y.dibuat||"").localeCompare(x.dibuat||"")), last=pem[0];
+  const kel=pid=>(b.keluar||[]).filter(k=>k.pid===pid), tem=pid=>(b.temuan||[]).filter(t=>t.pid===pid);
+  const card=(p,i)=>{ const ks=kel(p.id), ts=tem(p.id), c=k=>ks.filter(x=>x.kat===k).length;
+    return `<details class="rwc" ${i===0?"open":""}><summary><b>${fmt(p.tgl)}</b> <span class="muted">${esc(rwAgo(p.tgl))}</span><span class="rwchips">${c("terpakai")?`<span class="chip amber">${c("terpakai")} terpakai</span>`:""}${c("hilang")?`<span class="chip red">${c("hilang")} hilang</span>`:""}${c("exp")?`<span class="chip gray">${c("exp")} ditarik</span>`:""}${!ks.length?`<span class="chip green">Lengkap</span>`:""}</span></summary>
+     <div class="rwb"><div class="muted" style="font-size:13px">Pemeriksa: <b>${esc(p.pemeriksa||petugasName(p.petugas)||"–")}</b>${p.pic?" · PIC: "+esc(p.pic):""}${p.sebelum!=null?" · isi sebelum: "+p.sebelum:""}${p.sumber==="HP"||p.lapangan?" · dari HP":""}${p.updP3k?" · sudah di Program P3K":""}</div>
+     ${ks.length?`<table class="rwt"><thead><tr><th>Barcode</th><th>Item</th><th>Kondisi</th><th>Pengguna / ket.</th></tr></thead><tbody>${ks.map(k=>`<tr><td class="num">${esc(k.bc)}</td><td>${esc(itemOf(k.kode).nama)}</td><td>${esc((KELUAR[k.kat]||[k.kat])[0])}</td><td>${esc([k.pengguna,k.alasan].filter(Boolean).join(" · ")||"–")}</td></tr>`).join("")}</tbody></table>`:`<p class="muted" style="margin:6px 0 0">Tidak ada item yang dikeluarkan.</p>`}
+     ${ts.length?`<p style="margin:6px 0 0;font-size:13px"><b>Item temuan:</b> ${ts.map(t=>esc((t.bc||"")+" "+(t.nama||itemOf(t.kode).nama||""))).join(", ")}</p>`:""}${p.catatan?`<p style="margin:6px 0 0;font-size:13px"><b>Catatan:</b> ${esc(p.catatan)}</p>`:""}</div></details>`; };
+  openDlg(`<header><h2>Riwayat pemeriksaan ${esc(kode)}</h2><p class="hint" style="margin:4px 0 0">${esc([b.bagian,b.penempatan,last?"terakhir diperiksa "+fmt(last.tgl)+" ("+rwAgo(last.tgl)+")":"belum pernah diperiksa"].filter(Boolean).join(" · "))}</p></header>
+   <div class="body rwbody">${pem.length?pem.slice(0,12).map(card).join(""):`<p class="muted" style="margin:0">Belum ada riwayat pemeriksaan untuk kotak ini.</p>`}${pem.length>12?`<p class="hint">Menampilkan 12 pemeriksaan terakhir dari ${pem.length}.</p>`:""}</div>
+   <footer><button class="btn primary" value="cancel">Kembali ke pemeriksaan</button></footer>`, async ()=>{}); }
+function dlgAparHist(bc){ const a=S.apar.get(bc); if(!a) return; const ps=(a.pemeriksaan||[]).slice().sort((x,y)=>((y.tgl||"")+(y.dibuat||"")).localeCompare((x.tgl||"")+(x.dibuat||"")));
+  openDlg(`<header><h2>Riwayat APAR ${esc(apLabel(a))}</h2><p class="hint" style="margin:4px 0 0">${esc(a.bc)} · ${esc(a.penempatan||"")}${a.tglExp?" · expire "+fmt(a.tglExp):""}${ps[0]?` · terakhir ${fmt(ps[0].tgl)} (${esc(rwAgo(ps[0].tgl))})`:" · belum pernah diperiksa"}</p></header>
+   <div class="body rwbody">${ps.slice(0,12).map((p,i)=>`<details class="rwc" ${i===0?"open":""}><summary><b>${fmt(p.tgl)}</b> <span class="muted">${esc(rwAgo(p.tgl))}</span><span class="rwchips">${apHasilChip(p)}</span></summary>
+     <div class="rwb"><div class="muted" style="font-size:13px">Pemeriksa: <b>${esc(p.pemeriksa||"–")}</b>${p.pic?" · PIC: "+esc(p.pic):""}${p.sumber==="HP"?" · dari HP":""}</div>
+     <table class="rwt"><tbody>${AP_POIN.map(([k,l])=>`<tr><td>${l}</td><td>${p.cek&&p.cek[k]==="tidak"?`<span class="chip red">Tidak baik</span>`:p.cek&&p.cek[k]==="baik"?`<span class="chip green">Baik</span>`:"–"}</td><td>${esc((p.ket||{})[k]||"")}</td></tr>`).join("")}</tbody></table>${p.catatan?`<p style="margin:6px 0 0;font-size:13px"><b>Catatan:</b> ${esc(p.catatan)}</p>`:""}</div></details>`).join("")||`<p class="muted" style="margin:0">Belum ada riwayat pemeriksaan untuk APAR ini.</p>`}</div>
+   <footer><button class="btn primary" value="cancel">Kembali ke pemeriksaan</button></footer>`, async ()=>{}); }
+document.addEventListener("click",ev=>{ const t=ev.target.closest("[data-rwbox],[data-rwapar]"); if(!t) return; ev.preventDefault(); if(t.dataset.rwbox) dlgBoxHist(t.dataset.rwbox); else dlgAparHist(t.dataset.rwapar); });
 
 // ---------- P2K3: Rapat / notulen pertemuan ----------
 const NT_HARI=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
