@@ -999,7 +999,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.5 · 06/11/2026 (perbaiki pemeriksaan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.6 · 06/11/2026 (perbaiki temuan & salah penempatan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2136,6 +2136,7 @@ function viewCek(route){
      ${nBelum?`<button class="btn small" data-act="ck-unscanned">Tandai ${nBelum} yang belum diperiksa sebagai Hilang</button>`:""}</div></section>
    <div class="panel" style="padding:4px 8px"><div><table class="cktab"><thead><tr><th class="c">Ada</th><th>Barcode</th><th>Exp.</th><th>Kondisi</th><th>Pengguna / keterangan</th></tr></thead><tbody>${rows||`<tr><td colspan="5" class="empty">${ck.show==="belum"?"Semua item sudah diperiksa.":"Tidak ada item pada tampilan ini."}</td></tr>`}</tbody></table></div></div>
    ${tmSection("ck")}
+   ${slSection("ck")}
    <section class="panel"><label class="f"><span>Catatan pemeriksaan (opsional)</span><textarea id="ckCat" rows="2">${esc(ck.catatan)}</textarea></label>
     <div class="row" style="margin-top:12px">${ck.fix?`<button class="btn primary" data-act="ck-fixsave">Simpan perbaikan</button>`:`<button class="btn primary" data-act="ck-save">Simpan hasil pemeriksaan</button>`}<button class="btn" data-act="ck-reset">Batal</button></div></section>`;
 }
@@ -3388,7 +3389,10 @@ function ckStartFix(box,pid){ const b=S.kotak.get(box); if(!b) return; const p=(
   const kel=(b.keluar||[]).filter(k=>k.pid===pid), st={}, orig={};
   (b.isi||[]).forEach(x=>{ st[x.bc]={k:"ada"}; orig[x.bc]={k:"ada"}; });
   kel.forEach(k=>{ const v={k:k.kat,nrp:k.nrp||"",nama:k.pengguna||"",alasan:k.alasan||"",tglPakai:k.tglPakai||""}; st[k.bc]=Object.assign({},v); orig[k.bc]=Object.assign({},v); });
-  S.ck={kode:box,tgl:p.tgl,st,scan:{},catatan:p.catatan||"",show:"semua",pem:p.pemeriksa||"",pemNrp:p.pemNrp||"",pic:p.pic||"",picNrp:p.picNrp||"",baru:[],salah:[],fix:{pid,orig,extra:kel.map(k=>({bc:k.bc,kode:k.kode,exp:k.exp||""}))}};
+  S.ck={kode:box,tgl:p.tgl,st,scan:{},catatan:p.catatan||"",show:"semua",pem:p.pemeriksa||"",pemNrp:p.pemNrp||"",pic:p.pic||"",picNrp:p.picNrp||"",
+    baru:(b.temuan||[]).filter(t=>t.pid===pid).map(t=>({bc:t.bc||"",kode:t.kode||(t.nama?"_lain":""),nama:t.nama||"",exp:t.exp||"",catatan:t.catatan||"",_id:t.id})),
+    salah:clone(p.salah||[]),fix:{pid,orig,extra:kel.map(k=>({bc:k.bc,kode:k.kode,exp:k.exp||""}))}};
+  S.ck.fix.origTm=JSON.stringify(S.ck.baru.map(({_id,...r})=>r)); S.ck.fix.origSl=JSON.stringify(S.ck.salah);
   go("cek-"+box); }
 async function ckFixSave(){ const ck=S.ck, fx=ck.fix, b=S.kotak.get(ck.kode); if(!fx||!b) return; const rows=ckIsi(b), changes=[], d=clone(b); delete d._id; const p=(d.pemeriksaan||[]).find(x=>x.id===fx.pid); if(!p){ toast("Pemeriksaan tidak ditemukan."); return; }
   const now=new Date().toISOString(), nm=x=>itemOf(x.kode).nama+" ("+x.bc+")", lbl=k=>k==="ada"?"Ada":(KELUAR[k]||[k])[0];
@@ -3398,8 +3402,14 @@ async function ckFixSave(){ const ck=S.ck, fx=ck.fix, b=S.kotak.get(ck.kode); if
     else if(KELUAR[o.k]&&nk==="ada"){ d.keluar=(d.keluar||[]).filter(k=>!(k.bc===x.bc&&k.pid===fx.pid)); if(!(d.isi||[]).some(i=>i.bc===x.bc)) (d.isi=d.isi||[]).push({bc:x.bc,kode:x.kode,exp:x.exp||"",masuk:""}); changes.push(nm(x)+": "+lbl(o.k)+" → Ada (dikembalikan ke kotak)"); }
     else if(KELUAR[o.k]&&KELUAR[nk]){ const e=(d.keluar||[]).find(k=>k.bc===x.bc&&k.pid===fx.pid); if(e) Object.assign(e,{kat:nk,nrp:nk==="terpakai"?(n.nrp||""):"",pengguna:nk==="terpakai"?(n.nama||""):"",alasan:n.alasan||"",tglPakai:nk==="terpakai"?(n.tglPakai||p.tgl):"",diubah:now}); changes.push(nm(x)+": "+lbl(o.k)+(o.k!==nk?" → "+lbl(nk):" (keterangan diperbarui)")); } });
   if((ck.catatan||"")!==(p.catatan||"")){ changes.push("Catatan diperbarui"); p.catatan=ck.catatan; }
-  const tm=tmCollect(ck.baru,p.tgl,fx.pid), sl=slCollect("ck"); if(tm.length){ d.temuan=(d.temuan||[]).concat(tm); p.temuanList=(p.temuanList||[]).concat(tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}))); p.temuan=(p.temuan||0)+tm.length; changes.push(tm.length+" item belum tercatat ditambahkan"); }
-  if(sl.length){ p.salah=(p.salah||[]).concat(sl); changes.push(sl.length+" item salah penempatan ditambahkan"); }
+  const rowsTm=(ck.baru||[]).filter(r=>String(r.bc||"").trim()||(r.kode&&r.kode!=="_lain")||String(r.nama||"").trim());
+  if(JSON.stringify((ck.baru||[]).map(({_id,...r})=>r))!==fx.origTm){ const keep=new Set(), fresh=[];
+    rowsTm.forEach(r=>{ const v={bc:String(r.bc||"").trim().toUpperCase(),kode:r.kode==="_lain"?"":(r.kode||""),nama:r.kode==="_lain"?String(r.nama||"").trim():(r.kode?itemOf(r.kode).nama:""),exp:r.exp||"",catatan:String(r.catatan||"").trim()};
+      const ex=r._id&&(d.temuan||[]).find(t=>t.id===r._id); if(ex){ Object.assign(ex,v,{diubah:now}); keep.add(ex.id); } else { const t=Object.assign(v,{id:uidGen("tm"),tgl:p.tgl,pid:fx.pid,status:"baru",petugas:S.uid||""}); fresh.push(t); keep.add(t.id); } });
+    const nOld=(d.temuan||[]).filter(t=>t.pid===fx.pid).length; d.temuan=(d.temuan||[]).filter(t=>t.pid!==fx.pid||keep.has(t.id)).concat(fresh);
+    const now2=(d.temuan||[]).filter(t=>t.pid===fx.pid); p.temuan=now2.length; p.temuanList=now2.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}));
+    changes.push("Item belum tercatat diperbarui ("+nOld+" → "+now2.length+" item)"); }
+  const sl=slCollect("ck"); if(JSON.stringify(ck.salah||[])!==fx.origSl){ const n0=JSON.parse(fx.origSl||"[]").length; p.salah=sl; changes.push("Item salah penempatan diperbarui ("+n0+" → "+sl.length+" item)"); }
   if(!changes.length){ toast("Tidak ada perubahan."); return; }
   openDlg(`<header><h2>Simpan perbaikan pemeriksaan ${fmt(p.tgl)}?</h2></header><div class="body"><ul style="margin:0;padding-left:18px">${changes.map(c=>`<li>${esc(c)}</li>`).join("")}</ul><p class="hint" style="margin:10px 0 0">Perbaikan dicatat di riwayat pemeriksaan beserta nama pemeriksa yang memperbaiki.</p></div>${foot("Simpan perbaikan")}`, async ()=>{
     p.keluar=(d.keluar||[]).filter(k=>k.pid===fx.pid).map(k=>({bc:k.bc,kode:k.kode,kat:k.kat}));
