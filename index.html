@@ -551,6 +551,7 @@ body.lvpic nav.side .navgrp:not([data-navg="pic"]),body.lvpic nav.side .navsub:n
 .camctl button[aria-pressed="true"]{background:#facc15;color:#111}
 .livebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 8px;padding:7px 10px;border-radius:8px;background:var(--green-bg);font-size:13px}
 .livedot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25);animation:sypulse 1.2s infinite alternate;flex:none}
+.fixban{margin:0 0 10px;border-left:4px solid var(--amber)}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -998,7 +999,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.4 · 06/11/2026 (pemeriksaan bersama realtime)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.5 · 06/11/2026 (perbaiki pemeriksaan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2106,7 +2107,7 @@ function ckLoad(kode){ if(S.ck&&S.ck.kode===kode) return S.ck; const b=S.kotak.g
 function ckSt(o,bc){ const v=o.st[bc]; return (v&&v.k)||(o.scan&&o.scan[bc]?"ada":""); }
 function viewCek(route){
   const kode=route.slice(4), b=S.kotak.get(kode); if(!b) return `<button class="back" data-go="p3k">‹ Master kotak</button><div class="panel">Kotak tidak ditemukan.</div>`;
-  const ck=ckLoad(kode), isi=[...(b.isi||[])].sort(itemCmp);
+  const ck=ckLoad(kode), isi=[...ckIsi(b)].sort(itemCmp);
   const stOf=x=>ckSt(ck,x.bc), nExp=isi.filter(x=>{ const e=expSt(x.exp); return e&&e.cls!=="green"&&!KELUAR[stOf(x)]; }).length;
   const nOut=isi.filter(x=>KELUAR[stOf(x)]).length, nBelum=isi.filter(x=>!stOf(x)).length, nDone=isi.length-nBelum, pct=isi.length?Math.round(nDone/isi.length*100):0;
   const show=isi.filter(x=>ck.show==="semua"||(ck.show==="belum"&&!stOf(x))||(ck.show==="keluar"&&KELUAR[stOf(x)]));
@@ -2118,7 +2119,7 @@ function viewCek(route){
      <td style="min-width:200px">${sel}</td>
      <td>${s==="terpakai"?`<div class="ckuse"><div class="pick"><input type="search" data-pick="cku-${esc(x.bc)}" value="${esc(v.nrp||"")}" placeholder="NRP pengguna" autocomplete="off" aria-label="NRP pengguna"><div class="picklist" hidden></div></div><input type="text" data-cku="${esc(x.bc)}" data-f="nama" value="${esc(v.nama||"")}" placeholder="Nama pengguna" aria-label="Nama pengguna"><input type="text" data-cku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Alasan penggunaan (opsional)" aria-label="Alasan"><label class="cktgl"><span>Tgl. terpakai</span><input type="date" data-cku="${esc(x.bc)}" data-f="tglPakai" value="${esc(v.tglPakai||"")}" max="${todayISO()}" aria-label="Tanggal terpakai"></label></div>`
        :KELUAR[s]?`<input type="text" data-cku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Keterangan (opsional)" aria-label="Keterangan">`:""}</td></tr>`; }).join("");
-  return `<button class="back" data-go="box-${esc(kode)}">‹ ${esc(kode)}</button><div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h1 style="margin:0">Pemeriksaan ${esc(kode)}</h1><button type="button" class="btn" data-rwbox="${esc(kode)}">🕘 Riwayat pemeriksaan${(b.pemeriksaan||[]).length?" ("+(b.pemeriksaan||[]).length+")":""}</button></div><p class="sub">${esc(b.bagian)} · ${esc(b.penempatan)} · ${isi.length} item tercatat di kotak</p>${liveBanner(kode)}
+  return `<button class="back" data-go="box-${esc(kode)}">‹ ${esc(kode)}</button>${ck.fix?`<div class="banner fixban"><b>Mode perbaikan pemeriksaan ${fmt(ck.tgl)}</b> · semua item yang sudah diperiksa tetap ditampilkan dengan hasil sebelumnya. Ubah hanya yang keliru, misalnya item hilang yang ternyata ditemukan (ubah ke Ada), lalu klik <b>Simpan perbaikan</b>.</div>`:""}<div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h1 style="margin:0">${ck.fix?"Perbaiki pemeriksaan":"Pemeriksaan"} ${esc(kode)}</h1><button type="button" class="btn" data-rwbox="${esc(kode)}">🕘 Riwayat pemeriksaan${(b.pemeriksaan||[]).length?" ("+(b.pemeriksaan||[]).length+")":""}</button></div><p class="sub">${esc(b.bagian)} · ${esc(b.penempatan)} · ${isi.length} item tercatat di kotak</p>${liveBanner(kode)}
    <section class="panel"><div class="grid3"><label class="f"><span>Tanggal pemeriksaan</span><input type="date" id="ckTgl" value="${ck.tgl}" max="${todayISO()}"></label>
     <span></span><span></span>
     ${picker("ck-pem","NRP personil pemeriksa",ck.pemNrp)}
@@ -2136,10 +2137,10 @@ function viewCek(route){
    <div class="panel" style="padding:4px 8px"><div><table class="cktab"><thead><tr><th class="c">Ada</th><th>Barcode</th><th>Exp.</th><th>Kondisi</th><th>Pengguna / keterangan</th></tr></thead><tbody>${rows||`<tr><td colspan="5" class="empty">${ck.show==="belum"?"Semua item sudah diperiksa.":"Tidak ada item pada tampilan ini."}</td></tr>`}</tbody></table></div></div>
    ${tmSection("ck")}
    <section class="panel"><label class="f"><span>Catatan pemeriksaan (opsional)</span><textarea id="ckCat" rows="2">${esc(ck.catatan)}</textarea></label>
-    <div class="row" style="margin-top:12px"><button class="btn primary" data-act="ck-save">Simpan hasil pemeriksaan</button><button class="btn" data-act="ck-reset">Batal</button></div></section>`;
+    <div class="row" style="margin-top:12px">${ck.fix?`<button class="btn primary" data-act="ck-fixsave">Simpan perbaikan</button>`:`<button class="btn primary" data-act="ck-save">Simpan hasil pemeriksaan</button>`}<button class="btn" data-act="ck-reset">Batal</button></div></section>`;
 }
 document.addEventListener("click",ev=>{ const g=ev.target.closest("[data-ckgrp]"); if(!g||!S.ck) return; const b=S.kotak.get(S.ck.kode);
-  (b.isi||[]).forEach(x=>{ if(x.kode===g.dataset.ckgrp&&!ckSt(S.ck,x.bc)) S.ck.st[x.bc]={k:g.dataset.k||"ada"}; }); const y=window.scrollY; render(); window.scrollTo(0,y); });
+  ckIsi(b).forEach(x=>{ if(x.kode===g.dataset.ckgrp&&!ckSt(S.ck,x.bc)) S.ck.st[x.bc]={k:g.dataset.k||"ada"}; }); const y=window.scrollY; render(); window.scrollTo(0,y); });
 function ckSave(force){
   const ck=S.ck, b=S.kotak.get(ck.kode); if(!ck.pem.trim()){ toast("Isi nama personil pemeriksa terlebih dahulu."); const n=$("#ckf-pem"); if(n) n.focus(); return; }
   const belum=(b.isi||[]).filter(x=>!ckSt(ck,x.bc)); if(belum.length&&!force){ ck.show="belum"; render();
@@ -3297,7 +3298,7 @@ document.addEventListener("input",ev=>{ const el=ev.target; if(!S.lk||!el.datase
 function ckObj(k){ return k==="lk"?S.lk:S.ck; }
 function ckSnap(k){ const o=ckObj(k); if(!o) return; o._undo=JSON.stringify({st:o.st,scan:o.scan}); }
 function ckUndo(k){ const o=ckObj(k); if(!o||!o._undo) return; const u=JSON.parse(o._undo); o.st=u.st; o.scan=u.scan; o._undo=""; if(k==="lk") lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); toast("Perubahan terakhir dibatalkan."); }
-function ckClearGroup(k,kode){ const o=ckObj(k), b=S.kotak.get(o.kode); ckSnap(k); (b.isi||[]).forEach(x=>{ if(!kode||x.kode===kode){ delete o.st[x.bc]; delete o.scan[x.bc]; } }); if(k==="lk") lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); }
+function ckClearGroup(k,kode){ const o=ckObj(k), b=S.kotak.get(o.kode); ckSnap(k); (k==="ck"?ckIsi(b):(b.isi||[])).forEach(x=>{ if(!kode||x.kode===kode){ delete o.st[x.bc]; delete o.scan[x.bc]; } }); if(k==="lk") lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); }
 function ckToolbar(k){ const o=ckObj(k); if(!o) return ""; const n=Object.keys(o.st||{}).length+Object.keys(o.scan||{}).filter(bc=>!(o.st||{})[bc]).length;
   return `<div class="row cktools" style="gap:6px;margin:6px 0 0">${o._undo?`<button type="button" class="btn small" data-ckundo="${k}">↶ Urungkan</button>`:""}${n?`<button type="button" class="btn small" data-ckclearall="${k}">↺ Kosongkan semua ceklis</button>`:""}</div>`; }
 document.addEventListener("click",ev=>{ const t=ev.target;
@@ -3371,7 +3372,7 @@ function livePush(){ if(!LV.un||!LV.o||LV.first||!SY.db||LV.gone) return; const 
   if(!Object.keys(pay).length) return; pay.diubah=FV.serverTimestamp(); pay.diubahOleh=akMyName(); LV.base=JSON.stringify(cur); liveRef(LV.kode).set(pay,{merge:true}).catch(()=>{}); }
 function liveTick(){ if(!liveOn()){ if(LV.un) liveDetach(); return; } const r=S.route||"";
   if(r.startsWith("lap-")&&S.lk&&S.lk.kode===r.slice(4)){ liveAttach("lk",S.lk); livePush(); }
-  else if(r.startsWith("cek-")&&S.ck&&S.ck.kode===r.slice(4)){ liveAttach("ck",S.ck); livePush(); }
+  else if(r.startsWith("cek-")&&S.ck&&S.ck.kode===r.slice(4)&&!S.ck.fix){ liveAttach("ck",S.ck); livePush(); }
   else if(LV.un) liveDetach(); }
 function liveDone(kode){ if(LV.kode===kode){ LV.saving=true; } if(liveOn()) liveRef(kode).delete().catch(()=>{}); if(LV.kode===kode) liveDetach(); }
 function liveBanner(kode){ if(LV.kode!==kode||!LV.un) return ""; const now=Date.now(), ps=Object.entries(LV.peserta||{}).filter(([,p])=>p&&(!p.t||!p.t.toMillis||now-p.t.toMillis()<3*60000)).map(([u,p])=>p.nama+(u===(SY.user&&SY.user.uid)?" (Anda)":""));
@@ -3380,6 +3381,34 @@ document.addEventListener("input",ev=>{ if(LV.kind==="ck"&&ev.target.closest&&ev
 document.addEventListener("change",ev=>{ if(LV.kind==="ck"&&ev.target.closest&&ev.target.closest("main")) setTimeout(livePush,50); });
 document.addEventListener("click",ev=>{ if(!ev.target.closest('[data-act="live-reset"]')) return; const k=LV.kode, kind=LV.kind;
   openDlg(`<header><h2>Mulai ulang pemeriksaan ${esc(k)}?</h2></header><div class="body"><p style="margin:0">Isian pemeriksaan bersama yang tersimpan sejak lebih dari 12 jam lalu dihapus untuk semua orang.</p></div>${foot("Mulai ulang")}`, async ()=>{ LV.saving=true; await liveRef(k).delete().catch(()=>{}); liveDetach(); if(kind==="lk"){ lapDraftDel(k); S.lk=null; } else S.ck=null; render(); }); });
+
+// ---------- Perbaiki pemeriksaan kotak P3K yang sudah disimpan ----------
+function ckIsi(b){ const base=(b&&b.isi)||[]; if(S.ck&&S.ck.fix&&b&&S.ck.kode===b.kode){ const have=new Set(base.map(x=>x.bc)); return base.concat(S.ck.fix.extra.filter(x=>!have.has(x.bc))); } return base; }
+function ckStartFix(box,pid){ const b=S.kotak.get(box); if(!b) return; const p=(b.pemeriksaan||[]).find(x=>x.id===pid); if(!p){ toast("Pemeriksaan tidak ditemukan."); return; }
+  const kel=(b.keluar||[]).filter(k=>k.pid===pid), st={}, orig={};
+  (b.isi||[]).forEach(x=>{ st[x.bc]={k:"ada"}; orig[x.bc]={k:"ada"}; });
+  kel.forEach(k=>{ const v={k:k.kat,nrp:k.nrp||"",nama:k.pengguna||"",alasan:k.alasan||"",tglPakai:k.tglPakai||""}; st[k.bc]=Object.assign({},v); orig[k.bc]=Object.assign({},v); });
+  S.ck={kode:box,tgl:p.tgl,st,scan:{},catatan:p.catatan||"",show:"semua",pem:p.pemeriksa||"",pemNrp:p.pemNrp||"",pic:p.pic||"",picNrp:p.picNrp||"",baru:[],salah:[],fix:{pid,orig,extra:kel.map(k=>({bc:k.bc,kode:k.kode,exp:k.exp||""}))}};
+  go("cek-"+box); }
+async function ckFixSave(){ const ck=S.ck, fx=ck.fix, b=S.kotak.get(ck.kode); if(!fx||!b) return; const rows=ckIsi(b), changes=[], d=clone(b); delete d._id; const p=(d.pemeriksaan||[]).find(x=>x.id===fx.pid); if(!p){ toast("Pemeriksaan tidak ditemukan."); return; }
+  const now=new Date().toISOString(), nm=x=>itemOf(x.kode).nama+" ("+x.bc+")", lbl=k=>k==="ada"?"Ada":(KELUAR[k]||[k])[0];
+  rows.forEach(x=>{ const o=fx.orig[x.bc]||{k:"ada"}, n=ck.st[x.bc]&&ck.st[x.bc].k?ck.st[x.bc]:(ck.scan[x.bc]?{k:"ada"}:o), nk=n.k||o.k;
+    const det=v=>JSON.stringify({k:v.k,nrp:v.nrp||"",nama:v.nama||"",alasan:v.alasan||"",tglPakai:v.tglPakai||""}); if(nk===o.k&&(nk==="ada"||det(n)===det(o))) return;
+    if(o.k==="ada"&&KELUAR[nk]){ d.isi=(d.isi||[]).filter(i=>i.bc!==x.bc); (d.keluar=d.keluar||[]).push({bc:x.bc,kode:x.kode,exp:x.exp||"",kat:nk,nrp:nk==="terpakai"?(n.nrp||""):"",pengguna:nk==="terpakai"?(n.nama||""):"",alasan:n.alasan||"",tglPakai:nk==="terpakai"?(n.tglPakai||p.tgl):"",tgl:p.tgl,pid:fx.pid,petugas:S.uid,koreksi:now}); changes.push(nm(x)+": Ada → "+lbl(nk)); }
+    else if(KELUAR[o.k]&&nk==="ada"){ d.keluar=(d.keluar||[]).filter(k=>!(k.bc===x.bc&&k.pid===fx.pid)); if(!(d.isi||[]).some(i=>i.bc===x.bc)) (d.isi=d.isi||[]).push({bc:x.bc,kode:x.kode,exp:x.exp||"",masuk:""}); changes.push(nm(x)+": "+lbl(o.k)+" → Ada (dikembalikan ke kotak)"); }
+    else if(KELUAR[o.k]&&KELUAR[nk]){ const e=(d.keluar||[]).find(k=>k.bc===x.bc&&k.pid===fx.pid); if(e) Object.assign(e,{kat:nk,nrp:nk==="terpakai"?(n.nrp||""):"",pengguna:nk==="terpakai"?(n.nama||""):"",alasan:n.alasan||"",tglPakai:nk==="terpakai"?(n.tglPakai||p.tgl):"",diubah:now}); changes.push(nm(x)+": "+lbl(o.k)+(o.k!==nk?" → "+lbl(nk):" (keterangan diperbarui)")); } });
+  if((ck.catatan||"")!==(p.catatan||"")){ changes.push("Catatan diperbarui"); p.catatan=ck.catatan; }
+  const tm=tmCollect(ck.baru,p.tgl,fx.pid), sl=slCollect("ck"); if(tm.length){ d.temuan=(d.temuan||[]).concat(tm); p.temuanList=(p.temuanList||[]).concat(tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}))); p.temuan=(p.temuan||0)+tm.length; changes.push(tm.length+" item belum tercatat ditambahkan"); }
+  if(sl.length){ p.salah=(p.salah||[]).concat(sl); changes.push(sl.length+" item salah penempatan ditambahkan"); }
+  if(!changes.length){ toast("Tidak ada perubahan."); return; }
+  openDlg(`<header><h2>Simpan perbaikan pemeriksaan ${fmt(p.tgl)}?</h2></header><div class="body"><ul style="margin:0;padding-left:18px">${changes.map(c=>`<li>${esc(c)}</li>`).join("")}</ul><p class="hint" style="margin:10px 0 0">Perbaikan dicatat di riwayat pemeriksaan beserta nama pemeriksa yang memperbaiki.</p></div>${foot("Simpan perbaikan")}`, async ()=>{
+    p.keluar=(d.keluar||[]).filter(k=>k.pid===fx.pid).map(k=>({bc:k.bc,kode:k.kode,kat:k.kat}));
+    (p.revisi=p.revisi||[]).push({tgl:now,oleh:(typeof akMyName==="function"?akMyName():S.uid)||"",perubahan:changes}); p.diubah=now; p.updP3k=false; p.updTgl="";
+    await S.db.doc("kotak/"+ck.kode).set(d); const k=ck.kode; S.ck=null; toast("Perbaikan pemeriksaan "+k+" disimpan."); go("box-"+k); }); }
+document.addEventListener("click",ev=>{ const t=ev.target;
+  if(t.closest('[data-act="ck-fixsave"]')){ ckFixSave(); return; }
+  const f=t.closest("[data-ckfix]"); if(f){ const [box,pid]=f.dataset.ckfix.split("|"); const d=$("#dlg"); if(d.open) d.close(); ckStartFix(box,pid); } });
+function ckFixBtn(box,pid,label){ return S.canWrite?`<button class="btn small" data-ckfix="${esc(box)}|${esc(pid)}">${label||"Perbaiki"}</button>`:""; }
 
 // ---------- HIRADC (Hazard Identification, Risk Assessment & Determining Control) ----------
 const HIRA_DEF={perusahaan:"PT. DEWASUTRATEX – PANITIA PEMBINA KESELAMATAN DAN KESEHATAN KERJA (P2K3)",judul:"HAZARD IDENTIFICATION, RISK ASSESSMENT AND DETERMINING CONTROL (HIRADC)",lokasi:"Cimahi",
@@ -3833,7 +3862,7 @@ function pmTable(rows,withBox){ const ed=S.canWrite;
    ${rows.map(p=>`<tr class="${p.updP3k?"":"pmbelum"}"><td class="num">${fmt(p.tgl)}${p.sumber==="HP"||p.lapangan?`<div class="muted" style="font-size:12px">dari HP</div>`:""}</td>${withBox?`<td class="num"><button class="linkbtn tpn" data-gobox="${esc(p._box)}">${esc(p._box)}</button><div class="muted" style="font-size:12.5px">${esc(p._bag)}</div></td>`:""}
     <td>${esc(p.pemeriksa||petugasName(p.petugas))}${p.pemNrp?`<div class="muted" style="font-size:12.5px">NRP ${esc(p.pemNrp)}</div>`:""}</td><td>${esc(p.pic||"–")}${p.picNrp?`<div class="muted" style="font-size:12.5px">NRP ${esc(p.picNrp)}</div>`:""}</td>
     <td class="num">${p.sebelum??"–"}</td><td class="num">${pmCount(p,"terpakai")}</td><td class="num">${pmCount(p,"hilang")}</td><td class="num">${pmCount(p,"exp")}</td><td>${esc(p.catatan||"")}${p.temuan?` <span class="chip amber">${p.temuan} item temuan</span>`:""}</td>
-    <td>${pmUpdCell(p._box,p)}</td>${ed?`<td><button class="btn small" data-act="pm-edit" data-box="${esc(p._box)}" data-id="${esc(p.id)}">Ubah</button></td>`:""}</tr>`).join("")}</tbody></table></div>`; }
+    <td>${pmUpdCell(p._box,p)}</td>${ed?`<td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn small" data-act="pm-edit" data-box="${esc(p._box)}" data-id="${esc(p.id)}">Ubah</button>${ckFixBtn(p._box,p.id,"Perbaiki hasil")}</div>${(p.revisi||[]).length?`<div class="muted" style="font-size:12px;margin-top:2px">diperbaiki ${(p.revisi||[]).length}×</div>`:""}</td>`:""}</tr>`).join("")}</tbody></table></div>`; }
 function viewP3kRiwayat(){
   if(!S.loaded) return `<h1>Riwayat pemeriksaan</h1><p class="muted">Memuat data…</p>`;
   const F=S.pmF, all=pmAll(), months=[...new Set(all.map(p=>(p.tgl||"").slice(0,7)).filter(Boolean))].sort().reverse(), bags=[...new Set(all.map(p=>p._bag))].sort();
@@ -4058,9 +4087,13 @@ document.addEventListener("input",ev=>{ const el=ev.target; if(!S.bg) return;
 // ---------- urutan item P3K menurut abjad & tombol ceklis per kelompok ----------
 function itemCmp(x,y){ const a=itemOf(x.kode).nama||x.kode, b=itemOf(y.kode).nama||y.kode; return a.localeCompare(b,"id",{sensitivity:"base",numeric:true})||x.kode.localeCompare(y.kode)||String(x.bc||"").localeCompare(String(y.bc||"")); }
 function grpBtns(kind,kode,sts){ const rem=sts.filter(s=>!s).length, chk=sts.filter(Boolean); if(!rem&&!chk.length) return "";
-  const opts=!chk.length?[["ada","✓ Semua ada"],["hilang","✗ Semua hilang"]]:chk.every(s=>s==="ada")?[["hilang",`✗ ${rem} sisanya hilang`]]:[["ada",`✓ ${rem} sisanya ada`],["hilang",`✗ ${rem} sisanya hilang`]];
+  const opts=!chk.length?[["ada","✓ Semua ada"],["hilang","✗ Semua hilang"]]:[["ada",`✓ ${rem} sisanya ada`],["hilang",`✗ ${rem} sisanya hilang`]];
   if(!rem) opts.length=0; if(chk.length) opts.push(["clear","↺ Kosongkan "+chk.length]);
   return `<span class="grpbtns">${opts.map(([k,l])=>`<button type="button" class="btn small${k==="hilang"?" gh":k==="clear"?" gc":""}" data-${kind}="${esc(kode)}" data-k="${k}">${l}</button>`).join("")}</span>`; }
+
+// jumlah per jenis item saat scan
+function scanTypeCount(boxKode,bc){ const b=S.kotak.get(boxKode); if(!b) return null; const all=(typeof ckIsi==="function"&&S.ck&&S.ck.kode===boxKode)?ckIsi(b):(b.isi||[]), x=all.find(i=>i.bc.toUpperCase()===String(bc).toUpperCase()); if(!x) return null;
+  const st=S.lk&&S.lk.kode===boxKode?(z=>lkStOf(z)):S.ck&&S.ck.kode===boxKode?(z=>ckSt(S.ck,z)):null; if(!st) return null; const g=all.filter(i=>i.kode===x.kode); return {nama:itemOf(x.kode).nama,done:g.filter(i=>st(i.bc)).length,ada:g.filter(i=>st(i.bc)==="ada").length,tot:g.length}; }
 
 // ---------- Item temuan: sudah berbarcode di kotak tetapi belum tercatat di program ----------
 function tmState(k){ const o=k==="lk"?S.lk:S.ck; if(!o) return null; if(!Array.isArray(o.baru)) o.baru=[]; return o.baru; }
@@ -4308,8 +4341,8 @@ document.addEventListener("click",ev=>{ const t=ev.target.closest('[data-act="pt
 // ---------- Hasil scan barcode item yang jelas: "(nama item) ditemukan" ----------
 function bcItemName(bc,boxKode){ let nm="", box=""; S.kotak.forEach(k=>{ if(nm||(boxKode&&k.kode!==boxKode)) return; const x=(k.isi||[]).find(i=>i.bc.toUpperCase()===String(bc).toUpperCase()); if(x){ nm=itemOf(x.kode).nama; box=k.kode; } }); return {nm,box}; }
 function scanInfo(r,bc,boxKode){ const [t,v]=String(r).split(":"); bc=String(bc||"").trim().toUpperCase();
-  if(t==="ok"){ const i=bcItemName(v,boxKode); return {ok:true,cls:"good",title:`${i.nm||"Item"} ditemukan`,sub:`${v} · otomatis dicentang Ada`}; }
-  if(t==="dup"){ const i=bcItemName(v,boxKode); return {ok:true,cls:"dup",title:`${i.nm||"Item"} sudah discan sebelumnya`,sub:v+" · sudah tercentang Ada"}; }
+  if(t==="ok"){ const i=bcItemName(v,boxKode), c=scanTypeCount(boxKode,v); return {ok:true,cls:"good",title:`${i.nm||"Item"} ditemukan${c?` · ${c.done}/${c.tot}`:""}`,sub:`${v} · otomatis dicentang Ada${c?` · ${c.nama}: ${c.done} dari ${c.tot} sudah diperiksa (${c.ada} ada)`:""}`}; }
+  if(t==="dup"){ const i=bcItemName(v,boxKode), c=scanTypeCount(boxKode,v); return {ok:true,cls:"dup",title:`${i.nm||"Item"} sudah discan sebelumnya${c?` · ${c.done}/${c.tot}`:""}`,sub:v+" · sudah tercentang Ada"+(c?` · ${c.nama}: ${c.done} dari ${c.tot} sudah diperiksa`:"")}; }
   if(t==="other"){ const i=bcItemName(bc,v), ob=S.kotak.get(v)||{}, bg=[ob.bagian,ob.penempatan].filter(Boolean).join(" · "); return {ok:false,cls:"bad",title:`${bc} milik kotak ${v}${bg?" ("+bg+")":""}`,sub:`${i.nm?i.nm+" · ":""}bukan isi kotak ini · dicatat sebagai item salah penempatan`}; }
   if(t==="temu") return {ok:false,cls:"temu",title:`${bc} belum terdaftar di kotak ini`,sub:"Barcode belum ada di program · dicatat di bagian Item belum tercatat"};
   return {ok:false,cls:"bad",title:`${bc} tidak ada di kotak ini`,sub:""}; }
@@ -4317,7 +4350,7 @@ function scanResHtml(s){ return s?`<div class="scanres ${s.cls}" role="status"><
 let SC_AC=null; function scanSound(ok){ try{ SC_AC=SC_AC||new (window.AudioContext||window.webkitAudioContext)(); const t=SC_AC.currentTime, beep=(f,s,d)=>{ const o=SC_AC.createOscillator(), g=SC_AC.createGain(); o.frequency.value=f; o.type="square"; g.gain.setValueAtTime(.07,t+s); g.gain.exponentialRampToValueAtTime(.001,t+s+d); o.connect(g); g.connect(SC_AC.destination); o.start(t+s); o.stop(t+s+d+.02); };
   if(ok) beep(1400,0,.09); else { beep(320,0,.14); beep(320,.2,.14); } }catch(e){} }
 // komputer: kolom scan (scanner barcode USB atau ketik)
-function ckMark(bc){ const ck=S.ck, b=S.kotak.get(ck.kode); bc=String(bc||"").trim().toUpperCase(); const x=(b.isi||[]).find(i=>i.bc.toUpperCase()===bc);
+function ckMark(bc){ const ck=S.ck, b=S.kotak.get(ck.kode); bc=String(bc||"").trim().toUpperCase(); const x=ckIsi(b).find(i=>i.bc.toUpperCase()===bc);
   if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other){ slAdd("ck",bc,other); return "other:"+other; }
     const tl=tmState("ck"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); return "temu:"+bc; }
   if(ck.scan[x.bc]||(ck.st[x.bc]&&ck.st[x.bc].k==="ada")) return "dup:"+x.bc; ck.scan[x.bc]=true; if(ck.st[x.bc]&&ck.st[x.bc].k==="hilang") delete ck.st[x.bc]; if(!ck.st[x.bc]) ck.st[x.bc]={k:"ada"}; return "ok:"+x.bc; }
@@ -5074,7 +5107,7 @@ function dlgBoxHist(kode){ const b=S.kotak.get(kode); if(!b) return; const pem=(
     return `<details class="rwc" ${i===0?"open":""}><summary><b>${fmt(p.tgl)}</b> <span class="muted">${esc(rwAgo(p.tgl))}</span><span class="rwchips">${c("terpakai")?`<span class="chip amber">${c("terpakai")} terpakai</span>`:""}${c("hilang")?`<span class="chip red">${c("hilang")} hilang</span>`:""}${c("exp")?`<span class="chip gray">${c("exp")} ditarik</span>`:""}${!ks.length?`<span class="chip green">Lengkap</span>`:""}</span></summary>
      <div class="rwb"><div class="muted" style="font-size:13px">Pemeriksa: <b>${esc(p.pemeriksa||petugasName(p.petugas)||"–")}</b>${p.pic?" · PIC: "+esc(p.pic):""}${p.sebelum!=null?" · isi sebelum: "+p.sebelum:""}${p.sumber==="HP"||p.lapangan?" · dari HP":""}${p.updP3k?" · sudah di Program P3K":""}</div>
      ${ks.length?`<table class="rwt"><thead><tr><th>Barcode</th><th>Item</th><th>Kondisi</th><th>Pengguna / ket.</th></tr></thead><tbody>${ks.map(k=>`<tr><td class="num">${esc(k.bc)}</td><td>${esc(itemOf(k.kode).nama)}</td><td>${esc((KELUAR[k.kat]||[k.kat])[0])}</td><td>${esc([k.pengguna,k.alasan].filter(Boolean).join(" · ")||"–")}</td></tr>`).join("")}</tbody></table>`:`<p class="muted" style="margin:6px 0 0">Tidak ada item yang dikeluarkan.</p>`}
-     ${ts.length?`<p style="margin:6px 0 0;font-size:13px"><b>Item temuan:</b> ${ts.map(t=>esc((t.bc||"")+" "+(t.nama||itemOf(t.kode).nama||""))).join(", ")}</p>`:""}${p.catatan?`<p style="margin:6px 0 0;font-size:13px"><b>Catatan:</b> ${esc(p.catatan)}</p>`:""}</div></details>`; };
+     ${ts.length?`<p style="margin:6px 0 0;font-size:13px"><b>Item temuan:</b> ${ts.map(t=>esc((t.bc||"")+" "+(t.nama||itemOf(t.kode).nama||""))).join(", ")}</p>`:""}${p.catatan?`<p style="margin:6px 0 0;font-size:13px"><b>Catatan:</b> ${esc(p.catatan)}</p>`:""}${(p.revisi||[]).length?`<p class="muted" style="margin:6px 0 0;font-size:12.5px">Diperbaiki ${(p.revisi||[]).length}×, terakhir oleh ${esc(p.revisi[p.revisi.length-1].oleh||"")}: ${esc((p.revisi[p.revisi.length-1].perubahan||[]).join("; "))}</p>`:""}</div></details>`; };
   openDlg(`<header><h2>Riwayat pemeriksaan ${esc(kode)}</h2><p class="hint" style="margin:4px 0 0">${esc([b.bagian,b.penempatan,last?"terakhir diperiksa "+fmt(last.tgl)+" ("+rwAgo(last.tgl)+")":"belum pernah diperiksa"].filter(Boolean).join(" · "))}</p></header>
    <div class="body rwbody">${pem.length?pem.slice(0,12).map(card).join(""):`<p class="muted" style="margin:0">Belum ada riwayat pemeriksaan untuk kotak ini.</p>`}${pem.length>12?`<p class="hint">Menampilkan 12 pemeriksaan terakhir dari ${pem.length}.</p>`:""}</div>
    <footer><button class="btn primary" value="cancel">Kembali ke pemeriksaan</button></footer>`, async ()=>{}); }
@@ -5150,6 +5183,7 @@ function viewRespon(){ const L=rsList(), w=L.filter(r=>r.status==="menunggu");
    <div class="ptrlist">${((S.rsf||"menunggu")==="menunggu"?w:L).map(r=>`<div class="panel rscard"><div class="row" style="justify-content:space-between;gap:8px"><b>${esc(r.judul||"")}</b><span class="chip ${RS_ST[r.status][1]}">${RS_ST[r.status][0]}</span></div>
      <p class="muted" style="margin:2px 0 6px;font-size:13px">${esc({patroli:"Temuan patroli",kotak:"Kotak P3K",apar:"APAR"}[r.jenis]||r.jenis)} · ${esc(r.bagian||"")} · dari <b>${esc(r.nama||"")}</b> · ${esc(fmt((r.dibuat||"").slice(0,10)))}</p>
      <p style="margin:0">${esc(r.teks||"")}${r.usul?` <i class="muted">(${r.usul==="selesai"?"usul: sudah diperbaiki":"usul: dalam proses"})</i>`:""}</p>${r.foto?`<img src="${r.foto}" class="rsfoto" alt="Foto tanggapan">`:""}
+     ${r.jenis==="kotak"&&S.canWrite?(()=>{ const bx=S.kotak.get(r.ref), lp=bx&&(bx.pemeriksaan||[]).slice().sort((u,v)=>(v.tgl||"").localeCompare(u.tgl||""))[0]; return lp?`<div style="margin-top:8px">${ckFixBtn(r.ref,lp.id,"Perbaiki pemeriksaan terakhir ("+fmt(lp.tgl)+")")}</div>`:""; })():""}
      ${r.status==="menunggu"&&S.canWrite?`<div class="row" style="gap:6px;margin-top:8px"><input type="text" placeholder="Catatan untuk PIC (opsional)" data-rscat="${esc(r._id)}" style="flex:1;min-width:180px"><button class="btn small primary" data-rsok="${esc(r._id)}">Terima</button><button class="btn small danger" data-rsno="${esc(r._id)}">Tolak</button></div>`:r.catAdmin?`<p class="muted" style="margin:6px 0 0;font-size:13px">Catatan admin: ${esc(r.catAdmin)} (${esc(r.oleh||"")})</p>`:""}</div>`).join("")||`<div class="panel empty">Tidak ada tanggapan${(S.rsf||"menunggu")==="menunggu"?" yang menunggu persetujuan":""}.</div>`}</div>`; }
 // ---- dashboard PIC Area
 function akInBag(x,bags){ const v=String(x||"").toLowerCase(); return bags.some(b=>{ const bb=b.toLowerCase(); return v===bb||v.includes(bb)||bb.includes(v)&&v.length>3; }); }
