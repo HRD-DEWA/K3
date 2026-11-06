@@ -538,6 +538,17 @@ body.lvpic nav.side .navgrp:not([data-navg="pic"]),body.lvpic nav.side .navsub:n
 .rsitem{margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--gray-bg);font-size:13px}
 .rsfoto{display:block;max-width:220px;max-height:160px;border-radius:6px;margin-top:6px;object-fit:cover}
 .pvban{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;border-left:4px solid var(--accent)}
+.scanres.dup{background:#dbeafe;border-color:#1d4ed8}.scanres.temu{background:#f3e8dc;border-color:#8b5a2b}
+[data-theme="dark"] .scanres.dup{background:#172554}[data-theme="dark"] .scanres.temu{background:#3b2a1a}
+.camres.dup{background:#1d4ed8}.camres.temu{background:#8b5a2b}
+.btn.gc{color:var(--muted)}
+.slrow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto;gap:8px 10px;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}
+@media (max-width:640px){.slrow{grid-template-columns:1fr auto}.slrow input{grid-column:1/-1;grid-row:2}}
+.lapcard.done{background:var(--green-bg);border-color:var(--green)}.lapcard.done .lc1 b{color:var(--green)}
+.lapsep{margin:10px 2px 4px;font-size:13px;font-weight:700;color:var(--muted);grid-column:1/-1}
+.camctl{position:absolute;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:3}
+.camctl button{background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:22px;padding:9px 14px;font:inherit;font-size:14px;font-weight:600}
+.camctl button[aria-pressed="true"]{background:#facc15;color:#111}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -985,7 +996,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.2 · 05/11/2026 (Akses Level I–III)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.3 · 06/11/2026 (perbaikan mode lapangan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2115,7 +2126,7 @@ function viewCek(route){
     <p class="hint" style="margin:24px 0 0">PIC tersimpan juga sebagai PIC kotak ini.</p></div>
     <p class="hint" style="margin:8px 0 0">Kondisi setiap item kosong sampai diperiksa. Centang ✓ untuk item yang ada, atau pilih Terpakai, Hilang, atau Ditarik untuk item yang tidak ada. Untuk Terpakai, data pengguna boleh dikosongkan.</p>
     <div class="ckprog"><div class="row" style="justify-content:space-between"><b>Diperiksa ${nDone} dari ${isi.length}</b><span class="muted">${nBelum?nBelum+" belum diperiksa":"Semua item sudah diperiksa"}${nOut?" · "+nOut+" dikeluarkan":""}</span></div><div class="life"><i style="width:${pct}%"></i></div></div>
-    ${ckScanBar()}
+    ${ckScanBar()}${ckToolbar("ck")}
     <div class="row" style="margin-top:10px">
      <select id="ckShow" aria-label="Tampilkan" style="width:auto"><option value="semua" ${ck.show==="semua"?"selected":""}>Tampilkan semua (${isi.length})</option><option value="belum" ${ck.show==="belum"?"selected":""}>Belum diperiksa (${nBelum})</option><option value="keluar" ${ck.show==="keluar"?"selected":""}>Dikeluarkan (${nOut})</option></select>
      ${nExp?`<button class="btn small" data-act="ck-exp">Tarik ${nExp} item kadaluarsa / H-6 bulan</button>`:""}
@@ -2143,7 +2154,7 @@ function ckSave(force){
     const d=clone(b); delete d._id; const ids=new Set(keluar.map(x=>x.bc));
     d.isi=(d.isi||[]).filter(x=>!ids.has(x.bc)); d.keluar=(d.keluar||[]).concat(keluar);
     (d.pemeriksaan=d.pemeriksaan||[]).push({id:pid,tgl:ck.tgl,petugas:S.uid,sebelum:(b.isi||[]).length,scan:Object.keys(ck.scan).length,diperiksa:(b.isi||[]).length,keluar:keluar.map(x=>({bc:x.bc,kat:x.kat})),catatan:ck.catatan.trim(),pemeriksa:ck.pem.trim(),pemNrp:ck.pemNrp.trim(),pic:ck.pic.trim(),picNrp:ck.picNrp.trim()});
-    { const tm=tmCollect(ck.baru,ck.tgl,pid); if(tm.length){ d.temuan=(d.temuan||[]).concat(tm); d.pemeriksaan[d.pemeriksaan.length-1].temuan=tm.length; } }
+    { const tm=tmCollect(ck.baru,ck.tgl,pid), pmx=d.pemeriksaan[d.pemeriksaan.length-1]; if(tm.length){ d.temuan=(d.temuan||[]).concat(tm); pmx.temuan=tm.length; pmx.temuanList=tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan})); } const sl=slCollect("ck"); if(sl.length) pmx.salah=sl; }
     if(ck.pic.trim()){ d.picNama=ck.pic.trim(); d.picNrp=ck.picNrp.trim(); }
     await S.db.doc("kotak/"+ck.kode).set(d); const k=ck.kode; S.ck=null; toast("Pemeriksaan "+k+" disimpan."); go("box-"+k); });
 }
@@ -3119,9 +3130,13 @@ function viewLapangan(){
   const hp=lapRole()==="hp", all=boxList(), q=S.lapQ.trim().toLowerCase(), hasil=lapHasil(), belum=hasil.filter(h=>!h.dikirim), today=todayISO();
   const doneToday=new Set(hasil.filter(h=>h.tgl===today).map(h=>h.kode));
   const rows=all.filter(b=>!q||[b.kode,b.bagian,b.penempatan,b.picNama].join(" ").toLowerCase().includes(q));
-  const cards=rows.map(b=>{ const s=boxStat(b), dr=lapDraftGet(b.kode);
-    return `<button class="lapcard" data-golap="${esc(b.kode)}"><span class="lc1"><b>${esc(b.kode)}</b>${doneToday.has(b.kode)?`<span class="chip green">Diperiksa hari ini</span>`:dr?`<span class="chip amber">Sedang diperiksa</span>`:s.due?`<span class="chip amber">Jadwal periksa</span>`:""}</span>
-      <span class="lc2">${esc(b.bagian||"–")}${b.penempatan?" · "+esc(b.penempatan):""}</span><span class="lc3 num">${s.ada}/${s.std} item · terakhir ${s.last?fmt(s.last):"belum pernah"}${s.exp||s.soon?` · <b class="tred">${s.exp+s.soon} perlu ditarik</b>`:""}</span></button>`; }).join("");
+  const ym=today.slice(0,7), doneOf=b=>{ const ps=(b.pemeriksaan||[]).filter(p=>(p.tgl||"").startsWith(ym)).sort((x,y)=>(y.tgl||"").localeCompare(x.tgl||"")); return doneToday.has(b.kode)?{tgl:today}:ps[0]||null; };
+  const numK=k=>{ const m=String(k).match(/(\d+)\s*$/); return m?+m[1]:0; }, srt=(x,y)=>numK(x.kode)-numK(y.kode)||x.kode.localeCompare(y.kode);
+  const rowsD=rows.filter(b=>doneOf(b)).sort(srt), rowsB=rows.filter(b=>!doneOf(b)).sort(srt);
+  const card=b=>{ const s=boxStat(b), dr=lapDraftGet(b.kode), dn=doneOf(b);
+    return `<button class="lapcard${dn?" done":""}" data-golap="${esc(b.kode)}"><span class="lc1"><b>${esc(b.kode)}</b>${dn?`<span class="chip green">✓ Diperiksa ${dn.tgl===today?"hari ini":fmt(dn.tgl)}</span>`:dr?`<span class="chip amber">Sedang diperiksa</span>`:s.due?`<span class="chip amber">Jadwal periksa</span>`:""}</span>
+      <span class="lc2">${esc(b.bagian||"–")}${b.penempatan?" · "+esc(b.penempatan):""}</span><span class="lc3 num">${s.ada}/${s.std} item · terakhir ${s.last?fmt(s.last):"belum pernah"}${s.exp||s.soon?` · <b class="tred">${s.exp+s.soon} perlu ditarik</b>`:""}</span></button>`; };
+  const cards=(rowsD.length?`<p class="lapsep">Sudah diperiksa bulan ini (${rowsD.length})</p>`+rowsD.map(card).join(""):"")+(rowsB.length?`<p class="lapsep">Belum diperiksa bulan ini (${rowsB.length})</p>`+rowsB.map(card).join(""):"");
   const sync=hp?`<section class="panel lapsync"><div><b>Perangkat lapangan (HP)</b><div class="muted" style="font-size:13px">Paket dari komputer: ${S.lapSet&&S.lapSet.paket?fmt(S.lapSet.paket.slice(0,10)):"–"} · ${all.length} kotak</div></div>
       <div class="row"><button class="btn primary" data-act="lap-kirim" ${belum.length?"":"disabled"}>Kirim hasil ke komputer${belum.length?` (${belum.length})`:""}</button><button class="btn" data-act="lap-imp">Impor paket baru</button></div>
       ${hasil.length&&!belum.length?`<p class="hint" style="margin:0">Semua hasil sudah dikirim. <button class="linkbtn" data-act="lap-kirim-semua">Kirim ulang semua</button></p>`:""}</section>`
@@ -3164,12 +3179,13 @@ function viewLapBox(route){
     <div class="lkscan">${lapCanScan()?`<button class="btn primary lkcam" data-act="lap-cam">Pindai dengan kamera</button>`:""}<form id="lkManual" class="lkman" autocomplete="off"><input type="text" id="lkBc" data-bcsug="lk" data-bcsubmit autocomplete="off" placeholder="Ketik barcode lalu Enter" aria-label="Ketik barcode" inputmode="text" autocapitalize="characters"><button class="btn" type="submit">OK</button></form>
     ${lapCanPhoto()?`<label class="btn lkfoto">Foto barcode<input type="file" accept="image/*" capture="environment" id="lkPhoto" hidden></label>`:""}</div>
     ${scanResHtml(lk.lastScan)}
-    <div class="lkchips">${[["semua","Semua "+isi.length],["belum","Belum diperiksa "+nBelum],["keluar","Dikeluarkan "+nOut]].map(([k,l])=>`<button class="lkchip" data-lkshow="${k}" aria-pressed="${lk.show===k}">${l}</button>`).join("")}</div></div>
+    <div class="lkchips">${[["semua","Semua "+isi.length],["belum","Belum diperiksa "+nBelum],["keluar","Dikeluarkan "+nOut]].map(([k,l])=>`<button class="lkchip" data-lkshow="${k}" aria-pressed="${lk.show===k}">${l}</button>`).join("")}</div>${ckToolbar("lk")}</div>
    <p class="hint" style="margin:4px 0 8px">Kondisi semua item kosong sampai diperiksa. Ketuk kotak ✓ atau pindai barcode untuk item yang ada; pilih Terpakai, Hilang, atau Ditarik untuk yang tidak ada.${lapCanScan()?"":" Pemindaian kamera tidak tersedia di browser ini."}</p>
    ${nExp?`<button class="btn small" data-act="lk-exp" style="margin-bottom:10px">Tandai ${nExp} item kadaluarsa / H-6 bulan sebagai Ditarik</button>`:""}
    <div class="lklist">${rows||`<p class="empty">${lk.show==="belum"?"Semua item sudah diperiksa.":"Tidak ada item pada tampilan ini."}</p>`}</div>
    ${nBelum?`<p class="hint" style="margin:10px 0">${nBelum} item belum diperiksa. Bila memang tidak ada di kotak, <button class="linkbtn" data-act="lk-hilang">tandai semuanya sebagai Hilang</button>.</p>`:""}
    ${tmSection("lk")}
+   ${slSection("lk")}
    <section class="panel lkfoot"><h2>Data pemeriksaan</h2><div class="lkgrid">
     <label class="f"><span>Tanggal pemeriksaan</span><input type="date" data-lkf="tgl" value="${esc(lk.tgl)}" max="${todayISO()}"></label>
     ${picker("lk-pem","NRP personil pemeriksa",lk.pemNrp)}<label class="f"><span>Nama personil pemeriksa</span><input type="text" data-lkf="pem" value="${esc(lk.pem)}" placeholder="Wajib diisi"></label>
@@ -3189,7 +3205,7 @@ function lkSave(force){
    <p style="margin-bottom:0">${out.length?`${out.length} item dikeluarkan: terpakai ${c("terpakai")}, hilang ${c("hilang")}, ditarik ${c("exp")}.`:"Semua item ada."}</p></div>${foot("Simpan")}`, async ()=>{
     const pid=uidGen("pm"), keluar=out.map(x=>{ const v=lk.st[x.bc]; return {bc:x.bc,kode:x.kode,exp:x.exp||"",kat:v.k,nrp:v.k==="terpakai"?(v.nrp||"").trim():"",pengguna:v.k==="terpakai"?(v.nama||"").trim():"",alasan:(v.alasan||"").trim(),tgl:lk.tgl,tglPakai:v.k==="terpakai"?(v.tglPakai||lk.tgl):"",pid,petugas:S.uid}; });
     const pm={id:pid,tgl:lk.tgl,petugas:S.uid,sebelum:isi.length,scan:nScan,keluar:keluar.map(x=>({bc:x.bc,kat:x.kat})),catatan:lk.catatan.trim(),pemeriksa:lk.pem.trim(),pemNrp:lk.pemNrp.trim(),pic:lk.pic.trim(),picNrp:lk.picNrp.trim(),lapangan:true,diperiksa:isi.length};
-    const tm=tmCollect(lk.baru,lk.tgl,pid); if(tm.length) pm.temuan=tm.length;
+    const tm=tmCollect(lk.baru,lk.tgl,pid); if(tm.length) pm.temuan=tm.length; const sl=slCollect("lk"); if(sl.length) pm.salah=sl; if(tm.length) pm.temuanList=tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}));
     const d=STORE["kotak/"+lk.kode]; if(tm.length) d.temuan=(d.temuan||[]).concat(tm); lapApplyRemove(d,{keluar}); d.keluar=(d.keluar||[]).concat(keluar); (d.pemeriksaan=d.pemeriksaan||[]).push(pm); if(pm.pic){ d.picNama=pm.pic; d.picNrp=pm.picNrp; }
     if(lapRole()==="hp") STORE["lapangan/"+pid]={id:pid,kode:lk.kode,tgl:lk.tgl,keluar,temuan:tm,pemeriksaan:pm,pic:pm.pic,picNrp:pm.picNrp,dibuat:new Date().toISOString()};
     try{ localStorage.setItem("k3.lapPem",JSON.stringify({pem:pm.pemeriksa,pemNrp:pm.pemNrp})); }catch(e){}
@@ -3202,23 +3218,23 @@ function lapCanScan(){ return !!lapDet()&&!!(navigator.mediaDevices&&navigator.m
 function lapBeep(ok){ try{ if(navigator.vibrate) navigator.vibrate(ok?60:[80,60,80]); }catch(e){} }
 function lkMark(bc,src){ const lk=S.lk; if(!lk) return "none"; const b=S.kotak.get(lk.kode); bc=String(bc||"").trim().toUpperCase();
   const x=(b.isi||[]).find(i=>i.bc.toUpperCase()===bc);
-  if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other) return "other:"+other; const tl=tmState("lk"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); lapDraftSave(); return "temu:"+bc; }
-  if(lk.scan[x.bc]) return "dup:"+x.bc; lk.scan[x.bc]=true; if(lk.st[x.bc]&&lk.st[x.bc].k==="hilang") delete lk.st[x.bc]; if(!lk.st[x.bc]) lk.st[x.bc]={k:"ada"}; lapDraftSave(); return "ok:"+x.bc; }
+  if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other){ slAdd("lk",bc,other); return "other:"+other; } const tl=tmState("lk"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); lapDraftSave(); return "temu:"+bc; }
+  if(lk.scan[x.bc]||(lk.st[x.bc]&&lk.st[x.bc].k==="ada")) return "dup:"+x.bc; lk.scan[x.bc]=true; if(lk.st[x.bc]&&lk.st[x.bc].k==="hilang") delete lk.st[x.bc]; if(!lk.st[x.bc]) lk.st[x.bc]={k:"ada"}; lapDraftSave(); return "ok:"+x.bc; }
 function lkMsg(r,bc){ const [t,v]=r.split(":"); if(t==="ok") return {ok:true,txt:"✓ "+v}; if(t==="dup") return {ok:true,txt:v+" sudah dipindai"}; if(t==="other") return {ok:false,txt:bc+" milik kotak "+v}; if(t==="temu") return {ok:false,txt:v+" belum tercatat di program, ditambahkan ke Item belum tercatat"}; return {ok:false,txt:bc+" tidak ada di kotak ini"}; }
 let LAP_CAM=null;
 async function lapCamOpen(mode){
   const det=lapDet(); if(!det){ toast("Pemindaian kamera tidak tersedia."); return; }
   const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="camres" hidden></div><div class="cambar"><span class="cammsg">${mode==="box"?"Arahkan kamera ke barcode kode kotak":"Arahkan kamera ke barcode item"}</span><span class="camcnt"></span><button class="btn" data-act="cam-close">Selesai</button></div>`;
   document.body.appendChild(ov); const video=ov.querySelector("video"), msg=ov.querySelector(".cammsg"), cnt=ov.querySelector(".camcnt"), card=ov.querySelector(".camres"); scanSound(true);
-  let stream; try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false}); }
+  let stream; try{ let pref=""; try{ pref=localStorage.getItem("k3.camId")||""; }catch(e){} stream=await camPickStream(pref); }
   catch(e){ ov.remove(); toast(e&&e.name==="NotAllowedError"?"Izin kamera ditolak. Gunakan Foto barcode atau ketik barcode.":"Kamera tidak bisa dibuka di tampilan ini. Gunakan Foto barcode atau ketik barcode."); return; }
   video.srcObject=stream; await video.play().catch(()=>{});
-  const st={on:true,last:"",lastT:0}; LAP_CAM={ov,stream,st};
+  const st={on:true,last:"",lastT:0}; LAP_CAM={ov,stream,st}; LAP_CAM.redraw=camControls(ov,video);
   const upd=()=>{ if(S.lk){ const b=S.kotak.get(S.lk.kode), n=(b.isi||[]).filter(x=>lkStOf(x.bc)).length; cnt.textContent=n+"/"+(b.isi||[]).length+" diperiksa"; } }; upd();
   const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=await det.detect(video); const now=Date.now();
         for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v||(v===st.last&&now-st.lastT<1800)) continue; st.last=v; st.lastT=now;
           if(mode==="box"){ const kb=v.toUpperCase(); if(S.kotak.has(kb)){ lapBeep(true); lapCamClose(); go("lap-"+kb); return; } lapBeep(false); msg.textContent=v+" bukan kode kotak"; msg.className="cammsg bad"; continue; }
-          const s=scanInfo(lkMark(v),v,S.lk&&S.lk.kode); if(S.lk) S.lk.lastScan=s; lapBeep(s.ok); scanSound(s.ok); card.className="camres "+s.cls; card.innerHTML=`<b>${s.ok?"✓ ":s.cls==="warn"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}`; card.hidden=false;
+          const s=scanInfo(lkMark(v),v,S.lk&&S.lk.kode); if(S.lk) S.lk.lastScan=s; lapBeep(s.ok); scanSound(s.ok); card.className="camres "+s.cls; card.innerHTML=`<b>${s.cls==="dup"?"↻ ":s.ok?"✓ ":s.cls==="warn"||s.cls==="temu"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}`; card.hidden=false;
           msg.textContent="Lanjutkan scan item berikutnya"; msg.className="cammsg"; upd(); } } }catch(e){}
     setTimeout(loop,220); };
   loop();
@@ -3272,6 +3288,51 @@ function lkPick(inp,k){ const key=inp.dataset.pick; inp.parentElement.querySelec
   lapDraftSave(); }
 document.addEventListener("input",ev=>{ const el=ev.target; if(!S.lk||!el.dataset||!el.dataset.pick) return; const key=el.dataset.pick;
   if(key.startsWith("lku-")){ const v=S.lk.st[key.slice(4)]; if(v) v.nrp=el.value.trim(); lapDraftSave(); } else if(key.startsWith("lk-")){ S.lk[key.slice(3)+"Nrp"]=el.value.trim(); lapDraftSave(); } });
+
+// ---------- Perbaikan pemeriksaan: urungkan/kosongkan ceklis, item salah penempatan, kamera (fokus, flash) ----------
+// urungkan & kosongkan ceklis (komputer: ck, HP: lk)
+function ckObj(k){ return k==="lk"?S.lk:S.ck; }
+function ckSnap(k){ const o=ckObj(k); if(!o) return; o._undo=JSON.stringify({st:o.st,scan:o.scan}); }
+function ckUndo(k){ const o=ckObj(k); if(!o||!o._undo) return; const u=JSON.parse(o._undo); o.st=u.st; o.scan=u.scan; o._undo=""; if(k==="lk") lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); toast("Perubahan terakhir dibatalkan."); }
+function ckClearGroup(k,kode){ const o=ckObj(k), b=S.kotak.get(o.kode); ckSnap(k); (b.isi||[]).forEach(x=>{ if(!kode||x.kode===kode){ delete o.st[x.bc]; delete o.scan[x.bc]; } }); if(k==="lk") lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); }
+function ckToolbar(k){ const o=ckObj(k); if(!o) return ""; const n=Object.keys(o.st||{}).length+Object.keys(o.scan||{}).filter(bc=>!(o.st||{})[bc]).length;
+  return `<div class="row cktools" style="gap:6px;margin:6px 0 0">${o._undo?`<button type="button" class="btn small" data-ckundo="${k}">↶ Urungkan</button>`:""}${n?`<button type="button" class="btn small" data-ckclearall="${k}">↺ Kosongkan semua ceklis</button>`:""}</div>`; }
+document.addEventListener("click",ev=>{ const t=ev.target;
+  const g=t.closest("[data-ckgrp],[data-lkgrp]"); if(g){ const k=g.dataset.lkgrp!=null?"lk":"ck", kode=g.dataset.lkgrp??g.dataset.ckgrp; if(g.dataset.k==="clear"){ ev.stopImmediatePropagation(); ckClearGroup(k,kode); return; } ckSnap(k); return; }
+  const u=t.closest("[data-ckundo]"); if(u){ ckUndo(u.dataset.ckundo); return; }
+  const c=t.closest("[data-ckclearall]"); if(c){ const k=c.dataset.ckclearall; openDlg(`<header><h2>Kosongkan semua ceklis?</h2></header><div class="body"><p style="margin:0">Semua item kembali ke "belum diperiksa". Bisa dibatalkan dengan tombol Urungkan.</p></div>${foot("Kosongkan")}`, async ()=>ckClearGroup(k,null)); return; }
+  const h=t.closest('[data-act="lk-hilang"],[data-act="ck-unscanned"],[data-act="lk-exp"],[data-act="ck-exp"]'); if(h) ckSnap(/^lk/.test(h.dataset.act)?"lk":"ck"); },true);
+// item salah penempatan
+function slState(k){ const o=ckObj(k); if(!o) return null; if(!Array.isArray(o.salah)) o.salah=[]; return o.salah; }
+function slAdd(k,bc,asal){ const l=slState(k); if(!l) return; bc=String(bc).toUpperCase(); if(l.some(x=>x.bc===bc)) return; const b=S.kotak.get(asal)||{}, it=(b.isi||[]).find(i=>i.bc.toUpperCase()===bc)||{};
+  l.push({bc,kode:it.kode||"",nama:it.kode?itemOf(it.kode).nama:"",asal,bagianAsal:[b.bagian,b.penempatan].filter(Boolean).join(" · "),catatan:""}); if(k==="lk") lapDraftSave(); }
+function slSection(k){ const l=slState(k)||[];
+  return `<section class="panel tmsec"><h2 style="margin:0">Item salah penempatan <span class="muted" style="font-weight:400;font-size:14px">(otomatis dari scan)</span></h2>
+   <p class="hint" style="margin:4px 0 ${l.length?"10px":"0"}">Item yang ditemukan di kotak ini tetapi terdaftar di kotak lain. Otomatis tercatat saat dipindai, dan ikut tercetak di laporan Pemakaian & item keluar.</p>
+   ${l.map((r,i)=>`<div class="slrow"><div><b class="num">${esc(r.bc)}</b> · ${esc(r.nama||"item")}<div class="muted" style="font-size:12.5px">Terdaftar di kotak <b>${esc(r.asal)}</b>${r.bagianAsal?" · "+esc(r.bagianAsal):""}</div></div><input type="text" data-sl="${k}|${i}" value="${esc(r.catatan||"")}" placeholder="Catatan, misal: dikembalikan ke kotak asal"><button type="button" class="btn small danger" data-sldel="${k}|${i}" aria-label="Hapus">✕</button></div>`).join("")}</section>`; }
+function slCollect(k){ return (slState(k)||[]).map(r=>({bc:r.bc,kode:r.kode,nama:r.nama,asal:r.asal,bagianAsal:r.bagianAsal,catatan:String(r.catatan||"").trim()})); }
+document.addEventListener("input",ev=>{ const el=ev.target; if(el.dataset&&el.dataset.sl){ const [k,i]=el.dataset.sl.split("|"), l=slState(k); if(l&&l[+i]){ l[+i].catatan=el.value; if(k==="lk") lapDraftSave(); } } });
+document.addEventListener("click",ev=>{ const d=ev.target.closest("[data-sldel]"); if(!d) return; const [k,i]=d.dataset.sldel.split("|"), l=slState(k); if(!l) return; l.splice(+i,1); if(k==="lk") lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); });
+// kamera: pilih lensa utama (fokus otomatis), flash, ganti kamera
+async function camPickStream(pref){ const base={width:{ideal:1920},height:{ideal:1080},advanced:[{focusMode:"continuous"}]};
+  let stream=await navigator.mediaDevices.getUserMedia({video:Object.assign({facingMode:{ideal:"environment"}},base),audio:false});
+  try{ const devs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput"); const back=devs.filter(d=>/back|rear|belakang|environment/i.test(d.label));
+    let want=pref&&devs.find(d=>d.deviceId===pref); if(!want&&back.length>1){ want=back.find(d=>/\b0\b|camera2 0|camera 0/i.test(d.label))||back[0]; }
+    const cur=stream.getVideoTracks()[0].getSettings().deviceId; if(want&&want.deviceId!==cur){ stream.getTracks().forEach(t=>t.stop()); stream=await navigator.mediaDevices.getUserMedia({video:Object.assign({deviceId:{exact:want.deviceId}},base),audio:false}); } }catch(e){}
+  const tr=stream.getVideoTracks()[0]; try{ const cap=tr.getCapabilities?tr.getCapabilities():{}; if(cap.focusMode&&cap.focusMode.includes("continuous")) await tr.applyConstraints({advanced:[{focusMode:"continuous"}]}); }catch(e){}
+  return stream; }
+async function camDevices(){ try{ return (await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput"); }catch(e){ return []; } }
+function camControls(ov,video){ const bar=document.createElement("div"); bar.className="camctl"; ov.appendChild(bar);
+  const draw=async()=>{ const tr=LAP_CAM&&LAP_CAM.stream.getVideoTracks()[0], cap=tr&&tr.getCapabilities?tr.getCapabilities():{}, devs=await camDevices();
+    bar.innerHTML=`${cap.torch?`<button type="button" data-camtorch aria-pressed="${!!(LAP_CAM&&LAP_CAM.torch)}">🔦 ${LAP_CAM&&LAP_CAM.torch?"Flash on":"Flash"}</button>`:""}${devs.length>1?`<button type="button" data-camswitch>🔄 Ganti kamera</button>`:""}${cap.focusMode&&cap.focusMode.includes("single-shot")?`<button type="button" data-camfocus>🎯 Fokus</button>`:""}`; };
+  draw(); return draw; }
+document.addEventListener("click",async ev=>{ if(!LAP_CAM) return; const t=ev.target;
+  if(t.closest("[data-camtorch]")){ const tr=LAP_CAM.stream.getVideoTracks()[0]; LAP_CAM.torch=!LAP_CAM.torch; try{ await tr.applyConstraints({advanced:[{torch:LAP_CAM.torch}]}); }catch(e){ LAP_CAM.torch=false; toast("Flash tidak didukung kamera ini."); } if(LAP_CAM.redraw) LAP_CAM.redraw(); return; }
+  if(t.closest("[data-camfocus]")){ const tr=LAP_CAM.stream.getVideoTracks()[0]; try{ await tr.applyConstraints({advanced:[{focusMode:"single-shot"}]}); setTimeout(()=>tr.applyConstraints({advanced:[{focusMode:"continuous"}]}).catch(()=>{}),900); }catch(e){} return; }
+  if(t.closest("[data-camswitch]")){ const devs=await camDevices(), cur=LAP_CAM.stream.getVideoTracks()[0].getSettings().deviceId, i=devs.findIndex(d=>d.deviceId===cur), nx=devs[(i+1)%devs.length]; if(!nx) return;
+    LAP_CAM.stream.getTracks().forEach(x=>x.stop()); try{ LAP_CAM.stream=await navigator.mediaDevices.getUserMedia({video:{deviceId:{exact:nx.deviceId},width:{ideal:1920},height:{ideal:1080},advanced:[{focusMode:"continuous"}]},audio:false}); const v=LAP_CAM.ov.querySelector("video"); v.srcObject=LAP_CAM.stream; await v.play().catch(()=>{}); LAP_CAM.torch=false; try{ localStorage.setItem("k3.camId",nx.deviceId); }catch(e){} toast(nx.label||"Kamera diganti"); }catch(e){ toast("Kamera tidak bisa diganti."); } if(LAP_CAM.redraw) LAP_CAM.redraw(); } });
+// tap pada video untuk fokus ulang
+document.addEventListener("click",async ev=>{ if(!LAP_CAM||ev.target.tagName!=="VIDEO"||!ev.target.closest(".camov")) return; const tr=LAP_CAM.stream.getVideoTracks()[0]; try{ await tr.applyConstraints({advanced:[{focusMode:"single-shot"}]}); setTimeout(()=>tr.applyConstraints({advanced:[{focusMode:"continuous"}]}).catch(()=>{}),900); }catch(e){} });
 
 // ---------- HIRADC (Hazard Identification, Risk Assessment & Determining Control) ----------
 const HIRA_DEF={perusahaan:"PT. DEWASUTRATEX – PANITIA PEMBINA KESELAMATAN DAN KESEHATAN KERJA (P2K3)",judul:"HAZARD IDENTIFICATION, RISK ASSESSMENT AND DETERMINING CONTROL (HIRADC)",lokasi:"Cimahi",
@@ -3538,6 +3599,10 @@ function kxRows(){ const y=S.p3kLogY||todayISO().slice(0,7), k=S.p3kLogK||"", bg
   const rows=all.filter(x=>(y==="semua"||(x.tgl||"").startsWith(y))&&(!k||x.kat===k)&&kxMatch(x,bg)&&(!u||(u==="sudah")===kxUpd(x))).sort((a,c)=>(c.tgl||"").localeCompare(a.tgl||"")||a._box.localeCompare(c._box));
   return {all,rows,y,k,bg}; }
 function kxPeriod(y){ return y==="semua"?"Semua periode":BULAN[+y.slice(5)-1]+" "+y.slice(0,4); }
+function kxNotes(){ const {y,bg}=kxRows(), out=[]; S.kotak.forEach(b=>{ const bag=b.bagian||"(tanpa bagian)", grp=bag+(b.penempatan?" – "+b.penempatan:""); (b.pemeriksaan||[]).forEach(p=>{ if(!(y==="semua"||(p.tgl||"").startsWith(y))) return; if(!kxMatch({_bag:bag,_grp:grp},bg)) return;
+    const tl=p.temuanList||(b.temuan||[]).filter(t=>t.pid===p.id).map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan})), sl=p.salah||[];
+    if(p.catatan||tl.length||sl.length) out.push({b,p,tl,sl,grp}); }); }); return out.sort((a,c)=>a.grp.localeCompare(c.grp,"id")||(a.p.tgl||"").localeCompare(c.p.tgl||"")); }
+function kxNotesTxt(n){ return [n.p.catatan?"Catatan: "+n.p.catatan:"",n.tl.length?"Item belum tercatat: "+n.tl.map(t=>[t.bc,t.nama].filter(Boolean).join(" ")+(t.catatan?" ("+t.catatan+")":"")).join("; "):"",n.sl.length?"Item salah penempatan: "+n.sl.map(s=>s.bc+(s.nama?" "+s.nama:"")+" milik "+s.asal+(s.bagianAsal?" ("+s.bagianAsal+")":"")+(s.catatan?" – "+s.catatan:"")).join("; "):""].filter(Boolean); }
 function viewP3kLog(){
   const {all,rows,y,k,bg}=kxRows();
   const months=[...new Set([todayISO().slice(0,7),...all.map(x=>(x.tgl||"").slice(0,7)).filter(Boolean)])].sort().reverse();
@@ -3548,10 +3613,11 @@ function viewP3kLog(){
    <select id="p3kLogB" aria-label="Bagian dan penempatan"><option value="">Semua bagian (keseluruhan)</option>${bags.map(b=>{ const gs=grpOf(b); return `<optgroup label="${esc(b)}">${gs.length>1?`<option value="b:${esc(b)}" ${bg==="b:"+b||bg===b?"selected":""}>${esc(b)} – semua penempatan</option>`:""}${gs.map(g=>`<option value="g:${esc(g)}" ${bg==="g:"+g?"selected":""}>${esc(g)}</option>`).join("")}</optgroup>`; }).join("")}</select>
    <select id="p3kLogK" aria-label="Kategori"><option value="">Semua kategori</option>${Object.entries(KELUAR).map(([kk,[l]])=>`<option value="${kk}" ${k===kk?"selected":""}>${l}</option>`).join("")}</select>
    <select id="p3kLogU" aria-label="Status Program P3K"><option value="">Semua status Program P3K</option><option value="belum" ${S.p3kLogU==="belum"?"selected":""}>Belum dimasukkan ke Program P3K</option><option value="sudah" ${S.p3kLogU==="sudah"?"selected":""}>Sudah dimasukkan ke Program P3K</option></select></div>
-   <section class="panel hdl"><div class="row"><button class="btn primary" data-act="kx-print" ${rows.length?"":"disabled"}>Cetak</button><span class="dlrow"><span>Unduh laporan</span><button class="btn" data-act="kx-dl" data-fmt="pdf" ${rows.length?"":"disabled"}>PDF</button><button class="btn" data-act="kx-dl" data-fmt="ods" ${rows.length?"":"disabled"}>ODS</button><button class="btn" data-act="kx-dl" data-fmt="odt" ${rows.length?"":"disabled"}>ODT</button></span></div>
+   <section class="panel hdl"><div class="row"><button class="btn primary" data-act="kx-print" ${rows.length||kxNotes().length?"":"disabled"}>Cetak</button><span class="dlrow"><span>Unduh laporan</span><button class="btn" data-act="kx-dl" data-fmt="pdf" ${rows.length||kxNotes().length?"":"disabled"}>PDF</button><button class="btn" data-act="kx-dl" data-fmt="ods" ${rows.length||kxNotes().length?"":"disabled"}>ODS</button><button class="btn" data-act="kx-dl" data-fmt="odt" ${rows.length||kxNotes().length?"":"disabled"}>ODT</button></span></div>
     <p class="hint" style="margin:6px 0 0">Laporan mengikuti filter di atas: ${esc(kxPeriod(y))} · ${bg?esc(kxLabel(bg)):"keseluruhan (dikelompokkan per bagian dan penempatan)"}${k?" · "+esc(KELUAR[k][0]):""}.</p></section>
    <p class="hint">Terpakai ${cnt("terpakai")} · hilang ${cnt("hilang")} · ditarik kadaluarsa ${cnt("exp")} · <b>${rows.filter(x=>!kxUpd(x)).length}</b> belum dimasukkan ke Program P3K${S.canWrite&&rows.some(x=>!kxUpd(x))?` · <button class="linkbtn" data-act="kx-upd-all">tandai semua yang tampil sudah dimasukkan</button>`:""}</p>
-   <div class="panel" style="padding:4px 8px">${rows.length?keluarTable(rows,true):`<p class="empty">Tidak ada item keluar pada periode ini.</p>`}</div>`;
+   <div class="panel" style="padding:4px 8px">${rows.length?keluarTable(rows,true):`<p class="empty">Tidak ada item keluar pada periode ini.</p>`}</div>
+   ${(()=>{ const N=kxNotes(); return N.length?`<section class="panel"><h2>Catatan pemeriksaan (${N.length})</h2><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Kotak</th><th>Bagian · penempatan</th><th>Pemeriksa</th><th>Catatan, item belum tercatat & salah penempatan</th></tr></thead><tbody>${N.map(n=>`<tr><td class="num">${fmt(n.p.tgl)}</td><td class="num"><button class="linkbtn tpn" data-gobox="${esc(n.b.kode)}">${esc(n.b.kode)}</button></td><td style="font-size:13px">${esc(n.grp)}</td><td>${esc(n.p.pemeriksa||"")}</td><td style="font-size:13px">${kxNotesTxt(n).map(esc).join("<br>")}</td></tr>`).join("")}</tbody></table></div></section>`:""; })()}`;
 }
 function exportP3kLog(){ const {rows}=kxRows(); const out=[["Tgl. pemeriksaan","Kotak","Bagian","Penempatan","Barcode","No. Stock","Item","Kategori","Tgl. terpakai","NRP pengguna","Nama pengguna","Alasan / keterangan","Tgl. kadaluarsa"]];
   rows.slice().reverse().forEach(x=>out.push([fmt(x.tgl),x._box,x._bag,x._pen,x.bc,x.kode,itemOf(x.kode).nama,KELUAR[x.kat][0],x.kat==="terpakai"?fmt(x.tglPakai||x.tgl):"",x.nrp||"",x.pengguna||"",x.alasan||"",x.exp?fmt(x.exp):""]));
@@ -3591,10 +3657,11 @@ function kxDocHtml(){ const {rows,y,k,bg}=kxRows(), list=rows.slice().reverse();
     ${[...groups.entries()].map(([n,g])=>`<tr><td>${esc(g[0]._bag)}</td><td>${esc(g[0]._pen||"–")}</td><td class="c">${esc([...new Set(g.map(x=>x._box))].join(", "))}</td><td class="c">${c(g,"terpakai")}</td><td class="c">${c(g,"hilang")}</td><td class="c">${c(g,"exp")}</td><td class="c"><b>${g.length}</b></td></tr>`).join("")}
     ${groups.size>1?`<tr class="ktot"><td><b>TOTAL</b></td><td></td><td></td><td class="c"><b>${c(list,"terpakai")}</b></td><td class="c"><b>${c(list,"hilang")}</b></td><td class="c"><b>${c(list,"exp")}</b></td><td class="c"><b>${list.length}</b></td></tr>`:""}</tbody></table>
    ${[...groups.entries()].map(([n,g])=>`<p class="ksub">Bagian: ${esc(g[0]._bag)}${g[0]._pen?" &nbsp;·&nbsp; Penempatan: "+esc(g[0]._pen):""}</p>${tbl(g)}`).join("")}
+   ${(()=>{ const N=kxNotes(); return N.length?`<p class="ksub">Catatan pemeriksaan</p><table class="ktb"><colgroup><col style="width:7mm"><col style="width:17mm"><col style="width:19mm"><col style="width:36mm"><col style="width:24mm"><col style="width:87mm"></colgroup><thead><tr><th>No</th><th>Tgl. periksa</th><th>Kotak</th><th>Bagian · penempatan</th><th>Pemeriksa</th><th>Catatan, item belum tercatat & item salah penempatan</th></tr></thead><tbody>${N.map((n,i)=>`<tr><td class="c">${i+1}</td><td class="c">${fmt(n.p.tgl)}</td><td class="c">${esc(n.b.kode)}</td><td>${esc(n.grp)}</td><td>${esc(n.p.pemeriksa||"")}</td><td>${kxNotesTxt(n).map(esc).join("<br>")}</td></tr>`).join("")}</tbody></table>`:""; })()}
    <table class="hsg"><tr><td>Dibuat oleh,<br><br><br><br><b>( ____________________ )</b><br>Petugas K3</td><td></td><td>Mengetahui,<br><br><br><br><b>( ____________________ )</b><br>Kepala Bagian / HRD</td></tr></table></div>`; }
 function kxPrint(){ const pa=$("#printArea"); pa.innerHTML=kxDocHtml(); document.body.classList.add("printing");
   const done=()=>{ document.body.classList.remove("printing"); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done); setTimeout(()=>{ window.print(); setTimeout(done,500); },60); }
-async function kxDownload(fmtX){ const {rows,y,bg}=kxRows(); if(!rows.length) return; const base=("Item-Keluar-P3K-"+(bg?kxLabel(bg).replace(" (semua penempatan)",""):"Keseluruhan")+"-"+(y==="semua"?"semua":y)).replace(/[^\w.-]+/g,"_"); let st=null;
+async function kxDownload(fmtX){ const {rows,y,bg}=kxRows(); if(!rows.length&&!kxNotes().length) return; const base=("Item-Keluar-P3K-"+(bg?kxLabel(bg).replace(" (semua penempatan)",""):"Keseluruhan")+"-"+(y==="semua"?"semua":y)).replace(/[^\w.-]+/g,"_"); let st=null;
   toast("Menyiapkan file "+fmtX.toUpperCase()+"…");
   try{ if(fmtX==="pdf"){ st=xStage(kxDocHtml()); await new Promise(r=>setTimeout(r,30)); await saveBlob(base+".pdf",await pdfFromStage(st,{sel:".kdoc"}),"application/pdf"); }
     else if(fmtX==="odt"){ const m=xModel(null,kxDocHtml(),".kdoc",190); st=m.st; await saveBlob(base+".odt",buildOdtForm(m.model,[],"Laporan item keluar P3K"),"application/vnd.oasis.opendocument.text"); }
@@ -3609,6 +3676,8 @@ function kxOds(){ const {rows,y,k,bg}=kxRows(), list=rows.slice().reverse(); let
     rows:[...groups.entries()].map(([n,g])=>[g[0]._bag,g[0]._pen||"",[...new Set(g.map(x=>x._box))].join(", "),c(g,"terpakai"),c(g,"hilang"),c(g,"exp"),g.length]).concat(groups.size>1?[["TOTAL","","",c(list,"terpakai"),c(list,"hilang"),c(list,"exp"),list.length]]:[])});
   if(bg&&groups.size<=1) sheets.push({name:kxLabel(bg),title:"RINCIAN ITEM KELUAR – "+kxLabel(bg),sub,head,widths:wid,rows:dr(list)});
   else { if(bg) sheets[0].title+=" – "+kxLabel(bg); sheets.push({name:bg?"Semua":"Semua bagian",title:"RINCIAN ITEM KELUAR – "+(bg?kxLabel(bg):"KESELURUHAN"),sub,head,widths:wid,rows:dr(list)}); groups.forEach((g,n)=>sheets.push({name:n,title:"RINCIAN ITEM KELUAR – "+n,sub,head,widths:wid,rows:dr(g)})); }
+  { const N=kxNotes(); if(N.length) sheets.push({name:"Catatan pemeriksaan",title:"CATATAN PEMERIKSAAN KOTAK P3K",sub,head:["No","Tgl. pemeriksaan","Kotak","Bagian · penempatan","Pemeriksa","Catatan","Item belum tercatat","Item salah penempatan"],widths:[0.9,2.4,2.4,5,3.5,6,6,7],
+    rows:N.map((n,i)=>[i+1,fmt(n.p.tgl),n.b.kode,n.grp,n.p.pemeriksa||"",n.p.catatan||"",n.tl.map(t=>[t.bc,t.nama].filter(Boolean).join(" ")+(t.catatan?" ("+t.catatan+")":"")).join("; "),n.sl.map(s=>s.bc+(s.nama?" "+s.nama:"")+" milik "+s.asal+(s.bagianAsal?" ("+s.bagianAsal+")":"")+(s.catatan?" – "+s.catatan:"")).join("; ")])}); }
   return buildSimpleOds(sheets); }
 function buildSimpleOds(sheets){ const NS=`xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" office:version="1.2"`;
   const bd=`fo:border="0.5pt solid #000000"`, used=new Set();
@@ -3941,9 +4010,10 @@ document.addEventListener("input",ev=>{ const el=ev.target; if(!S.bg) return;
 
 // ---------- urutan item P3K menurut abjad & tombol ceklis per kelompok ----------
 function itemCmp(x,y){ const a=itemOf(x.kode).nama||x.kode, b=itemOf(y.kode).nama||y.kode; return a.localeCompare(b,"id",{sensitivity:"base",numeric:true})||x.kode.localeCompare(y.kode)||String(x.bc||"").localeCompare(String(y.bc||"")); }
-function grpBtns(kind,kode,sts){ const rem=sts.filter(s=>!s).length; if(!rem) return ""; const chk=sts.filter(Boolean);
+function grpBtns(kind,kode,sts){ const rem=sts.filter(s=>!s).length, chk=sts.filter(Boolean); if(!rem&&!chk.length) return "";
   const opts=!chk.length?[["ada","✓ Semua ada"],["hilang","✗ Semua hilang"]]:chk.every(s=>s==="ada")?[["hilang",`✗ ${rem} sisanya hilang`]]:[["ada",`✓ ${rem} sisanya ada`],["hilang",`✗ ${rem} sisanya hilang`]];
-  return `<span class="grpbtns">${opts.map(([k,l])=>`<button type="button" class="btn small${k==="hilang"?" gh":""}" data-${kind}="${esc(kode)}" data-k="${k}">${l}</button>`).join("")}</span>`; }
+  if(!rem) opts.length=0; if(chk.length) opts.push(["clear","↺ Kosongkan "+chk.length]);
+  return `<span class="grpbtns">${opts.map(([k,l])=>`<button type="button" class="btn small${k==="hilang"?" gh":k==="clear"?" gc":""}" data-${kind}="${esc(kode)}" data-k="${k}">${l}</button>`).join("")}</span>`; }
 
 // ---------- Item temuan: sudah berbarcode di kotak tetapi belum tercatat di program ----------
 function tmState(k){ const o=k==="lk"?S.lk:S.ck; if(!o) return null; if(!Array.isArray(o.baru)) o.baru=[]; return o.baru; }
@@ -4192,18 +4262,18 @@ document.addEventListener("click",ev=>{ const t=ev.target.closest('[data-act="pt
 function bcItemName(bc,boxKode){ let nm="", box=""; S.kotak.forEach(k=>{ if(nm||(boxKode&&k.kode!==boxKode)) return; const x=(k.isi||[]).find(i=>i.bc.toUpperCase()===String(bc).toUpperCase()); if(x){ nm=itemOf(x.kode).nama; box=k.kode; } }); return {nm,box}; }
 function scanInfo(r,bc,boxKode){ const [t,v]=String(r).split(":"); bc=String(bc||"").trim().toUpperCase();
   if(t==="ok"){ const i=bcItemName(v,boxKode); return {ok:true,cls:"good",title:`${i.nm||"Item"} ditemukan`,sub:`${v} · otomatis dicentang Ada`}; }
-  if(t==="dup"){ const i=bcItemName(v,boxKode); return {ok:true,cls:"good",title:`${i.nm||"Item"} sudah dicentang`,sub:v}; }
-  if(t==="other"){ const i=bcItemName(bc,v); return {ok:false,cls:"bad",title:`${bc} terdaftar di kotak ${v}`,sub:`${i.nm?i.nm+" · ":""}bukan isi kotak ini, tidak dicentang`}; }
-  if(t==="temu") return {ok:false,cls:"warn",title:`${bc} belum terdaftar di kotak ini`,sub:"Barcode belum ada di program · dicatat di bagian Item belum tercatat"};
+  if(t==="dup"){ const i=bcItemName(v,boxKode); return {ok:true,cls:"dup",title:`${i.nm||"Item"} sudah discan sebelumnya`,sub:v+" · sudah tercentang Ada"}; }
+  if(t==="other"){ const i=bcItemName(bc,v), ob=S.kotak.get(v)||{}, bg=[ob.bagian,ob.penempatan].filter(Boolean).join(" · "); return {ok:false,cls:"bad",title:`${bc} milik kotak ${v}${bg?" ("+bg+")":""}`,sub:`${i.nm?i.nm+" · ":""}bukan isi kotak ini · dicatat sebagai item salah penempatan`}; }
+  if(t==="temu") return {ok:false,cls:"temu",title:`${bc} belum terdaftar di kotak ini`,sub:"Barcode belum ada di program · dicatat di bagian Item belum tercatat"};
   return {ok:false,cls:"bad",title:`${bc} tidak ada di kotak ini`,sub:""}; }
-function scanResHtml(s){ return s?`<div class="scanres ${s.cls}" role="status"><b>${s.ok?"✓ ":s.cls==="warn"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}</div>`:""; }
+function scanResHtml(s){ return s?`<div class="scanres ${s.cls}" role="status"><b>${s.cls==="dup"?"↻ ":s.ok?"✓ ":s.cls==="warn"||s.cls==="temu"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}</div>`:""; }
 let SC_AC=null; function scanSound(ok){ try{ SC_AC=SC_AC||new (window.AudioContext||window.webkitAudioContext)(); const t=SC_AC.currentTime, beep=(f,s,d)=>{ const o=SC_AC.createOscillator(), g=SC_AC.createGain(); o.frequency.value=f; o.type="square"; g.gain.setValueAtTime(.07,t+s); g.gain.exponentialRampToValueAtTime(.001,t+s+d); o.connect(g); g.connect(SC_AC.destination); o.start(t+s); o.stop(t+s+d+.02); };
   if(ok) beep(1400,0,.09); else { beep(320,0,.14); beep(320,.2,.14); } }catch(e){} }
 // komputer: kolom scan (scanner barcode USB atau ketik)
 function ckMark(bc){ const ck=S.ck, b=S.kotak.get(ck.kode); bc=String(bc||"").trim().toUpperCase(); const x=(b.isi||[]).find(i=>i.bc.toUpperCase()===bc);
-  if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other) return "other:"+other;
+  if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other){ slAdd("ck",bc,other); return "other:"+other; }
     const tl=tmState("ck"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); return "temu:"+bc; }
-  if(ck.scan[x.bc]) return "dup:"+x.bc; ck.scan[x.bc]=true; if(ck.st[x.bc]&&ck.st[x.bc].k==="hilang") delete ck.st[x.bc]; if(!ck.st[x.bc]) ck.st[x.bc]={k:"ada"}; return "ok:"+x.bc; }
+  if(ck.scan[x.bc]||(ck.st[x.bc]&&ck.st[x.bc].k==="ada")) return "dup:"+x.bc; ck.scan[x.bc]=true; if(ck.st[x.bc]&&ck.st[x.bc].k==="hilang") delete ck.st[x.bc]; if(!ck.st[x.bc]) ck.st[x.bc]={k:"ada"}; return "ok:"+x.bc; }
 function ckScanBar(){ const ck=S.ck; return `<form id="ckScanF" class="scanbar" autocomplete="off"><input type="text" id="ckBc" data-bcsug="ck" data-bcsubmit placeholder="Scan barcode item (scanner atau ketik), lalu Enter" aria-label="Scan barcode item" autocapitalize="characters" autocomplete="off"><button class="btn" type="submit">Centang</button></form>${scanResHtml(ck.lastScan)}`; }
 document.addEventListener("submit",ev=>{ if(ev.target.id!=="ckScanF"||!S.ck) return; ev.preventDefault(); const v=$("#ckBc").value.trim(); if(!v) return;
   const s=scanInfo(ckMark(v),v,S.ck.kode); S.ck.lastScan=s; scanSound(s.ok); const y=window.scrollY; render(); window.scrollTo(0,y); const n=$("#ckBc"); if(n) n.focus(); });
@@ -4440,8 +4510,10 @@ function bcsPick(v){ const inp=BCS&&BCS._inp; bcsHide(); if(!inp) return; inp.va
 document.addEventListener("input",ev=>{ const el=ev.target; if(el.dataset&&el.dataset.bcsug&&ev.isTrusted!==false) bcsShow(el); });
 document.addEventListener("mousedown",ev=>{ const b=ev.target.closest&&ev.target.closest("[data-bcv]"); if(b){ ev.preventDefault(); bcsPick(b.dataset.bcv); } else if(BCS&&!BCS.hidden&&!ev.target.closest(".bcsug")&&ev.target!==BCS._inp) bcsHide(); },true);
 document.addEventListener("keydown",ev=>{ if(!BCS||BCS.hidden||ev.target!==BCS._inp) return; const bs=[...BCS.querySelectorAll("button")], i=bs.findIndex(b=>b.classList.contains("on"));
-  if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){ ev.preventDefault(); if(!bs.length) return; const j=(i+(ev.key==="ArrowDown"?1:-1)+bs.length)%bs.length; bs.forEach((b,x)=>b.classList.toggle("on",x===j)); }
-  else if(ev.key==="Enter"){ const exact=bcSugSource(ev.target.dataset.bcsug).some(it=>it.v.toUpperCase()===ev.target.value.trim().toUpperCase()); if(exact||!bs.length){ bcsHide(); return; } ev.preventDefault(); ev.stopPropagation(); const b=bs[i>=0?i:0]; if(b) bcsPick(b.dataset.bcv); }
+  if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){ ev.preventDefault(); if(!bs.length) return; const j=(i+(ev.key==="ArrowDown"?1:-1)+bs.length)%bs.length; bs.forEach((b,x)=>{ b.classList.toggle("on",x===j); if(x===j) b.dataset.nav="1"; }); }
+  else if(ev.key==="Enter"){ const v=ev.target.value.trim().toUpperCase(), kind=ev.target.dataset.bcsug, chosen=bs.some(b=>b.classList.contains("on")&&b.dataset.nav);
+    let known=bcSugSource(kind).some(it=>it.v.toUpperCase()===v); if(!known&&kind!=="apar"){ S.kotak.forEach(b=>{ if(!known&&(b.isi||[]).some(i=>i.bc.toUpperCase()===v)) known=true; }); }
+    if(!chosen&&(known||v.length>=8||!bs.length)){ bcsHide(); return; } ev.preventDefault(); ev.stopPropagation(); const b=bs[i>=0?i:0]; if(b) bcsPick(b.dataset.bcv); }
   else if(ev.key==="Escape") bcsHide(); },true);
 document.addEventListener("focusout",ev=>{ if(BCS&&ev.target===BCS._inp) setTimeout(()=>{ if(document.activeElement!==BCS._inp) bcsHide(); },150); });
 window.addEventListener("scroll",()=>bcsHide(),true);
