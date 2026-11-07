@@ -533,7 +533,7 @@ body.hprole nav.side [data-navg="track"],body.hprole nav.side .navgrp[data-navg=
 .rwchips{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:auto}
 .rwb{padding:0 12px 10px}.rwt{width:100%;margin-top:6px;font-size:13px;table-layout:fixed}.rwt td,.rwt th{padding:4px 6px;overflow-wrap:anywhere;white-space:normal}
 .akdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#9ca3af;margin-right:6px}.akdot.on{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
-body:not(.lvpic) [data-navg="pic"],body:not(.lvpic) #ng-pic{display:none!important}
+body:not(.lvpic) nav.side [data-navg="pic"],body:not(.lvpic) nav.side #ng-pic{display:none!important}
 body.lvpic nav.side .navgrp:not([data-navg="pic"]),body.lvpic nav.side .navsub:not(#ng-pic),body.lvpic nav.side>a{display:none!important}
 .rsitem{margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--gray-bg);font-size:13px}
 .rsfoto{display:block;max-width:220px;max-height:160px;border-radius:6px;margin-top:6px;object-fit:cover}
@@ -552,6 +552,9 @@ body.lvpic nav.side .navgrp:not([data-navg="pic"]),body.lvpic nav.side .navsub:n
 .livebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 8px;padding:7px 10px;border-radius:8px;background:var(--green-bg);font-size:13px}
 .livedot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25);animation:sypulse 1.2s infinite alternate;flex:none}
 .fixban{margin:0 0 10px;border-left:4px solid var(--amber)}
+.aipanel{border-left:4px solid var(--accent)}.aiprompt{width:100%;font-size:12px;font-family:ui-monospace,monospace}
+body.lvobs nav.side [data-navg="ms"],body.lvobs nav.side #ng-ms,body.lvobs nav.side [data-navg="apd"],body.lvobs nav.side #ng-apd,body.lvobs nav.side [data-navg="track"],body.lvobs nav.side #ng-track,body.lvobs nav.side [data-navg="akses"],body.lvobs nav.side #ng-akses,body.lvobs nav.side [data-navg="data"],body.lvobs nav.side #ng-data,body.lvobs nav.side [data-nav="lapangan"],body.lvobs nav.side [data-nav="apar-cek"],body.lvobs nav.side [data-nav="apar-pic"],body.lvobs nav.side [data-nav="matriks"]{display:none!important}
+.obsban{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:90;display:flex;gap:10px;align-items:center;background:#111827;color:#fff;padding:8px 10px 8px 14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:13.5px;max-width:calc(100vw - 24px);flex-wrap:wrap}
 /* laporan item keluar */
 .kdoc{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;font-size:8pt;line-height:1.25;width:100%}
 .kdoc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -999,7 +1002,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.6 · 06/11/2026 (perbaiki temuan & salah penempatan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.8 · 07/11/2026 (AI tanpa opsi berbayar)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -1837,11 +1840,11 @@ function edBody(){ const r=S.ed.rec;
      ${fT("kron.setelah","3. Setelah kejadian",{cls:"full",area:true,rows:4,ph:"Tindakan darurat, pertolongan pertama, evakuasi, pengamanan area"})}</div></section>
      ${[0,1].map(i=>`<section class="panel"><h2>Saksi mata ${i+1}</h2><div class="grid3">${picker("saksi"+i,"NRP saksi",r.saksi[i].nrp)}${fT(`saksi.${i}.nama`,"Nama")}${fT(`saksi.${i}.jab`,"Jabatan")}${fT(`saksi.${i}.hp`,"No. HP",{type:"tel"})}</div></section>`).join("")}`;
   case "analisis": { const k=r.korban.kid&&S.list.get(r.korban.kid); const bad=k&&r.tglKej?apdAt(k,r.tglKej).filter(a=>a.cls==="red"):[];
-    return `${bad.length?`<div class="banner">Kartu APD: saat kejadian korban tidak memegang APD wajib yang berlaku (${esc(bad.map(a=>a.n).join(", "))}). Pertimbangkan sebagai temuan tindakan atau kondisi tidak aman.</div>`:""}
+    return `${aiPanel()}${bad.length?`<div class="banner">Kartu APD: saat kejadian korban tidak memegang APD wajib yang berlaku (${esc(bad.map(a=>a.n).join(", "))}). Pertimbangkan sebagai temuan tindakan atau kondisi tidak aman.</div>`:""}
      ${RCA.map(([g,jenis,nm,items])=>`<section class="panel"><h2>${esc(nm)} <span class="muted" style="font-weight:500;font-size:14px">· ${esc(jenis)}</span></h2><div class="cbgrid">${items.map(([key,l])=>fC(`rca.${g}.${key}`,l)).join("")}${fC(`rca.${g}.lain`,"Lainnya / uraian tambahan")}</div>
        <div style="margin-top:10px">${fT(`rca.${g}Lain`,"Uraian tambahan",{area:true,rows:2})}</div></section>`).join("")}
      <section class="panel"><h2>Analisis akar masalah (5-Whys)</h2><div class="grid2">${WHY.map((w,i)=>fT(`rca.why.${i}`,`Why ${i+1} · ${w}`,{cls:"full",area:true,rows:2})).join("")}</div></section>`; }
-  case "tindakan": return `<section class="panel"><h2>Rekomendasi tindakan perbaikan / pencegahan</h2>
+  case "tindakan": return `${aiPanel()}<section class="panel"><h2>Rekomendasi tindakan perbaikan / pencegahan</h2>
      ${r.rek.map((x,i)=>`<div class="rek"><span class="rekno">${i+1}</span><div class="grid3" style="flex:1">${fT(`rek.${i}.t`,"Tindakan",{cls:"full",area:true,rows:2})}${fT(`rek.${i}.pic`,"Penanggung jawab (PIC)")}${fT(`rek.${i}.tgt`,"Target selesai",{type:"date"})}${fS(`rek.${i}.st`,"Status",REK_ST.map(s=>[s,s]))}</div>
        ${S.canWrite?`<button class="btn small danger" data-act="rek-del" data-i="${i}" aria-label="Hapus tindakan ${i+1}">Hapus</button>`:""}</div>`).join("")||`<p class="muted">Belum ada tindakan.</p>`}
      ${S.canWrite?`<button class="btn" data-act="rek-add">Tambah tindakan</button>`:""}<p class="hint">Form menyediakan 5 baris. Bila lebih dari 5, baris tabel ditambah otomatis saat diunduh.</p></section>`;
@@ -3419,6 +3422,66 @@ document.addEventListener("click",ev=>{ const t=ev.target;
   if(t.closest('[data-act="ck-fixsave"]')){ ckFixSave(); return; }
   const f=t.closest("[data-ckfix]"); if(f){ const [box,pid]=f.dataset.ckfix.split("|"); const d=$("#dlg"); if(d.open) d.close(); ckStartFix(box,pid); } });
 function ckFixBtn(box,pid,label){ return S.canWrite?`<button class="btn small" data-ckfix="${esc(box)}|${esc(pid)}">${label||"Perbaiki"}</button>`:""; }
+
+// ---------- Investigasi: isi otomatis Analisis penyebab & Tindakan pencegahan (AI Claude, atau saran cepat tanpa AI) ----------
+try{ localStorage.removeItem("k3.aiKey"); }catch(e){}
+function aiCase(r){ const kat=KAT.filter(([k])=>r.kat&&r.kat[k]).map(x=>x[2]); const k=r.korban||{}; const kk=k.kid&&S.list.get(k.kid), bad=kk&&r.tglKej?apdAt(kk,r.tglKej).filter(a=>a.cls==="red").map(a=>a.n):[];
+  return {kategori:kat,tanggal:r.tglKej,jam:r.jam,lokasi:r.lokasi,area:r.area,korban:{jabatan:k.jab,bagian:k.bagian,shift:k.shift,usia:k.usia,masaKerja:[k.mkThn&&k.mkThn+" tahun",k.mkBln&&k.mkBln+" bulan"].filter(Boolean).join(" "),status:k.status},
+    cedera:r.cedera,bagianTubuh:r.tubuh,aset:r.aset,kronologi:r.kron,apdWajibTidakDipegangSaatKejadian:bad}; }
+function aiApply(r,o){ r.rca=r.rca||{}; RCA.forEach(([g,,,items])=>{ const pick=new Set((o[g]||[]).map(String)); r.rca[g]={}; items.forEach(([k])=>{ if(pick.has(k)) r.rca[g][k]=true; }); if(o[g+"Lain"]!=null) r.rca[g+"Lain"]=String(o[g+"Lain"]||""); });
+  if(Array.isArray(o.why)) r.rca.why=[0,1,2,3,4].map(i=>String(o.why[i]||"")); const base=r.tglKej||todayISO();
+  const rek=(o.tindakan||[]).filter(t=>t&&t.t).map(t=>{ const d=new Date(base+"T00:00:00"); d.setDate(d.getDate()+(+t.hari||14)); return {t:String(t.t),pic:String(t.pic||""),tgt:d.toISOString().slice(0,10),st:"Open"}; });
+  const kosong=(r.rek||[]).every(x=>!String(x.t||"").trim()); r.rek=kosong?rek:(r.rek||[]).concat(rek); }
+function aiPrompt(c){ return `Anda adalah ahli K3 (keselamatan dan kesehatan kerja) di pabrik tekstil Indonesia. Berdasarkan data kejadian berikut, susun analisis penyebab dan tindakan pencegahan.
+Data kejadian (JSON):
+${JSON.stringify(c,null,1)}
+
+Pilihan kotak centang yang tersedia (gunakan HANYA kunci berikut):
+${RCA.map(([g,j,n,items])=>`- ${g} (${n}): ${items.map(([k,l])=>k+"="+l).join("; ")}`).join("\n")}
+
+Balas HANYA dengan JSON valid tanpa teks lain dan tanpa backtick, dengan bentuk:
+{"ua":["kunci",...],"uc":[...],"fi":[...],"fp":[...],"uaLain":"uraian tambahan tindakan tidak aman (boleh kosong)","ucLain":"...","fiLain":"...","fpLain":"...",
+"why":["Why 1: mengapa insiden terjadi","Why 2","Why 3","Why 4","Akar penyebab / kegagalan sistem"],
+"tindakan":[{"t":"tindakan perbaikan/pencegahan yang spesifik dan dapat diukur","pic":"jabatan/bagian penanggung jawab","hari":14}]}
+Ketentuan: bahasa Indonesia baku dan ringkas; pilih kunci yang benar-benar didukung data; 5-Whys harus berurutan logis dari kejadian ke akar penyebab sistem; 3–6 tindakan mengikuti hierarki pengendalian (eliminasi, substitusi, rekayasa, administrasi, APD) termasuk minimal satu tindakan untuk akar penyebab; "hari" = target penyelesaian dalam hari sejak kejadian. Jangan mengarang fakta yang tidak ada di data; bila data kurang, tulis sebagai dugaan yang perlu dikonfirmasi.`; }
+// saran cepat tanpa AI (kata kunci)
+function aiQuick(){ const ed=S.ed; if(!ed) return; const r=ed.rec, kr=r.kron||{}, T=[kr.sebelum,kr.saat,kr.setelah,r.cedera,r.tubuh,r.aset&&r.aset.desk,r.aset&&r.aset.alat,r.lokasi,r.area].join(" ").toLowerCase(), has=re=>re.test(T), o={ua:[],uc:[],fi:[],fp:[],why:[],tindakan:[]};
+  const k=r.korban||{}, kk=k.kid&&S.list.get(k.kid), bad=kk&&r.tglKej?apdAt(kk,r.tglKej).filter(a=>a.cls==="red"):[];
+  if(bad.length||has(/tanpa (apd|sarung|helm|masker|kacamata|sepatu)|tidak (memakai|menggunakan) (apd|sarung|helm|masker|kacamata)/)){ o.ua.push("apd"); o.tindakan.push({t:"Wajibkan dan awasi penggunaan APD sesuai matriks APD di area kejadian; lengkapi APD yang belum dimiliki korban dan rekan kerja",pic:"Kepala bagian & K3",hari:7}); }
+  if(has(/tanpa izin|tidak sesuai (sop|prosedur)|melanggar|bukan tugas|tanpa wewenang/)){ o.ua.push("sop"); o.fp.push("awas"); }
+  if(has(/terburu|cepat-cepat|kejar target|mengejar/)){ o.ua.push("cepat"); o.fp.push("jadwal"); }
+  if(has(/alat rusak|tidak layak|salah alat|pakai tangan|dengan tangan/)) o.ua.push("alat");
+  if(has(/mesin|roller|rol|gear|belt|terjepit|tergulung|tertarik|berputar/)){ o.uc.push("guard"); o.fp.push("desain"); o.tindakan.push({t:"Pasang/perbaiki safety guard dan interlock pada titik jepit mesin; terapkan LOTO sebelum membersihkan atau menangani bagian bergerak",pic:"Maintenance / MTC",hari:14}); }
+  if(has(/rusak|patah|aus|bocor|retak|longgar/)){ o.uc.push("rusak"); o.fp.push("rawat"); o.tindakan.push({t:"Perbaiki atau ganti peralatan yang rusak dan masukkan ke jadwal inspeksi/perawatan berkala",pic:"Maintenance / MTC",hari:14}); }
+  if(has(/licin|tumpah|basah|oli|gelap|sempit|tersandung|terpeleset|lubang|berantakan/)){ o.uc.push("area"); o.tindakan.push({t:"Perbaiki kondisi area kerja (housekeeping/5R, penerangan, lantai anti-licin, rambu peringatan) di lokasi kejadian",pic:"Kepala bagian & Umum",hari:14}); }
+  if(has(/kimia|panas|api|uap|steam|terbakar|boiler|asam|soda/)){ o.uc.push("kimia"); o.tindakan.push({t:"Kaji ulang pengendalian bahaya panas/kimia (isolasi, label, MSDS, APD khusus) dan sosialisasikan ke operator",pic:"K3 & Kepala bagian",hari:21}); }
+  if(has(/baru|belum (pernah|terlatih)|tidak tahu|kurang paham|training/)){ o.fi.push("latih"); o.tindakan.push({t:"Berikan pelatihan ulang / safety induction terkait pekerjaan dan bahayanya, lengkapi dengan bukti pelatihan",pic:"Kepala bagian & HRD",hari:30}); }
+  if(has(/lelah|lembur|ngantuk|shift malam|capek|kelelahan/)){ o.fi.push("lelah"); o.fp.push("jadwal"); }
+  if(has(/salah paham|tidak (diberi tahu|komunikasi)|aba-aba|tidak terdengar/)) o.fi.push("komunikasi");
+  if(!o.fp.includes("awas")) o.fp.push("awas");
+  o.tindakan.push({t:"Sosialisasikan kejadian dan pelajaran (safety talk) kepada seluruh karyawan di bagian terkait",pic:"Kepala bagian & K3",hari:7});
+  o.tindakan.push({t:"Tinjau ulang HIRADC untuk aktivitas terkait dan perbarui pengendalian risikonya",pic:"P2K3 / K3",hari:30});
+  const lb=(g,k)=>((RCA.find(x=>x[0]===g)||[,,,[]])[3].find(x=>x[0]===k)||[,k])[1];
+  o.why=[`Insiden terjadi karena ${[...o.ua.map(k=>lb("ua",k)),...o.uc.map(k=>lb("uc",k))].join(", ").toLowerCase()||"kondisi/tindakan yang perlu dikonfirmasi"} (dugaan, perlu dikonfirmasi).`,
+    `Karena ${o.fi.length?o.fi.map(k=>lb("fi",k)).join(", ").toLowerCase():"pengendalian bahaya di lokasi belum memadai"}.`,`Karena ${o.fp.map(k=>lb("fp",k)).join(", ").toLowerCase()}.`,"Karena pemantauan dan evaluasi pengendalian risiko di area tersebut belum berjalan rutin.","Akar penyebab: sistem pengendalian risiko (HIRADC, inspeksi, pelatihan, pengawasan) belum diterapkan secara konsisten (perlu dikonfirmasi tim investigasi)."];
+  ["ua","uc","fi","fp"].forEach(g=>o[g]=[...new Set(o[g])]); ed._aiUndo=JSON.stringify({rca:r.rca,rek:r.rek}); aiApply(r,o); edSave(); render(); toast("Saran cepat (tanpa AI) diisi berdasarkan kata kunci. Periksa dan sesuaikan."); }
+function aiPanel(){ return S.canWrite?`<section class="panel aipanel"><div class="row" style="justify-content:space-between;gap:8px"><div><b>Isi otomatis</b><div class="hint" style="margin:2px 0 0">Mengisi penyebab langsung/tidak langsung, 5-Whys, dan tindakan pencegahan dari data tab 1–3. Hasilnya tetap bisa diedit.${S.ed&&S.ed.rec.aiDiisi?` Terakhir diisi AI ${esc(fmt(S.ed.rec.aiDiisi.slice(0,10)))}.`:""}</div></div>
+   <div class="row" style="gap:6px"><button type="button" class="btn primary" data-act="ai-copy">✨ Isi dengan bantuan Claude</button><button type="button" class="btn" data-act="ai-quick">Saran cepat (tanpa AI)</button>${S.ed&&S.ed._aiUndo?`<button type="button" class="btn" data-act="ai-undo">↶ Batalkan isian otomatis</button>`:""}</div></div></section>`:""; }
+document.addEventListener("click",ev=>{ const t=ev.target.closest("[data-act]"); if(!t) return; const a=t.dataset.act;
+  if(a==="ai-quick") aiQuick();
+  else if(a==="ai-undo"&&S.ed&&S.ed._aiUndo){ const u=JSON.parse(S.ed._aiUndo); S.ed.rec.rca=u.rca; S.ed.rec.rek=u.rek; S.ed._aiUndo=""; edSave(); render(); toast("Isian otomatis dibatalkan."); } });
+
+// cara tanpa kunci API: salin perintah ke Claude, tempel jawabannya
+function dlgAiCopy(){ const ed=S.ed; if(!ed) return; const r=ed.rec, kr=r.kron||{}; if(!String(kr.saat||kr.sebelum||"").trim()&&!String(r.cedera||"").trim()){ toast("Isi dulu kronologi kejadian dan/atau cedera."); return; } const p=aiPrompt(aiCase(r));
+  openDlg(`<header><h2>Isi dengan bantuan Claude</h2><p class="hint" style="margin:4px 0 0">Gratis: salin perintah, tempel di Claude, lalu tempel jawabannya di sini. Data dikirim tanpa nama, NRP, NIK, atau nomor HP.</p></header><div class="body">
+   <p style="margin:0 0 6px"><b>1.</b> Salin perintah:</p><textarea rows="5" readonly class="aiprompt">${esc(p)}</textarea>
+   <div class="row" style="gap:6px;margin:6px 0 12px"><button type="button" class="btn" data-act="ai-cp">📋 Salin perintah</button><a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Buka Claude ↗</a></div>
+   <p style="margin:0 0 6px"><b>2.</b> Tempel seluruh jawaban Claude di sini:</p><textarea name="jawab" rows="6" placeholder='{"ua":[...],"why":[...],"tindakan":[...]}'></textarea></div>${foot("Masukkan ke form")}`, async f=>{
+    try{ const txt=String(f.jawab.value||"").replace(/```json|```/g,""); const o=JSON.parse(txt.slice(txt.indexOf("{"),txt.lastIndexOf("}")+1)); ed._aiUndo=JSON.stringify({rca:r.rca,rek:r.rek}); aiApply(r,o); r.aiDiisi=new Date().toISOString(); edSave(); render(); toast("Analisis dari Claude dimasukkan. Periksa dan sesuaikan bila perlu."); }
+    catch(e){ toast("Jawaban tidak bisa dibaca. Pastikan menyalin seluruh jawaban berformat JSON."); return false; } }); }
+document.addEventListener("click",ev=>{ const t=ev.target.closest("[data-act]"); if(!t) return;
+  if(t.dataset.act==="ai-copy") dlgAiCopy();
+  else if(t.dataset.act==="ai-cp"){ const ta=document.querySelector(".aiprompt"); const done=()=>toast("Perintah disalin."); try{ navigator.clipboard.writeText(ta.value).then(done).catch(()=>{ ta.select(); document.execCommand("copy"); done(); }); }catch(e){ ta.select(); document.execCommand("copy"); done(); } } });
 
 // ---------- HIRADC (Hazard Identification, Risk Assessment & Determining Control) ----------
 const HIRA_DEF={perusahaan:"PT. DEWASUTRATEX – PANITIA PEMBINA KESELAMATAN DAN KESEHATAN KERJA (P2K3)",judul:"HAZARD IDENTIFICATION, RISK ASSESSMENT AND DETERMINING CONTROL (HIRADC)",lokasi:"Cimahi",
@@ -5130,14 +5193,17 @@ function dlgAparHist(bc){ const a=S.apar.get(bc); if(!a) return; const ps=(a.pem
 document.addEventListener("click",ev=>{ const t=ev.target.closest("[data-rwbox],[data-rwapar]"); if(!t) return; ev.preventDefault(); if(t.dataset.rwbox) dlgBoxHist(t.dataset.rwbox); else dlgAparHist(t.dataset.rwapar); });
 
 // ---------- Level akses: Super Admin, Admin (perangkat tim), PIC Area ----------
-const AK_LV={super:["Akses Level III","Akses penuh (pemilik / pengelola program): perangkat utama, NIK, Track proses, mengatur pengguna dan level akses, menimpa data server, menyetujui tanggapan"],admin:["Akses Level II","Perangkat tim K3: memeriksa dan mengisi semua data K3 (kotak P3K, APAR, patroli, P2K3, dll.), menyetujui tanggapan; tanpa NIK & Track proses"],pic:["Akses Level I","Kepala bagian / PIC area: melihat hasil pemeriksaan di bagiannya (temuan patroli, kotak P3K, APAR) dan memberi tanggapan yang disetujui oleh Level II/III"]};
+const AK_LV={super:["Akses Level III","Akses penuh (pemilik / pengelola program): perangkat utama, NIK, Track proses, mengatur pengguna dan level akses, menimpa data server, menyetujui tanggapan"],admin:["Akses Level II","Perangkat tim K3: memeriksa dan mengisi semua data K3 (kotak P3K, APAR, patroli, P2K3, dll.), menyetujui tanggapan; tanpa NIK & Track proses"],observer:["Observer","Melihat seluruh data K3 seperti Akses Level II (kotak P3K, APAR, patroli, kecelakaan, investigasi, HIRADC, P2K3, program K3, peta) tanpa bisa mengisi atau mengubah; tidak bisa melihat Master karyawan, Kartu APD, Track proses, pengguna, dan backup data"],pic:["Akses Level I","Kepala bagian / PIC area: melihat hasil pemeriksaan di bagiannya (temuan patroli, kotak P3K, APAR) dan memberi tanggapan yang disetujui oleh Level II/III"]};
 function akLevelName(l){ return (AK_LV[l]||AK_LV.admin)[0]; }
 function syLevel(){ if(!SY.user) return "admin"; const e=String(SY.user.email||"").toLowerCase(); if(e===SY_OWNER) return "super"; const acc=SY.acc||SY.meta.acc||{}, lv=(acc.levels||{})[SY.user.uid];
   if(lv) return lv; if((SY.admins||SY.meta.admins||[]).map(x=>String(x).toLowerCase()).includes(e)) return "super"; return "admin"; }
 function akMyBagian(){ if(S.picPrev) return S.picPrev.bagian; const acc=SY.acc||SY.meta.acc||{}; return SY.user?((acc.bagian||{})[SY.user.uid]||[]):[]; }
 function akMyName(){ return (SY.me&&SY.me.nama)||S.uid||(SY.user&&SY.user.email)||""; }
-function akApply(){ const pic=(SY.user&&syLevel()==="pic")||!!S.picPrev; document.body.classList.toggle("lvpic",!!pic); S.canWrite=!(SY.user&&syLevel()==="pic"); if(pic&&!/^#(pic|respon-saya)/.test(location.hash)) location.hash="#pic"; if(S.loaded) render(); }
-window.addEventListener("hashchange",()=>{ if(document.body.classList.contains("lvpic")&&!/^#pic/.test(location.hash)) location.hash="#pic"; });
+function akObs(){ return (SY.user&&syLevel()==="observer")||!!S.obsPrev; }
+const AK_OBS_BLOCK=/^#(master|beranda|karyawan|k-|pengaturan|matriks|bagi|track|backup|pengguna|respon|pic|lapangan|lap-|cek-|apar-cek|apar-pic|prt-)/;
+function akApply(){ const pic=(SY.user&&syLevel()==="pic")||!!S.picPrev, obs=!pic&&akObs(); document.body.classList.toggle("lvobs",obs); if(obs&&AK_OBS_BLOCK.test(location.hash)) location.hash="#ringkasan"; akObsBanner(); document.body.classList.toggle("lvpic",!!pic); S.canWrite=!(SY.user&&["pic","observer"].includes(syLevel()))&&!S.obsPrev; if(SY.user&&syLevel()==="observer"&&Object.keys(STORE).some(x=>/^(karyawan|pembagian|track)\//.test(x))){ Object.keys(STORE).forEach(x=>{ if(/^(karyawan|pembagian|track)\//.test(x)||x==="pengaturan/track") delete STORE[x]; }); Object.keys(SY.meta.base||{}).forEach(x=>{ if(/^(karyawan|pembagian)\//.test(x)) delete SY.meta.base[x]; }); persist(); notify(); } if(pic&&!/^#(pic|respon-saya)/.test(location.hash)) location.hash="#pic"; if(S.loaded) render(); }
+window.addEventListener("hashchange",()=>{ if(document.body.classList.contains("lvpic")&&!/^#pic/.test(location.hash)) location.hash="#pic"; if(document.body.classList.contains("lvobs")&&AK_OBS_BLOCK.test(location.hash)){ toast("Tidak tersedia untuk level Observer."); location.hash="#ringkasan"; } });
+function akObsBanner(){ let b=document.getElementById("obsBan"); if(!S.obsPrev){ if(b) b.remove(); return; } if(!b){ b=document.createElement("div"); b.id="obsBan"; b.className="obsban"; document.body.appendChild(b); } b.innerHTML=`<span>👁 <b>Mode pratinjau Observer</b> · hanya melihat, tanpa data karyawan</span><button class="btn small primary" data-act="obs-exit">Keluar pratinjau</button>`; }
 // ---- kehadiran (online/offline) & nama tampilan
 async function akPresence(on){ if(!SY.db||!SY.user||!navigator.onLine) return; try{ await SY.db.collection("pengguna").doc(SY.user.uid).set({email:SY.user.email||"",nama:akMyName(),online:on!==false,lastSeen:SY.fb.firestore.FieldValue.serverTimestamp(),perangkat:SY.meta.joined==="up"?"utama":"tim",ua:/Mobi|Android/i.test(navigator.userAgent)?"HP":"Komputer"},{merge:true}); }catch(e){} }
 function akStart(){ if(!SY.db||!SY.user||SY._akOn) return; SY._akOn=true;
@@ -5164,7 +5230,7 @@ function viewPengguna(){ if(!SY.user) return `<h1>Pengguna & akses</h1><div clas
      return `<tr><td><span class="akdot ${akOnline(u)?"on":""}"></span>${akOnline(u)?"Online":"Offline"}<div class="muted" style="font-size:12px">${akOnline(u)?"aktif "+akAgo(u):"terakhir "+akAgo(u)}</div></td><td><b>${esc(u.nama||"–")}</b>${u.uid===SY.user.uid?` <span class="chip">Anda</span>`:""}</td><td style="font-size:13px">${esc(u.email||"")}</td>
       <td>${sup&&!own?`<select data-aklv="${esc(u.uid)}">${Object.entries(AK_LV).map(([k,[l]])=>`<option value="${k}" ${lv===k?"selected":""}>${l}</option>`).join("")}</select>`:`<b>${esc(akLevelName(lv))}</b>${own?` <span class="muted" style="font-size:12px">(pemilik)</span>`:""}`}</td>
       <td style="font-size:13px">${lv==="pic"?`${bg.length?bg.map(x=>`<span class="chip">${esc(x)}</span>`).join(" "):`<span class="chip red">belum dipilih</span>`}${sup?` <button class="btn small" data-akbag="${esc(u.uid)}">Pilih bagian</button>${bg.length?` <button class="btn small" data-pvuid="${esc(u.uid)}">👁 Lihat seperti ${esc((u.nama||"").split(" ")[0]||"PIC")}</button>`:""}`:""}`:"–"}</td><td style="font-size:13px">${esc([u.ua,u.perangkat==="utama"?"perangkat utama":"perangkat tim"].filter(Boolean).join(" · "))}</td></tr>`; }).join("")||`<tr><td colspan="6" class="empty">Belum ada data pengguna.</td></tr>`}</tbody></table></div></div>
-   ${sup?`<section class="panel"><div class="row" style="justify-content:space-between;gap:8px"><div><h2 style="margin:0">Pratinjau Akses Level I</h2><p class="hint" style="margin:4px 0 0">Lihat tampilan yang diterima pengguna Akses Level I untuk bagian tertentu, tanpa akun kedua. Data tidak berubah selama pratinjau.</p></div><button class="btn primary" data-act="pv-start">👁 Pratinjau Akses Level I</button></div></section>`:""}
+   ${sup?`<section class="panel"><div class="row" style="justify-content:space-between;gap:8px"><div><h2 style="margin:0">Pratinjau Akses Level I</h2><p class="hint" style="margin:4px 0 0">Lihat tampilan yang diterima pengguna Akses Level I untuk bagian tertentu, tanpa akun kedua. Data tidak berubah selama pratinjau.</p></div><div class="row" style="gap:6px"><button class="btn primary" data-act="pv-start">👁 Pratinjau Akses Level I</button><button class="btn" data-act="obs-start">👁 Pratinjau Observer</button></div></div></section>`:""}
    <section class="panel"><h2>Penjelasan level</h2>${Object.entries(AK_LV).map(([k,[l,d]])=>`<p style="margin:4px 0"><b>${l}</b> – ${esc(d)}</p>`).join("")}${sup?`<p class="hint" style="margin:8px 0 0">Perubahan level langsung berlaku di perangkat pengguna tersebut saat online.</p>`:""}</section>`; }
 async function akSaveAcc(patch){ const cur=Object.assign({admins:[],levels:{},bagian:{}},SY.acc||{}); Object.assign(cur,patch,{diubah:new Date().toISOString(),oleh:SY.user.email});
   try{ await Promise.race([SY.db.collection("pengaturan").doc("akses").set(cur),new Promise((_,rej)=>setTimeout(()=>rej(new Error("Tidak ada respons server")),15000))]); SY.acc=cur; toast("Akses diperbarui."); render(); }catch(e){ toast("Gagal menyimpan: "+(e.message||e)); } }
@@ -5241,6 +5307,10 @@ document.addEventListener("click",ev=>{ const t=ev.target;
   if(t.closest('[data-act="pv-start"]')){ if(syLevel()!=="super"){ toast("Hanya untuk Akses Level III."); return; } dlgPvStart(); return; }
   if(t.closest('[data-act="pv-exit"]')){ pvExit(); return; }
   const u=t.closest("[data-pvuid]"); if(u){ const acc=SY.acc||{}, us=SY.users.get(u.dataset.pvuid)||{}; pvStart((acc.bagian||{})[u.dataset.pvuid]||[],us.nama||us.email||""); } });
+
+document.addEventListener("click",ev=>{ const t=ev.target;
+  if(t.closest('[data-act="obs-start"]')){ if(syLevel()!=="super"){ toast("Hanya untuk Akses Level III."); return; } S.obsPrev=true; akApply(); location.hash="#ringkasan"; render(); toast("Mode pratinjau Observer aktif."); return; }
+  if(t.closest('[data-act="obs-exit"]')){ S.obsPrev=false; akApply(); location.hash="#pengguna"; render(); toast("Keluar dari pratinjau Observer."); } });
 
 // ---------- P2K3: Rapat / notulen pertemuan ----------
 const NT_HARI=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
@@ -5368,7 +5438,7 @@ function syMerge(b,l,r){ if(syEq(l,r)) return l; if(b!==undefined&&syEq(l,b)) re
 function syRestoreNik(r,l){ if(Array.isArray(r)&&Array.isArray(l)){ return r.map((x,i)=>{ const k=syKeyOf(x); const y=k?l.find(z=>syKeyOf(z)===k):l[i]; return syRestoreNik(x,y); }); }
   if(r&&l&&typeof r==="object"&&typeof l==="object"){ const o=Object.assign({},r); for(const k in l){ if(/^nik$/i.test(k)&&!(k in r)) o[k]=l[k]; } for(const k in r) if(l[k]!==undefined) o[k]=syRestoreNik(r[k],l[k]); return o; } return r; }
 // ---- status
-function syDirty(){ const keys=new Set([...syncKeys(),...Object.keys(SY.meta.base)]); let n=0; keys.forEach(k=>{ if(syLevel()==="pic"&&!k.startsWith("respon/")) return; if(syLocalJson(k)!==(SY.meta.base[k]??null)) n++; }); return n; }
+function syDirty(){ const keys=new Set([...syncKeys(),...Object.keys(SY.meta.base)]); let n=0; keys.forEach(k=>{ if((syLevel()==="pic"&&!k.startsWith("respon/"))||syLevel()==="observer") return; if(syLocalJson(k)!==(SY.meta.base[k]??null)) n++; }); return n; }
 function syOnline(){ return navigator.onLine&&Object.values(SY.live).some(Boolean); }
 function syState(){ if(!SY.user) return {c:"gray",t:SY.loaded?"Belum masuk":"Mode lokal"}; if(!SY.meta.joined) return {c:"gray",t:"Pilih sumber data"}; const n=syDirty();
   if(!navigator.onLine||!syOnline()) return {c:"red",t:"Offline"+(n?" · "+n+" menunggu":"")}; if(n||SY.busy) return {c:"amber",t:"Mengirim"+(n?" "+n:"")+"…"}; return {c:"green",t:"Online"}; }
@@ -5394,7 +5464,7 @@ function syErrText(e){ const c=(e&&e.code)||"", m=(e&&e.message)||String(e||"");
   return "Gagal masuk: "+(c?c+" – ":"")+m; }
 function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; SY.ready={}; }
 function sySubscribe(){ syUnsub(); if(!SY.db||!SY.user||!SY.meta.joined) return;
-  [...SYNC_COLS,"pengaturan"].forEach(col=>{ const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
+  [...SYNC_COLS,"pengaturan"].forEach(col=>{ if(syLevel()==="observer"&&(col==="karyawan"||col==="pembagian")){ SY.ready[col]=true; return; } const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
     const un=q.onSnapshot({includeMetadataChanges:true},async snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) await syApply(col,ch.map(c=>c.doc)); if(!snap.metadata.fromCache&&!SY.ready[col]){ SY.ready[col]=true; syKick(); } syBadge(); },err=>{ SY.err=err.message; SY.live[col]=false; syBadge(); });
     SY.unsub.push(un); });
   syKick(); }
@@ -5418,7 +5488,7 @@ function syKick(){ clearTimeout(SY.timer); SY.timer=setTimeout(syPush,600); syBa
 async function syPush(){ if(!SY.db||!SY.user||!SY.meta.joined||!navigator.onLine||SY._pushing) return; SY._pushing=true; SY.busy=1; syBadge();
   try{ const keys=[...new Set([...syncKeys(),...Object.keys(SY.meta.base)])], now=Date.now(); let n=0;
     for(const k of keys){ const lj=syLocalJson(k), base=SY.meta.base[k]??null; if(lj===base) continue; if(SY.inflight[k]&&now-SY.inflight[k]<30000) continue;
-      const [col,id]=k.split("/"); if(!SY.ready[col]) continue; if(syLevel()==="pic"&&col!=="respon") continue; SY.inflight[k]=now;
+      const [col,id]=k.split("/"); if(!SY.ready[col]) continue; if((syLevel()==="pic"&&col!=="respon")||syLevel()==="observer") continue; SY.inflight[k]=now;
       const work=(async()=>{ if(lj===null){ await SY.db.collection(col).doc(id).set({_del:true,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); delete SY.meta.base[k]; return; }
         if(lj.length>950000){ SY.err="Data "+k+" terlalu besar untuk disinkronkan"; return; }
         const hs=new Set(); syExt(syStrip(STORE[k]),hs); for(const h of hs) await syPutBlob(h);
