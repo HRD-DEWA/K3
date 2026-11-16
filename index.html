@@ -1002,7 +1002,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.8 · 07/11/2026 (AI tanpa opsi berbayar)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.9 · 16/11/2026 (Track proses tersinkron antar perangkat utama Level III)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -5404,10 +5404,11 @@ document.addEventListener("click",ev=>{ const t=ev.target, pane=document.querySe
 // Disinkronkan: karyawan & kartu APD, pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, beserta pengaturannya.
 // Tetap lokal: track proses. Field "nik" tidak pernah dikirim ke server (NIK hanya ada di komputer kantor).
 const FB_CFG={apiKey:"AIzaSyDO6zLuw8sMEWTExa1UuEFxeGvBSx6Pn8o",authDomain:"k3-dewasutratex.firebaseapp.com",projectId:"k3-dewasutratex",storageBucket:"k3-dewasutratex.firebasestorage.app",messagingSenderId:"864608893325",appId:"1:864608893325:web:f12a06b2a9d4506ce9e5c4"};
-const FB_VER="10.12.2", SYNC_COLS=["respon","karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3","p2k3rapat"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
+const FB_VER="10.12.2", SYNC_COLS=["respon","track","karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3","p2k3rapat"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org","track"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
 const SY_OWNER="adrisatriaputra3@gmail.com";
 const SY={me:null,users:new Map(),acc:null,ready:{},admins:null,fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
-function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
+function syTrackOK(){ return !!(SY.user&&SY.meta.joined==="up"&&syLevel()==="super"); }
+function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; if(p[0]==="track"||(p[0]==="pengaturan"&&p[1]==="track")) return syTrackOK(); return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
 function syncKeys(){ return Object.keys(STORE).filter(syncKey); }
 try{ SY.dev=localStorage.getItem("k3.dev")||(Math.random().toString(36).slice(2,10)); localStorage.setItem("k3.dev",SY.dev); }catch(e){ SY.dev="dev"; }
 // ---- penyimpanan meta sinkron (IndexedDB kv "syncmeta")
@@ -5464,14 +5465,14 @@ function syErrText(e){ const c=(e&&e.code)||"", m=(e&&e.message)||String(e||"");
   return "Gagal masuk: "+(c?c+" – ":"")+m; }
 function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; SY.ready={}; }
 function sySubscribe(){ syUnsub(); if(!SY.db||!SY.user||!SY.meta.joined) return;
-  [...SYNC_COLS,"pengaturan"].forEach(col=>{ if(syLevel()==="observer"&&(col==="karyawan"||col==="pembagian")){ SY.ready[col]=true; return; } const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
+  [...SYNC_COLS,"pengaturan"].forEach(col=>{ if(col==="track"&&!syTrackOK()){ SY.ready[col]=true; return; } if(syLevel()==="observer"&&(col==="karyawan"||col==="pembagian")){ SY.ready[col]=true; return; } const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
     const un=q.onSnapshot({includeMetadataChanges:true},async snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) await syApply(col,ch.map(c=>c.doc)); if(!snap.metadata.fromCache&&!SY.ready[col]){ SY.ready[col]=true; syKick(); } syBadge(); },err=>{ SY.err=err.message; SY.live[col]=false; syBadge(); });
     SY.unsub.push(un); });
   syKick(); }
 const SY_PENDING=[];
 async function syApply(col,docs){ let changed=false, maxT=SY.meta.seen[col]||0;
   for(const d of docs){ const data=d.data()||{}; const t=data._t&&data._t.toMillis?data._t.toMillis():0; if(t>maxT) maxT=t;
-    if(col==="pengaturan"&&!SYNC_SET.includes(d.id)) continue; const k=col+"/"+d.id, base=SY.meta.base[k]??null, lj=syLocalJson(k);
+    if((col==="pengaturan"&&!SYNC_SET.includes(d.id))||!syncKey(col+"/"+d.id)) continue; const k=col+"/"+d.id, base=SY.meta.base[k]??null, lj=syLocalJson(k);
     if(data._del){ if(lj===null){ delete SY.meta.base[k]; continue; } if(lj===base){ delete STORE[k]; delete SY.meta.base[k]; changed=true; } else delete SY.meta.base[k]; continue; }
     const rj=data.j; if(typeof rj!=="string"||rj===base) continue; if(SY.force){ SY.meta.base[k]=rj; continue; } let R; try{ R=JSON.parse(rj); }catch(e){ continue; }
     const need=new Set(); syNeedBlobs(R,need); if(need.size){ const ok=await syFetchBlobs([...need]); if(!ok){ SY_PENDING.push([col,d]); continue; } }
@@ -5516,7 +5517,7 @@ function dlgSyncJoin(){ if(!SY.user||SY.meta.joined) return; const n=syncKeys().
   openDlg(`<header><h2>Sumber data perangkat ini</h2><p class="hint" style="margin:4px 0 0">Hanya ditanyakan sekali di setiap perangkat.</p></header><div class="body">
    <label class="cb" style="align-items:flex-start;margin-bottom:12px"><input type="radio" name="m" value="up" ${n>200?"checked":""}> <span><b>Perangkat utama (komputer kantor)</b><br><span class="muted">Data karyawan & kartu APD (tanpa NIK), kotak P3K, APAR, peta, HIRADC, dan kecelakaan di perangkat ini (${n} data) dikirim ke server dan digabung dengan data yang sudah ada di server.</span></span></label>
    <label class="cb" style="align-items:flex-start"><input type="radio" name="m" value="down" ${n>200?"":"checked"}> <span><b>Perangkat tim</b><br><span class="muted">Data tersebut di perangkat ini diganti dengan data dari server. Kirim dulu hasil pemeriksaan yang belum terkirim lewat Mode lapangan bila ada.</span></span></label>
-   <p class="hint" style="margin:12px 0 0">NIK karyawan dan track proses tidak pernah dikirim ke server. Di perangkat tim, NIK dan menu Track proses tidak ditampilkan.</p></div>${foot("Lanjutkan")}`, async f=>{
+   <p class="hint" style="margin:12px 0 0">NIK karyawan tidak pernah dikirim ke server. Track proses hanya tersinkron antar perangkat utama milik Akses Level III. Di perangkat tim, NIK dan menu Track proses tidak ditampilkan.</p></div>${foot("Lanjutkan")}`, async f=>{
     await syJoin(f.querySelector("[name=m]:checked").value); }); }
 async function syJoin(m){ if(m==="up"&&!syIsAdmin()) m="down";
   if(m==="down"){ syncKeys().forEach(k=>delete STORE[k]); Object.keys(STORE).forEach(k=>{ if(/^track\//.test(k)||k==="pengaturan/track") delete STORE[k]; }); SY.meta.base={}; SY.meta.seen={}; await persist(); notify(); } else { SY.meta.base={}; SY.meta.seen={}; }
@@ -5525,7 +5526,7 @@ function dlgSync(){ const s=syState(), n=syDirty();
   openDlg(`<header><h2>Sinkronisasi online</h2></header><div class="body"><p style="margin:0 0 10px"><span class="syncb ${s.c}" style="display:inline-flex"><i></i><span>${esc(s.t)}</span></span></p>
    <dl class="kv"><dt>Akun</dt><dd>${SY.user?esc(SY.user.email||""):"belum masuk"}</dd><dt>Internet</dt><dd>${navigator.onLine?"tersambung":"tidak ada"}</dd><dt>Belum terkirim</dt><dd>${n} data</dd><dt>Sinkron terakhir</dt><dd>${esc(SY.lastOk||"–")}</dd><dt>Nama</dt><dd>${esc(akMyName()||"–")} ${SY.user?`<button type="button" class="linkbtn" data-act="ak-name">ubah</button>`:""}</dd><dt>Level akses</dt><dd>${SY.user?esc(akLevelName(syLevel())):"–"}</dd><dt>Peran perangkat</dt><dd>${SY.meta.joined==="up"?"perangkat utama":SY.meta.joined==="down"?"perangkat tim":"–"}</dd></dl>
    ${SY.err?`<p class="hint" style="color:var(--amber);margin:8px 0 0">Catatan: ${esc(SY.err)}</p>`:""}
-   <p class="hint" style="margin:10px 0 0">Yang disinkronkan: karyawan & kartu APD (tanpa NIK), pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi. NIK dan track proses tetap hanya di komputer kantor. Saat offline, program tetap bisa dipakai dan perubahan dikirim otomatis begitu internet kembali.</p>
+   <p class="hint" style="margin:10px 0 0">Yang disinkronkan: karyawan & kartu APD (tanpa NIK), pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi. NIK tidak pernah dikirim; track proses hanya tersinkron antar perangkat utama milik Akses Level III. Saat offline, program tetap bisa dipakai dan perubahan dikirim otomatis begitu internet kembali.</p>
    <div class="row" style="margin-top:12px;gap:6px">${SY.user?`<button type="button" class="btn" data-act="sy-now">Sinkronkan sekarang</button><button type="button" class="btn" data-act="sy-role">Ganti peran perangkat</button><button type="button" class="btn" data-act="sy-out">Keluar</button>`:`<button type="button" class="btn primary" data-act="sy-in">Masuk</button>`}</div>
    ${SY.user&&syIsAdmin()?`<p style="margin:14px 0 0;display:flex;gap:16px;flex-wrap:wrap"><button type="button" class="linkbtn" data-act="sy-admins">Atur pengguna & level akses</button>${SY.meta.joined==="up"?`<button type="button" class="linkbtn" data-act="sy-force" style="color:var(--red)">Timpa data server dengan data perangkat ini…</button>`:""}</p>`:""}</div><footer><button class="btn" value="cancel">Tutup</button></footer>`, async ()=>{}); }
 document.addEventListener("click",ev=>{ if(ev.target.closest("#syncBadge")){ if(!SY.user) dlgSyncLogin(); else if(!SY.meta.joined) dlgSyncJoin(); else dlgSync(); return; }
