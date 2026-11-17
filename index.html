@@ -720,6 +720,13 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
 @media (max-width:1100px){.tpgrid{grid-template-columns:1fr}.tpside{border-left:0;border-top:1px solid var(--line);padding:12px 0 0}}
 @media (max-width:700px){.tpr5,.tpr6{grid-template-columns:1fr}.tpr1,.tpr2,.tpr3,.tpr4{grid-template-columns:1fr 1fr}.tpr1 > :first-child,.tpquick,.tpbtns{grid-column:1/-1}.tpkg{grid-template-columns:1fr}.tpkgl{padding:0}}
 
+.pndwarn{border:1.5px solid var(--red);background:var(--red-bg);color:var(--red);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13.5px;display:flex;flex-direction:column;gap:3px}
+.pndwarn b{font-size:14px}.pndwarn .pndby{color:var(--muted);font-size:12px}.pndwarn .pndket{color:var(--text)}.pndwarn .linkbtn{align-self:flex-start;color:var(--red);font-weight:600}
+.pndmark{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-size:11.5px;font-weight:700;white-space:nowrap}
+.pfbody{max-height:72vh;overflow:auto}.pfhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.pfname{font-size:20px;font-weight:700}
+.pfkv{margin:10px 0}.pfsec{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.pfsec h3{margin:0 0 6px;font-size:15px}
+.pfpnd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:8px;background:var(--gray-bg);margin-top:6px}.pfpnd.on{background:var(--red-bg);border-left:4px solid var(--red)}.pfpnd.on b{color:var(--red)}
+.pftab{font-size:13px}.pftab td,.pftab th{padding:4px 6px}
 </style>
 </head>
 <body>
@@ -1002,7 +1009,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.9 · 16/11/2026 (Track proses tersinkron antar perangkat utama Level III)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.10 · 17/11/2026 (penanda & profil karyawan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -1725,7 +1732,7 @@ function pickSearch(inp){ if(inp.dataset.pick&&inp.dataset.pick.startsWith("tp-"
   const res=[]; for(const k of S.list.values()){ if((k.nrp||"").startsWith(q)||(k.nama||"").toLowerCase().includes(q)) res.push(k); if(res.length>=8) break; }
   box.innerHTML=res.length?res.map((k,i)=>`<button type="button" data-pickid="${esc(k._id)}" class="${i?"":"on"}"><span><b>${esc(k.nama)}</b> <span class="muted">${esc(k.jabatan||"")}</span></span><span class="muted num">${esc(k.nrp)} · ${esc(k.bagian||"")}</span></button>`).join(""):`<p class="muted" style="margin:0;padding:8px 10px">Tidak ditemukan. Nama tetap bisa diketik manual.</p>`;
   box.hidden=false; }
-function pickDone(inp,k){ const key=inp.dataset.pick; inp.parentElement.querySelector(".picklist").hidden=true; inp.value=k.nrp;
+function pickDone(inp,k){ if(k&&k.nrp&&!(inp.closest&&inp.closest("#tpForm"))) setTimeout(()=>pndNear(inp,k.nrp,k.nama),0); const key=inp.dataset.pick; inp.parentElement.querySelector(".picklist").hidden=true; inp.value=k.nrp;
   if(key.startsWith("ck-")||key.startsWith("pr-")){ const o=key.startsWith("ck-")?S.ck:S.pr, f=key.slice(3); if(!o) return; o[f+"Nrp"]=k.nrp; o[f]=k.nama;
     const n=document.querySelector(key.startsWith("ck-")?`[data-ckf="${f}"]`:`[data-prf="${f}"]`); if(n) n.value=k.nama;
     if(key.startsWith("pr-")){ const r=$("#prRev"), p=$("#prPrev"); if(r) r.innerHTML=prRevHtml(S.kotak.get(S.pr.kode)); if(p) p.innerHTML=printHtml(S.pr.kode); } return; }
@@ -2663,7 +2670,7 @@ function tpSearch(inp){ const nm=inp.dataset.pick==="tp-nama", q=inp.value.trim(
   const ks=[...S.list.values()].filter(k=>k.nrp&&k.aktif!==false&&hit(k.nrp,k.nama)); if(nm) ks.sort((a,b)=>(b.nama.toLowerCase().startsWith(ql))-(a.nama.toLowerCase().startsWith(ql)));
   ks.slice(0,8).forEach(k=>add(tpPerson(k.nrp)));
   if(res.length<8) for(const h of tpPeople().values()){ if(hit(h.nrp,h.nama)) add(tpPerson(h.nrp)); if(res.length>=8) break; }
-  box.innerHTML=res.length?res.map((p,i)=>`<button type="button" data-tpnrp="${esc(p.nrp)}" class="${i?"":"on"}"><span><b>${esc(p.nama)}</b> <span class="muted">${esc(p.jabatan||(p.src==="riwayat"?"dari riwayat proses":""))}</span></span><span class="muted num">${esc(p.nrp)}${p.bagian?" · "+esc(p.bagian):""}${p.grup?" · Grup "+esc(grupShort(p.grup)):""}${p.ku?" · KU "+esc(p.ku):""}</span></button>`).join("")
+  box.innerHTML=res.length?res.map((p,i)=>`<button type="button" data-tpnrp="${esc(p.nrp)}" class="${i?"":"on"}"><span><b>${esc(p.nama)}</b>${pndMark(p.nrp)} <span class="muted">${esc(p.jabatan||(p.src==="riwayat"?"dari riwayat proses":""))}</span></span><span class="muted num">${esc(p.nrp)}${p.bagian?" · "+esc(p.bagian):""}${p.grup?" · Grup "+esc(grupShort(p.grup)):""}${p.ku?" · KU "+esc(p.ku):""}</span></button>`).join("")
     :`<p class="muted" style="margin:0;padding:8px 10px">${nm?"Tidak ada nama yang cocok. Nama tetap bisa diketik manual.":"NRP belum dikenal. Lanjutkan, lalu isi nama secara manual."}</p>`;
   box.hidden=false; }
 function tpPick(p){ const t=S.tp; t.nrp=p.nrp; t.nama=p.nama; if(p.ku) t.ku=p.ku; t.bagian=p.bagian||""; t.grup=p.grup||"";
@@ -2701,7 +2708,7 @@ function viewTrack(){
       ${picker("tp-nama","Nama",t.nama)}
       <label class="f"><span>KU</span><input type="text" data-tpf="ku" value="${v("ku")}" list="tpKuDL" maxlength="4"><datalist id="tpKuDL"><option value="M"><option value="H"><option value="M2"><option value="K"><option value="Z"></datalist></label>
       <label class="f"><span>Grup</span><input type="text" data-tpf="grup" value="${v("grup")}" list="tpGrDL" placeholder="Otomatis"><datalist id="tpGrDL"><option value="Non-shift">${"ABCDEFG".split("").map(x=>`<option value="Group ${x}">`).join("")}</datalist></label></div>
-     ${t.nrp&&(t.bagian||t.grup)?`<p class="tpinfo"><span>Bagian: <b>${esc(t.bagian||"–")}</b></span><span>Grup: <b>${esc(t.grup||"–")}</b></span>${t.ku?`<span>KU: <b>${esc(t.ku)}</b></span>`:""}</p>`:""}
+     ${t.nrp?pndBox(t.nrp,t.nama):""}${t.nrp&&(t.bagian||t.grup)?`<p class="tpinfo"><span>Bagian: <b>${esc(t.bagian||"–")}</b></span><span>Grup: <b>${esc(t.grup||"–")}</b></span>${t.ku?`<span>KU: <b>${esc(t.ku)}</b></span>`:""}</p>`:""}
      <label class="f"><span>Alasan</span><input type="text" data-tpf="alasan" value="${v("alasan")}" placeholder="Misal: Demam, istri melahirkan, ban bocor, lepas ketokan"></label>
      <div class="tpr2"><label class="f"><span>Tanggal absen</span><input type="date" data-tpf="tglAbsen" value="${v("tglAbsen")}"></label>
       <label class="f"><span>Sampai tanggal</span><input type="date" data-tpf="tglAbsen2" value="${v("tglAbsen2")}" min="${v("tglAbsen")}"></label>
@@ -2885,7 +2892,7 @@ function viewMaster(){
   const opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?"selected":""}>${esc(l)}</option>`;
   const body=shown.map(k=>{ const s=msKontrakSisa(k);
     const st=k.aktif===false?`<span class="chip gray">Keluar${k.tglKeluar?" "+fmt(k.tglKeluar):""}</span>`:s!=null&&s<0?`<span class="chip red">Kontrak lewat ${-s} hari</span>`:s!=null&&s<=30?`<span class="chip amber">Kontrak habis ${s} hari lagi</span>`:msIncomplete(k)?`<span class="chip amber">Data belum lengkap</span>`:`<span class="chip green">Aktif</span>`;
-    return `<tr class="click" data-msopen="${esc(k._id)}" tabindex="0"><td class="num"><b>${esc(k.nrp||"–")}</b></td><td><b>${esc(k.nama)}</b>${k.jk?` <span class="muted">${esc(k.jk)}</span>`:""}</td><td class="num">${esc(k.kodeBagian||"–")}</td><td>${esc(k.bagian||"–")}</td><td>${esc(k.jabatan||"–")}</td><td>${esc(k.shift||"–")}</td><td>${esc(msKu(k)||"–")}</td>
+    return `<tr class="click" data-msopen="${esc(k._id)}" tabindex="0"><td class="num"><b>${esc(k.nrp||"–")}</b></td><td><b>${esc(k.nama)}</b>${k.jk?` <span class="muted">${esc(k.jk)}</span>`:""}${pndMark(k.nrp)}</td><td class="num">${esc(k.kodeBagian||"–")}</td><td>${esc(k.bagian||"–")}</td><td>${esc(k.jabatan||"–")}</td><td>${esc(k.shift||"–")}</td><td>${esc(msKu(k)||"–")}</td>
      <td>${esc(k.status||"Tetap")}${k.status==="Kontrak"&&k.kontrakAkhir?`<div class="muted num" style="font-size:12.5px">s/d ${fmt(k.kontrakAkhir)}</div>`:""}</td><td class="num">${k.tglMasuk?fmt(k.tglMasuk):"–"}</td><td>${st}</td></tr>`; }).join("");
   return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Master karyawan</h1>
     <div class="row">${S.canWrite?`<button class="btn primary" data-act="ms-add">Tambah karyawan</button><button class="btn" data-act="ms-import">Impor / update dari HRIS</button><input type="file" id="msImport" accept=".xlsx,.ods,.csv,.txt" hidden>`:""}<button class="btn" data-act="ms-csv">Ekspor CSV</button></div></div>
@@ -3060,7 +3067,7 @@ document.addEventListener("change",ev=>{ const el=ev.target;
 document.addEventListener("input",ev=>{ const el=ev.target; if(el.id==="msQ"){ S.ms.q=el.value; S.ms.lim=200; clearTimeout(S._msQt); S._msQt=setTimeout(()=>{ const pos=el.selectionStart; render(); const q=$("#msQ"); if(q){ q.focus(); try{q.setSelectionRange(pos,pos);}catch(e){} } },180); } });
 document.addEventListener("click",ev=>{
   if(ev.target.closest("#dlg [data-open],#dlg [data-act=tp-person]")){ const d=$("#dlg"); if(d.open) d.close(); }
-  const r=ev.target.closest("[data-msopen]"); if(r){ dlgMaster(S.list.get(r.dataset.msopen)); return; }
+  const r=ev.target.closest("[data-msopen]"); if(r){ dlgProfil(S.list.get(r.dataset.msopen)); return; }
   const fb=ev.target.closest("[data-msf]"); if(fb){ const v=fb.dataset.msf; Object.assign(S.ms,{f:"",st:"",aktif:"aktif",lim:200}); if(v==="kontrak") S.ms.st="Kontrak"; if(v==="habis"||v==="kurang") S.ms.f=v; render(); return; }
   const bb=ev.target.closest("[data-msbag]"); if(bb){ Object.assign(S.ms,{bag:bb.dataset.msbag==="(bagian belum diisi)"?"":bb.dataset.msbag,q:"",f:"",st:"",ku:"",aktif:"aktif",lim:200}); go("master"); return; }
   const t=ev.target.closest("[data-act]"); if(!t||!t.dataset.act.startsWith("ms-")) return;
@@ -5172,6 +5179,54 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.id==="pgTh"){ if(el.value==="baru"){ const y=prompt("Tahun program K3:",String(S.pg.th+1)); if(y&&/^\d{4}$/.test(y)) S.pg.th=+y; } else S.pg.th=+el.value; S.pg.edit=false; render(); return; }
   if(el.id==="pgImp"&&el.files[0]){ const f=el.files[0]; el.value=""; pgImport(f); } });
 
+// ---------- Penanda karyawan & profil karyawan (histori proses, SP, APD, kecelakaan) ----------
+const PND_SARAN=["Dalam pantauan absensi","Dalam masa berlaku SP","Sering terlambat – konfirmasi ke atasan","Proses PHK / pengunduran diri","Perlu konfirmasi HRD sebelum diproses","Sedang cuti panjang / sakit berkepanjangan"];
+function pndDoc(nrp){ nrp=String(nrp||"").trim(); return nrp?STORE["penanda/"+nrp]||null:null; }
+function pndAktif(nrp){ const d=pndDoc(nrp); if(!d) return []; const t=todayISO(); return (d.items||[]).filter(x=>x.aktif!==false&&(!x.sampai||x.sampai>=t)); }
+function pndByName(nama){ const n=String(nama||"").trim().toLowerCase(); if(n.length<3) return null; const ks=[...S.list.values()].filter(k=>k.nrp&&(k.nama||"").toLowerCase()===n); return ks.length===1?ks[0]:null; }
+function pndMark(nrp){ const a=pndAktif(nrp); return a.length?` <span class="pndmark" title="${esc(a.map(x=>x.teks).join(" · "))}">⚑ ${esc(a[0].teks)}${a.length>1?" +"+(a.length-1):""}</span>`:""; }
+function pndBox(nrp,nama){ const a=pndAktif(nrp); if(!a.length) return ""; return `<div class="pndwarn" role="alert"><b>⚠ Penanda karyawan: ${esc(nama||(kByNrp(nrp)||{}).nama||nrp)}</b>${a.map(x=>`<div>• ${esc(x.teks)}${x.ket?` <span class="pndket">– ${esc(x.ket)}</span>`:""}<span class="pndby"> (${esc(x.oleh||"")}${x.dibuat?", "+fmt(x.dibuat.slice(0,10)):""}${x.sampai?", s/d "+fmt(x.sampai):""})</span></div>`).join("")}<button type="button" class="linkbtn" data-pfnrp="${esc(nrp)}">Lihat profil & riwayat</button></div>`; }
+function pndNear(inp,nrp,nama){ const host=inp.closest(".f")||inp.parentElement; if(!host||!host.parentElement) return; const box=host.parentElement; box.querySelectorAll(":scope > .pndwarn[data-for]").forEach(x=>{ if(x.dataset.for===(inp.dataset.pick||inp.name||"")) x.remove(); });
+  const h=pndBox(nrp,nama); if(!h) return; const d=document.createElement("div"); d.innerHTML=h; const el=d.firstElementChild; el.dataset.for=inp.dataset.pick||inp.name||""; el.style.gridColumn="1/-1"; host.insertAdjacentElement("afterend",el); }
+function pndCheckInput(inp){ if(!inp||!inp.closest) return; if(inp.closest("#tpForm")) return; const v=String(inp.value||"").trim(); if(!v) return; let k=/^\d{4,}$/.test(v)?kByNrp(v):null; if(!k&&!/^\d+$/.test(v)) k=pndByName(v); if(k) pndNear(inp,k.nrp,k.nama); }
+document.addEventListener("focusout",ev=>{ const el=ev.target; if(el&&el.tagName==="INPUT"&&(el.dataset.pick||(typeof nameKey==="function"&&nameKey(el)))) setTimeout(()=>pndCheckInput(el),120); });
+async function pndSave(nrp,items){ const k=kByNrp(nrp); if(items.length) STORE["penanda/"+nrp]={nrp,nama:k?k.nama:((pndDoc(nrp)||{}).nama||""),items,diubah:new Date().toISOString()}; else delete STORE["penanda/"+nrp]; await persist(); }
+function dlgPndEdit(nrp,id){ const d=pndDoc(nrp), items=d?clone(d.items||[]):[], x=id?items.find(i=>i.id===id):null, k=kByNrp(nrp);
+  openDlg(`<header><h2>${x?"Ubah penanda":"Tambah penanda"}</h2><p class="hint" style="margin:4px 0 0">${esc(k?k.nama:nrp)} · NRP ${esc(nrp)}</p></header><div class="body">
+   <label class="f full"><span>Penanda (muncul merah saat nama/NRP ini diketik)</span><input type="text" name="teks" list="pndDL" value="${esc(x?x.teks:"")}" required placeholder="Misal: Dalam pantauan absensi"><datalist id="pndDL">${PND_SARAN.map(t=>`<option value="${esc(t)}">`).join("")}</datalist></label>
+   <label class="f full" style="margin-top:8px"><span>Keterangan (opsional)</span><textarea name="ket" rows="2" placeholder="Misal: 3x mangkir Oktober, diminta pantau sampai Desember">${esc(x?x.ket||"":"")}</textarea></label>
+   <div class="grid2" style="margin-top:8px"><label class="f"><span>Berlaku sampai (opsional)</span><input type="date" name="sampai" value="${esc(x?x.sampai||"":"")}"></label>
+   <label class="f"><span>Status</span><select name="aktif"><option value="1" ${!x||x.aktif!==false?"selected":""}>Aktif</option><option value="0" ${x&&x.aktif===false?"selected":""}>Nonaktif (selesai)</option></select></label></div>
+   <p class="hint" style="margin:8px 0 0">Penanda hanya tersimpan di perangkat utama Akses Level III dan tidak terlihat oleh level lain.</p></div>${foot(x?"Simpan":"Tambah penanda")}`, async f=>{
+    const teks=f.teks.value.trim(); if(!teks){ toast("Isi penanda."); return false; } const v={teks,ket:f.ket.value.trim(),sampai:f.sampai.value||"",aktif:f.aktif.value==="1"};
+    if(x) Object.assign(x,v,{diubah:new Date().toISOString()}); else items.push(Object.assign({id:uidGen("pd"),dibuat:new Date().toISOString(),oleh:(typeof akMyName==="function"?akMyName():S.uid)||""},v));
+    await pndSave(nrp,items); toast("Penanda disimpan."); setTimeout(()=>{ dlgProfil(nrp); render(); },60); }); }
+// ---- profil karyawan
+function dlgProfil(kOrNrp){ const k=typeof kOrNrp==="string"?kByNrp(kOrNrp):kOrNrp, nrp=k?k.nrp:String(kOrNrp||""); if(!k&&!nrp) return;
+  const p=typeof tpPerson==="function"?tpPerson(nrp):null, nama=k?k.nama:(p?p.nama:nrp), d=pndDoc(nrp), items=(d&&d.items)||[], t=todayISO(), y=t.slice(0,4);
+  const tp=(typeof tpList==="function"?tpList():[]).filter(r=>r.nrp===nrp), tpY=tp.filter(r=>(r.tgl||"").startsWith(y)), sp=tp.filter(r=>r.sp).sort((a,b)=>(b.tgl||"").localeCompare(a.tgl||""));
+  const cnt={}; tp.forEach(r=>(r.kode||[]).forEach(c=>{ cnt[c]=(cnt[c]||0)+1; })); const cntY={}; tpY.forEach(r=>(r.kode||[]).forEach(c=>{ cntY[c]=(cntY[c]||0)+1; }));
+  const inc=[...(S.inc||new Map()).values()].filter(c=>c.korban&&(c.korban.nrp===nrp||(!c.korban.nrp&&(c.korban.nama||"").toLowerCase()===(nama||"").toLowerCase()))).sort((a,b)=>(b.tglKej||"").localeCompare(a.tglKej||""));
+  const rw=k&&Array.isArray(k.riwayat)?k.riwayat:[], lastApd=rw.slice().sort((a,b)=>(b.tgl||"").localeCompare(a.tgl||""))[0];
+  const kon=k&&k.status==="Kontrak"&&k.kontrakAkhir?` · kontrak s/d ${fmt(k.kontrakAkhir)}`:"";
+  const isi=`<div class="pfhead"><div><div class="pfname">${esc(nama)}</div><div class="muted">NRP ${esc(nrp)}${k&&k.kodeBagian?" · "+esc(k.kodeBagian):""}</div></div>${k&&k.aktif===false?`<span class="chip gray">Keluar${k.tglKeluar?" "+fmt(k.tglKeluar):""}</span>`:`<span class="chip green">Aktif</span>`}</div>
+   <dl class="kv pfkv"><dt>Bagian</dt><dd>${esc((k&&k.bagian)||(p&&p.bagian)||"–")}</dd><dt>Jabatan</dt><dd>${esc((k&&k.jabatan)||"–")}</dd><dt>Grup</dt><dd>${esc(grupShort((k&&grupOf(k))||(p&&p.grup)||"")||"–")}</dd><dt>Status</dt><dd>${esc((k&&k.status)||"Tetap")}${kon}</dd>${k&&k.tglMasuk?`<dt>Masuk kerja</dt><dd>${fmt(k.tglMasuk)}</dd>`:""}${k&&k.hp?`<dt>No. HP</dt><dd>${esc(k.hp)}</dd>`:""}</dl>
+   <section class="pfsec"><div class="row" style="justify-content:space-between"><h3>Penanda</h3>${S.canWrite?`<button type="button" class="btn small" data-pndadd="${esc(nrp)}">+ Tambah penanda</button>`:""}</div>
+    ${items.length?items.map(x=>{ const on=x.aktif!==false&&(!x.sampai||x.sampai>=t); return `<div class="pfpnd ${on?"on":""}"><div><b>${on?"⚑ ":""}${esc(x.teks)}</b>${on?"":` <span class="chip gray">${x.aktif===false?"nonaktif":"berakhir"}</span>`}${x.ket?`<div style="font-size:13px">${esc(x.ket)}</div>`:""}<div class="muted" style="font-size:12px">${esc(x.oleh||"")}${x.dibuat?" · "+fmt(x.dibuat.slice(0,10)):""}${x.sampai?" · s/d "+fmt(x.sampai):""}</div></div>${S.canWrite?`<div class="row" style="gap:4px;flex-wrap:nowrap"><button type="button" class="btn small" data-pndedit="${esc(nrp)}|${esc(x.id)}">Ubah</button><button type="button" class="btn small danger" data-pnddel="${esc(nrp)}|${esc(x.id)}" aria-label="Hapus">✕</button></div>`:""}</div>`; }).join(""):`<p class="muted" style="margin:4px 0 0">Belum ada penanda.</p>`}</section>
+   <section class="pfsec"><h3>Absensi & proses (Track proses)</h3>
+    <div class="tpnums"><span><b>${tp.length}</b>total proses</span><span><b>${tpY.length}</b>tahun ${y}</span><span><b>${cntY.M||0}</b>mangkir ${y}</span><span><b>${sp.length}</b>SP tercatat</span></div>
+    ${Object.keys(cnt).length?`<p style="margin:8px 0 0;font-size:13px">${Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([c,n])=>`<span class="tpk" title="${esc(tpLabel(c))}">${esc(c)}</span> ${esc(tpLabel(c)||c)}: <b>${n}</b>${cntY[c]?` <span class="muted">(${y}: ${cntY[c]})</span>`:""}`).join(" · ")}</p>`:""}
+    ${sp.length?`<div style="margin-top:8px">${sp.slice(0,5).map(r=>`<div style="font-size:13px">${spChip(r)} ${fmt(r.tgl)}${r.spKet?" – "+esc(r.spKet):""}</div>`).join("")}</div>`:""}
+    ${tp.length?`<div class="tablewrap" style="margin-top:8px;max-height:260px;overflow:auto"><table class="pftab"><thead><tr><th>Tanggal</th><th>Absen</th><th>Alasan</th><th>Kode</th><th>SP</th><th>HRIS</th></tr></thead><tbody>${tp.slice(0,60).map(r=>`<tr><td class="num">${fmt(r.tgl)}</td><td class="num">${tpAbsen(r)||"–"}</td><td>${esc(r.alasan||"")}${r.catatan?`<div class="muted" style="font-size:12px">${esc(r.catatan)}</div>`:""}</td><td>${tpKodeChips(r)}</td><td>${spChip(r)}</td><td>${r.hris?"✓":"–"}</td></tr>`).join("")}</tbody></table></div>${tp.length>60?`<p class="hint">Menampilkan 60 dari ${tp.length} proses.</p>`:""}`:`<p class="muted" style="margin:6px 0 0">${STORE["pengaturan/track"]||tpList().length?"Belum ada proses tercatat.":"Data Track proses tidak tersedia di perangkat ini."}</p>`}</section>
+   <section class="pfsec"><h3>Lainnya</h3><p style="margin:0;font-size:13.5px">Kartu APD: ${rw.length?`${rw.length} catatan, terakhir ${fmt(lastApd.tgl)} (${esc(lastApd.apd||lastApd.jenis||"")})`:"belum ada catatan"}<br>Kecelakaan kerja: ${inc.length?inc.map(c=>`${fmt(c.tglKej)} ${esc(KAT.filter(([q])=>c.kat&&c.kat[q]).map(z=>z[1]).join("/"))}`).join("; "):"tidak ada"}</p></section>`;
+  openDlg(`<header><h2>Profil karyawan</h2></header><div class="body pfbody">${isi}</div><footer class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><div class="row" style="gap:6px">${k&&S.canWrite?`<button type="button" class="btn" data-pfedit="${esc(k._id)}">Ubah data karyawan</button>`:""}${k?`<button type="button" class="btn" data-open="${esc(k._id)}">Kartu APD</button>`:""}${tp.length?`<button type="button" class="btn" data-act="tp-person" data-nrp="${esc(nrp)}">Buka di Track proses</button>`:""}</div><button class="btn primary" value="cancel">Tutup</button></footer>`, async ()=>{}); }
+document.addEventListener("click",ev=>{ const t=ev.target;
+  const a=t.closest("[data-pndadd]"); if(a){ dlgPndEdit(a.dataset.pndadd,null); return; }
+  const e=t.closest("[data-pndedit]"); if(e){ const [n,i]=e.dataset.pndedit.split("|"); dlgPndEdit(n,i); return; }
+  const x=t.closest("[data-pnddel]"); if(x){ const [n,i]=x.dataset.pnddel.split("|"), d=pndDoc(n); if(!d) return; pndSave(n,(d.items||[]).filter(z=>z.id!==i)).then(()=>{ toast("Penanda dihapus."); dlgProfil(n); render(); }); return; }
+  const pe=t.closest("[data-pfedit]"); if(pe){ const d=$("#dlg"); if(d.open) d.close(); setTimeout(()=>dlgMaster(S.list.get(pe.dataset.pfedit)),60); return; }
+  const pn=t.closest("[data-pfnrp]"); if(pn){ dlgProfil(pn.dataset.pfnrp); return; } });
+
 // ---------- Riwayat pemeriksaan saat sedang memeriksa (tanpa meninggalkan pemeriksaan) ----------
 function rwAgo(t){ if(!t) return ""; const d=daysBetween(t,todayISO()); return d<=0?"hari ini":d===1?"kemarin":d+" hari lalu"; }
 function dlgBoxHist(kode){ const b=S.kotak.get(kode); if(!b) return; const pem=(b.pemeriksaan||[]).slice().sort((x,y)=>(y.tgl||"").localeCompare(x.tgl||"")||(y.dibuat||"").localeCompare(x.dibuat||"")), last=pem[0];
@@ -5404,11 +5459,11 @@ document.addEventListener("click",ev=>{ const t=ev.target, pane=document.querySe
 // Disinkronkan: karyawan & kartu APD, pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, beserta pengaturannya.
 // Tetap lokal: track proses. Field "nik" tidak pernah dikirim ke server (NIK hanya ada di komputer kantor).
 const FB_CFG={apiKey:"AIzaSyDO6zLuw8sMEWTExa1UuEFxeGvBSx6Pn8o",authDomain:"k3-dewasutratex.firebaseapp.com",projectId:"k3-dewasutratex",storageBucket:"k3-dewasutratex.firebasestorage.app",messagingSenderId:"864608893325",appId:"1:864608893325:web:f12a06b2a9d4506ce9e5c4"};
-const FB_VER="10.12.2", SYNC_COLS=["respon","track","karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3","p2k3rapat"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org","track"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
+const FB_VER="10.12.2", SYNC_COLS=["respon","track","penanda","karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3","p2k3rapat"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org","track"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
 const SY_OWNER="adrisatriaputra3@gmail.com";
 const SY={me:null,users:new Map(),acc:null,ready:{},admins:null,fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
 function syTrackOK(){ return !!(SY.user&&SY.meta.joined==="up"&&syLevel()==="super"); }
-function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; if(p[0]==="track"||(p[0]==="pengaturan"&&p[1]==="track")) return syTrackOK(); return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
+function syncKey(k){ const p=k.split("/"); if(p.length!==2) return false; if(p[0]==="track"||p[0]==="penanda"||(p[0]==="pengaturan"&&p[1]==="track")) return syTrackOK(); return SYNC_COLS.includes(p[0])||(p[0]==="pengaturan"&&SYNC_SET.includes(p[1])); }
 function syncKeys(){ return Object.keys(STORE).filter(syncKey); }
 try{ SY.dev=localStorage.getItem("k3.dev")||(Math.random().toString(36).slice(2,10)); localStorage.setItem("k3.dev",SY.dev); }catch(e){ SY.dev="dev"; }
 // ---- penyimpanan meta sinkron (IndexedDB kv "syncmeta")
@@ -5465,7 +5520,7 @@ function syErrText(e){ const c=(e&&e.code)||"", m=(e&&e.message)||String(e||"");
   return "Gagal masuk: "+(c?c+" – ":"")+m; }
 function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; SY.ready={}; }
 function sySubscribe(){ syUnsub(); if(!SY.db||!SY.user||!SY.meta.joined) return;
-  [...SYNC_COLS,"pengaturan"].forEach(col=>{ if(col==="track"&&!syTrackOK()){ SY.ready[col]=true; return; } if(syLevel()==="observer"&&(col==="karyawan"||col==="pembagian")){ SY.ready[col]=true; return; } const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
+  [...SYNC_COLS,"pengaturan"].forEach(col=>{ if((col==="track"||col==="penanda")&&!syTrackOK()){ SY.ready[col]=true; return; } if(syLevel()==="observer"&&(col==="karyawan"||col==="pembagian")){ SY.ready[col]=true; return; } const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
     const un=q.onSnapshot({includeMetadataChanges:true},async snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) await syApply(col,ch.map(c=>c.doc)); if(!snap.metadata.fromCache&&!SY.ready[col]){ SY.ready[col]=true; syKick(); } syBadge(); },err=>{ SY.err=err.message; SY.live[col]=false; syBadge(); });
     SY.unsub.push(un); });
   syKick(); }
