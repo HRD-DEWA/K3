@@ -729,6 +729,7 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
 .pftab{font-size:13px}.pftab td,.pftab th{padding:4px 6px}
 .tpact{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px}.linkbtn.tpname{font-weight:700;color:var(--text);text-align:left}.linkbtn.tpname:hover{color:var(--accent);text-decoration:underline}
 .apisi{border:1.5px solid var(--amber);background:var(--amber-bg);border-radius:8px;padding:9px 12px;margin:10px 0 0;font-size:13.5px}.apisi b{color:var(--amber)}.apdone{margin:8px 0 0;padding:7px 10px;border-radius:8px;background:var(--gray-bg);font-size:13px}
+.sigcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.sigcol{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}.sigbtn{margin-left:6px}
 </style>
 </head>
 <body>
@@ -1011,7 +1012,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.13 · 17/11/2026 (ubah riwayat pemakaian APAR)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.14 · 18/11/2026 (ubah tanda tangan cetak & hapus data)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2185,7 +2186,7 @@ function dlgBox(kode){ const b=kode?S.kotak.get(kode):{}; const isNew=!kode;
    <label class="f full"><span>Detail penempatan</span><input type="text" name="penempatan" value="${esc(b.penempatan||"")}" placeholder="Misal mesin Ichinose"></label>
    <div class="f pick"><span class="lbl">NRP PIC kotak</span><input type="search" name="picNrp" data-pick="box-pic" value="${esc(b.picNrp||"")}" placeholder="Ketik NRP atau nama" autocomplete="off" aria-label="NRP PIC kotak"><div class="picklist" hidden></div></div>
    <label class="f"><span>Nama PIC kotak</span><input type="text" name="picNama" value="${esc(b.picNama||"")}"></label>
-  </div><datalist id="bagP3k">${bagianList().map(x=>`<option value="${esc(x)}">`).join("")}</datalist></div>${foot(isNew?"Tambah kotak":"Simpan")}`, async f=>{
+  </div><datalist id="bagP3k">${bagianList().map(x=>`<option value="${esc(x)}">`).join("")}</datalist>${!isNew&&S.canWrite?`<p style="margin:12px 0 0"><button type="button" class="linkbtn" data-boxdel="${esc(kode)}" style="color:var(--red)">Hapus kotak ${esc(kode)} beserta isi & riwayatnya</button></p>`:""}</div>${foot(isNew?"Tambah kotak":"Simpan")}`, async f=>{
     const v=Object.fromEntries(new FormData(f)); const k=v.kode.trim().toUpperCase();
     if(isNew&&S.kotak.has(k)){ toast("Kode kotak "+k+" sudah ada."); return false; }
     const d=Object.assign(isNew?{kode:k,isi:[],pemeriksaan:[],keluar:[]}:clone(b),{urut:+v.urut||0,bagianKode:v.bagianKode.trim(),bagian:v.bagian.trim().toUpperCase(),penempatan:v.penempatan.trim().toUpperCase(),picNrp:v.picNrp.trim(),picNama:v.picNama.trim()});
@@ -2218,7 +2219,7 @@ function dlgItem(kode){ const items=p3kItems(), i=kode?items.find(x=>x.kode===ko
    <label class="f"><span>Jumlah standar per kotak</span><input type="number" name="std" min="0" required value="${esc(i.std)}"></label>
    <label class="f"><span>Keterangan</span><input type="text" name="ket" value="${esc(i.ket||"")}"></label>
    <label class="cb full"><input type="checkbox" name="exp" ${i.exp?"checked":""}> <span>Item memiliki tanggal kadaluarsa (ditarik HRD saat H-6 bulan)</span></label>
-  </div></div>${foot(isNew?"Tambah item":"Simpan")}`, async f=>{
+  </div>${!isNew&&S.canWrite?`<p style="margin:12px 0 0"><button type="button" class="linkbtn" data-itmdel="${esc(i.kode)}" style="color:var(--red)">Hapus jenis item ini</button></p>`:""}</div>${foot(isNew?"Tambah item":"Simpan")}`, async f=>{
     const v=Object.fromEntries(new FormData(f)); const k=v.kode.trim().toUpperCase();
     if(isNew&&items.some(x=>x.kode===k)){ toast("No. Stock "+k+" sudah ada."); return false; }
     const it={kode:k,nama:v.nama.trim().toUpperCase(),satuan:v.satuan.trim().toUpperCase()||"BH",std:+v.std||0,exp:!!v.exp,ket:v.ket.trim()};
@@ -2948,7 +2949,7 @@ function dlgMaster(k){
     <label class="f"><span>Status kerja</span><select name="aktif">${o("1","Aktif",keluar?"0":"1")}${o("0","Sudah keluar",keluar?"0":"1")}</select></label>
     <label class="f"><span>Tanggal keluar</span><input type="date" name="tglKeluar" value="${esc(k.tglKeluar||"")}"></label>
     <label class="f full"><span>Keterangan keluar</span><input type="text" name="ketKeluar" value="${esc(k.ketKeluar||"")}" placeholder="Misal: resign, habis kontrak, PHK"></label>
-   </div><p class="hint" style="margin:10px 0 0">Kode bagian otomatis mengisi KU, shift, dan nama bagian bila kolomnya masih kosong.${keluar||isNew?"":" Pengembalian APD karyawan yang keluar tetap dicatat dari Kartu APD."}</p></div>${foot(isNew?"Tambah karyawan":"Simpan perubahan")}`, async f=>{
+   </div><p class="hint" style="margin:10px 0 0">Kode bagian otomatis mengisi KU, shift, dan nama bagian bila kolomnya masih kosong.${keluar||isNew?"":" Pengembalian APD karyawan yang keluar tetap dicatat dari Kartu APD."}</p>${!isNew&&S.canWrite?`<p style="margin:10px 0 0"><button type="button" class="linkbtn" data-msdel="${esc(k._id)}" style="color:var(--red)">Hapus karyawan ini dari Master</button></p>`:""}</div>${foot(isNew?"Tambah karyawan":"Simpan perubahan")}`, async f=>{
     const v=Object.fromEntries(new FormData(f)); ["nama","nik","nrp","kodeBagian","bagian","jabatan","shift","ku","hp","ketKeluar"].forEach(x=>v[x]=String(v[x]||"").trim()); if(S.noNik) delete v.nik;
     v.nrp=msNrp(v.nrp); v.kodeBagian=v.kodeBagian.toUpperCase();
     const kb=kbParse(v.kodeBagian); if(kb){ if(!v.ku) v.ku=kb.ku; if(!v.shift) v.shift=kbShift(kb.sh); if(!v.bagian&&deptMap()[kb.dept]) v.bagian=deptMap()[kb.dept]; }
@@ -5182,6 +5183,62 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.id==="pgTh"){ if(el.value==="baru"){ const y=prompt("Tahun program K3:",String(S.pg.th+1)); if(y&&/^\d{4}$/.test(y)) S.pg.th=+y; } else S.pg.th=+el.value; S.pg.edit=false; render(); return; }
   if(el.id==="pgImp"&&el.files[0]){ const f=el.files[0]; el.value=""; pgImport(f); } });
 
+// ---------- Ubah teks tanda tangan dokumen cetak (per dokumen, tersimpan sebagai pengaturan) ----------
+const SIG_SEL="table.hsg td, table.ntsg td, table.p2sg td, table.psign td, table.ptrsg td";
+const SIG_ACTS=/^(kx-dl|kx-print|ap-lap|hr-dl|hr-print|prt-dl|prt-go|bulk-go|p2-out|ptr-out|pg-out|p2o-out|p2k-out|nt-out|bg-tt-go|inv-dl|box-print|pt-print)$/;
+function sigKey(act){ return String(S.route||"").split("-")[0]+"|"+String(act||"").replace(/-(print|dl|go|out)$/,""); }
+function sigSet(){ return (STORE["pengaturan/cetak"]&&STORE["pengaturan/cetak"].docs)||{}; }
+function sigSegs(td){ return td.innerHTML.split(/<br\s*\/?>/i); }
+function sigText(seg){ const d=document.createElement("div"); d.innerHTML=seg; return (d.textContent||"").replace(/\s+/g," ").trim(); }
+function sigCells(root){ return [...root.querySelectorAll(SIG_SEL)].filter(td=>sigText(td.innerHTML)); }
+function sigApply(root,key){ if(!root||!key) return; const o=sigSet()[key]; if(!o||!o.cells) return;
+  sigCells(root).forEach((td,ci)=>{ const ch=o.cells[ci]; if(!ch||!ch.length) return; const segs=sigSegs(td); let n=-1;
+    const out=segs.map(seg=>{ if(!sigText(seg)) return seg; n++; const c=ch.find(x=>x.n===n); if(!c) return seg; const d=document.createElement("div"); d.innerHTML=seg;
+      const w=document.createTreeWalker(d,NodeFilter.SHOW_TEXT); let tn=null, x; while((x=w.nextNode())){ if(x.nodeValue.trim()){ tn=x; break; } } if(!tn) return seg;
+      const lead=tn.nodeValue.match(/^\s*/)[0]; tn.nodeValue=lead+c.t; let y; const rest=[]; while((y=w.nextNode())) rest.push(y); rest.forEach(r=>{ if(r.nodeValue.trim()) r.nodeValue=""; }); return d.innerHTML; });
+    td.innerHTML=out.join("<br>"); }); }
+// pasang di semua jalur cetak/unduh
+document.addEventListener("click",ev=>{ const b=ev.target.closest&&ev.target.closest("[data-act]"); if(b&&SIG_ACTS.test(b.dataset.act)) S._sigKey=sigKey(b.dataset.act); },true);
+{ const _xs=xStage; xStage=function(html){ const st=_xs(html); try{ if(S._sigCap) sigCapture(st); else sigApply(st,S._sigKey); }catch(e){} return st; }; }
+{ const _pr=window.print.bind(window); window.print=function(){ const pa=$("#printArea"); try{ if(S._sigCap){ if(pa) sigCapture(pa); return; } if(pa) sigApply(pa,S._sigKey); }catch(e){} return _pr(); }; }
+// tampilan pratinjau di layar (laporan P2K3, patroli, dll.)
+function sigPreview(){ const m=$("main"); if(!m) return; const btn=m.querySelector("[data-act][data-fmt]"); if(!btn||!SIG_ACTS.test(btn.dataset.act)) return; m.querySelectorAll(".p2paper,.ptrpaper").forEach(p=>sigApply(p,sigKey(btn.dataset.act))); }
+// tombol "Ubah tanda tangan" di samping tombol cetak/unduh
+function sigInject(){ const m=$("main"); if(!m||!S.canWrite) return; m.querySelectorAll("[data-act][data-fmt]").forEach(b=>{ if(!SIG_ACTS.test(b.dataset.act)) return; const grp=b.closest(".dlrow")||b.parentElement; const host=grp&&grp.parentElement; if(!host||host.querySelector(":scope > [data-sigedit]")) return;
+    const e=document.createElement("button"); e.type="button"; e.className="btn small sigbtn"; e.dataset.sigedit=b.dataset.act; e.textContent="✎ Ubah tanda tangan"; e.title="Ubah teks tanda tangan (dibuat oleh, jabatan, nama) untuk dokumen ini"; host.appendChild(e); }); }
+{ const _r=render; render=function(){ const x=_r.apply(this,arguments); try{ sigInject(); sigPreview(); }catch(e){} return x; }; }
+// ambil susunan tanda tangan dari dokumen yang dibuat (tanpa mencetak/mengunduh)
+let SIG_PRINT=null, SIG_SAVE=null;
+function sigStartCapture(act,key){ const btn=[...document.querySelectorAll(`main [data-act="${act}"]`)]; const pick=btn.find(x=>x.dataset.fmt==="print")||btn[0]||document.querySelector(`main [data-act="${act.replace(/-(dl|out)$/,"-print")}"]`); if(!pick){ toast("Tombol cetak tidak ditemukan."); return; }
+  S._sigCap={key,act}; SIG_SAVE=saveBlob; saveBlob=async()=>{}; setTimeout(sigEndCapture,6000); S._sigKey=key; pick.click(); }
+function sigEndCapture(){ if(SIG_SAVE){ saveBlob=SIG_SAVE; SIG_SAVE=null; } S._sigCap=null; document.body.classList.remove("printing"); }
+function sigCapture(root){ const cap=S._sigCap; if(!cap) return; const cells=sigCells(root).map(td=>sigSegs(td).map(sigText).filter(Boolean)); S._sigCap=null; setTimeout(()=>{ sigEndCapture(); const pa=$("#printArea"); if(pa) pa.innerHTML=""; const st=document.getElementById("xStage"); if(st) st.remove(); dlgSig(cap.key,cells); },30); }
+function dlgSig(key,cells){ const o=sigSet()[key]||{cells:[]};
+  if(!cells.length){ toast("Dokumen ini tidak memiliki bagian tanda tangan."); return; }
+  openDlg(`<header><h2>Ubah tanda tangan dokumen</h2><p class="hint" style="margin:4px 0 0">Ubah keterangan, jabatan, atau nama di bagian tanda tangan. Perubahan dipakai setiap kali dokumen ini dicetak atau diunduh (PDF, Word, ODT).</p></header><div class="body"><div class="sigcols">
+   ${cells.map((lines,ci)=>`<div class="sigcol"><b>Kolom ${ci+1}</b>${lines.map((t,n)=>{ const c=(o.cells[ci]||[]).find(x=>x.n===n); const orig=c&&c.o!=null?c.o:t; return `<label class="f"><span class="muted" style="font-weight:400">Baris ${n+1}${c?` <span class="chip amber">diubah</span>`:""}</span><input type="text" data-sigc="${ci}" data-sign="${n}" data-sigo="${esc(orig)}" value="${esc(c?c.t:t)}"></label>`; }).join("")}</div>`).join("")}</div>
+   <p class="hint" style="margin:8px 0 0">Kosongkan nama yang ingin ditulis tangan. Baris yang tidak diubah tetap mengikuti data program (misalnya nama Ketua P2K3 dari Struktur P2K3).</p>
+   ${o.cells.some(x=>x&&x.length)?`<p style="margin:10px 0 0"><button type="button" class="linkbtn" data-sigreset="${esc(key)}" style="color:var(--red)">Kembalikan ke teks bawaan</button></p>`:""}</div>${foot("Simpan")}`, async f=>{
+    const out=[]; f.querySelectorAll("[data-sigc]").forEach(inp=>{ const ci=+inp.dataset.sigc, n=+inp.dataset.sign, t=inp.value.trim(), oo=inp.dataset.sigo; out[ci]=out[ci]||[]; if(t!==oo) out[ci].push({n,t,o:oo}); });
+    const cur=STORE["pengaturan/cetak"]||{docs:{}}; cur.docs=Object.assign({},cur.docs||{}); if(out.some(x=>x&&x.length)) cur.docs[key]={cells:out.map(x=>x||[]),diubah:new Date().toISOString()}; else delete cur.docs[key];
+    STORE["pengaturan/cetak"]=cur; await persist(); render(); toast("Tanda tangan dokumen disimpan."); }); }
+document.addEventListener("click",ev=>{ const t=ev.target;
+  const e=t.closest("[data-sigedit]"); if(e){ sigStartCapture(e.dataset.sigedit,sigKey(e.dataset.sigedit)); return; }
+  const r=t.closest("[data-sigreset]"); if(r){ const cur=STORE["pengaturan/cetak"]||{docs:{}}; if(cur.docs) delete cur.docs[r.dataset.sigreset]; STORE["pengaturan/cetak"]=cur; persist().then(()=>{ $("#dlg").close(); render(); toast("Tanda tangan dikembalikan ke teks bawaan."); }); } });
+
+
+// ---------- hapus kotak P3K, jenis item, karyawan; ubah/tarik tanggapan ----------
+document.addEventListener("click",ev=>{ const t=ev.target;
+  const bd=t.closest("[data-boxdel]"); if(bd){ const k=bd.dataset.boxdel, b=S.kotak.get(k); $("#dlg").close(); setTimeout(()=>openDlg(`<header><h2>Hapus kotak ${esc(k)}?</h2></header><div class="body"><p style="margin:0 0 8px">Kotak beserta ${(b&&b.isi||[]).length} item isi, ${(b&&b.pemeriksaan||[]).length} riwayat pemeriksaan, dan ${(b&&b.keluar||[]).length} catatan item keluar dihapus permanen.</p><label class="f"><span>Ketik ${esc(k)} untuk konfirmasi</span><input type="text" name="k" autocomplete="off"></label></div>${foot("Hapus kotak")}`, async f=>{
+      if(f.k.value.trim().toUpperCase()!==k){ toast("Kode kotak tidak sesuai."); return false; } delete STORE["kotak/"+k]; await persist(); notify(); toast("Kotak "+k+" dihapus."); go("p3k"); }),40); return; }
+  const id=t.closest("[data-itmdel]"); if(id){ const kode=id.dataset.itmdel; let n=0; S.kotak.forEach(b=>{ n+=(b.isi||[]).filter(x=>x.kode===kode).length+(b.keluar||[]).filter(x=>x.kode===kode).length; });
+    if(n){ toast("Item "+kode+" masih dipakai di "+n+" barcode isi/riwayat kotak, sehingga tidak bisa dihapus."); return; } $("#dlg").close();
+    setTimeout(()=>openDlg(`<header><h2>Hapus jenis item ${esc(kode)}?</h2></header><div class="body"><p style="margin:0">${esc(itemOf(kode).nama)} dihapus dari daftar item standar kotak P3K.</p></div>${foot("Hapus")}`, async ()=>{ const items=p3kItems().filter(x=>x.kode!==kode); await S.db.doc("pengaturan/p3k").set(Object.assign({},S.p3k||{},{items,interval:p3kInterval()})); toast("Item "+kode+" dihapus."); }),40); return; }
+  const md=t.closest("[data-msdel]"); if(md){ $("#dlg").close(); setTimeout(()=>dlgHapusK(md.dataset.msdel),40); return; }
+  const re=t.closest("[data-rsedit]"); if(re){ const r=STORE["respon/"+re.dataset.rsedit]; if(!r||r.status!=="menunggu") return;
+    openDlg(`<header><h2>Ubah tanggapan</h2><p class="hint" style="margin:4px 0 0">${esc(r.judul||"")}</p></header><div class="body"><label class="f full"><span>Tanggapan / tindakan</span><textarea name="teks" rows="4">${esc(r.teks||"")}</textarea></label>${r.jenis==="patroli"?`<label class="f" style="margin-top:8px"><span>Status yang diusulkan</span><select name="usul"><option value="proses" ${r.usul!=="selesai"?"selected":""}>Dalam proses</option><option value="selesai" ${r.usul==="selesai"?"selected":""}>Sudah diperbaiki</option></select></label>`:""}</div>${foot("Simpan")}`, async f=>{ const x=f.teks.value.trim(); if(!x){ toast("Isi tanggapan."); return false; } r.teks=x; if(f.usul) r.usul=f.usul.value; r.diubah=new Date().toISOString(); await persist(); render(); toast("Tanggapan diperbarui."); }); return; }
+  const rd=t.closest("[data-rsdel]"); if(rd){ const r=STORE["respon/"+rd.dataset.rsdel]; if(!r) return; openDlg(`<header><h2>${r.status==="menunggu"?"Tarik tanggapan ini?":"Hapus tanggapan ini?"}</h2></header><div class="body"><p style="margin:0">${esc(r.judul||"")}: ${esc(r.teks||"")}</p></div>${foot(r.status==="menunggu"?"Tarik tanggapan":"Hapus")}`, async ()=>{ delete STORE["respon/"+rd.dataset.rsdel]; await persist(); render(); toast("Tanggapan dihapus."); }); return; } });
+
 // ---------- APAR: pemakaian / isi ulang, dan hapus hasil pemeriksaan ----------
 const AP_TND={tarik:"Ditarik HRD untuk isi ulang – titik kosong",ganti:"Ditarik untuk isi ulang – diganti sementara APAR lain",tetap:"Belum ditarik – masih di titik (sudah terpakai)"};
 function apPakaiAktif(a){ const l=(a&&a.pakai)||[]; for(let i=l.length-1;i>=0;i--) if(l[i].status!=="selesai") return l[i]; return null; }
@@ -5379,7 +5436,7 @@ function viewRespon(){ const L=rsList(), w=L.filter(r=>r.status==="menunggu");
      <p class="muted" style="margin:2px 0 6px;font-size:13px">${esc({patroli:"Temuan patroli",kotak:"Kotak P3K",apar:"APAR"}[r.jenis]||r.jenis)} · ${esc(r.bagian||"")} · dari <b>${esc(r.nama||"")}</b> · ${esc(fmt((r.dibuat||"").slice(0,10)))}</p>
      <p style="margin:0">${esc(r.teks||"")}${r.usul?` <i class="muted">(${r.usul==="selesai"?"usul: sudah diperbaiki":"usul: dalam proses"})</i>`:""}</p>${r.foto?`<img src="${r.foto}" class="rsfoto" alt="Foto tanggapan">`:""}
      ${r.jenis==="kotak"&&S.canWrite?(()=>{ const bx=S.kotak.get(r.ref), lp=bx&&(bx.pemeriksaan||[]).slice().sort((u,v)=>(v.tgl||"").localeCompare(u.tgl||""))[0]; return lp?`<div style="margin-top:8px">${ckFixBtn(r.ref,lp.id,"Perbaiki pemeriksaan terakhir ("+fmt(lp.tgl)+")")}</div>`:""; })():""}
-     ${r.status==="menunggu"&&S.canWrite?`<div class="row" style="gap:6px;margin-top:8px"><input type="text" placeholder="Catatan untuk PIC (opsional)" data-rscat="${esc(r._id)}" style="flex:1;min-width:180px"><button class="btn small primary" data-rsok="${esc(r._id)}">Terima</button><button class="btn small danger" data-rsno="${esc(r._id)}">Tolak</button></div>`:r.catAdmin?`<p class="muted" style="margin:6px 0 0;font-size:13px">Catatan admin: ${esc(r.catAdmin)} (${esc(r.oleh||"")})</p>`:""}</div>`).join("")||`<div class="panel empty">Tidak ada tanggapan${(S.rsf||"menunggu")==="menunggu"?" yang menunggu persetujuan":""}.</div>`}</div>`; }
+     ${r.status==="menunggu"&&S.canWrite?`<div class="row" style="gap:6px;margin-top:8px"><input type="text" placeholder="Catatan untuk PIC (opsional)" data-rscat="${esc(r._id)}" style="flex:1;min-width:180px"><button class="btn small primary" data-rsok="${esc(r._id)}">Terima</button><button class="btn small danger" data-rsno="${esc(r._id)}">Tolak</button></div>`:r.catAdmin?`<p class="muted" style="margin:6px 0 0;font-size:13px">Catatan admin: ${esc(r.catAdmin)} (${esc(r.oleh||"")})</p>`:""}${S.canWrite&&r.status!=="menunggu"?`<p style="margin:6px 0 0"><button type="button" class="linkbtn" data-rsdel="${esc(r._id)}" style="color:var(--red)">Hapus tanggapan</button></p>`:""}</div>`).join("")||`<div class="panel empty">Tidak ada tanggapan${(S.rsf||"menunggu")==="menunggu"?" yang menunggu persetujuan":""}.</div>`}</div>`; }
 // ---- dashboard PIC Area
 function akInBag(x,bags){ const v=String(x||"").toLowerCase(); return bags.some(b=>{ const bb=b.toLowerCase(); return v===bb||v.includes(bb)||bb.includes(v)&&v.length>3; }); }
 function viewPic(){ const bags=akMyBagian(), tab=S.pict||"patroli", pv=S.picPrev?`<div class="banner pvban"><span>👁 <b>Mode pratinjau Akses Level I</b> · ${esc(S.picPrev.nama||"")}${S.picPrev.nama?" · ":""}${bags.map(esc).join(", ")}. Tanggapan di mode ini tidak dikirim.</span><button class="btn small primary" data-act="pv-exit">Keluar pratinjau</button></div>`:"";
@@ -5402,7 +5459,7 @@ function viewPic(){ const bags=akMyBagian(), tab=S.pict||"patroli", pv=S.picPrev
   if(tab==="apar") body=`<div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th>APAR</th><th>Penempatan</th><th>Pemeriksaan terakhir</th><th></th></tr></thead><tbody>${apars.map(a=>{ const lp=apLast(a), bad=apBad(lp);
      return `<tr><td><b>${esc(apLabel(a))}</b><div class="muted num" style="font-size:12px">${esc(a.bc)}</div></td><td>${esc(a.penempatan||"")}</td><td>${lp?fmt(lp.tgl)+" ":""}${apHasilChip(lp)}${bad.length?`<div class="muted" style="font-size:12.5px">${esc(AP_POIN.filter(([k])=>lp.cek[k]==="tidak").map(([k,l])=>l+((lp.ket||{})[k]?": "+lp.ket[k]:"")).join("; "))}</div>`:""}${rsChips("apar",a.bc)}</td>
       <td>${bad.length||!lp?`<button class="btn small" data-rsnew="apar" data-ref="${esc(a.bc)}" data-judul="APAR ${esc(apLabel(a))}" data-bag="${esc(a.bagian||"")}">Beri tanggapan</button>`:""}</td></tr>`; }).join("")||`<tr><td colspan="4" class="empty">Tidak ada APAR di bagian Anda.</td></tr>`}</tbody></table></div></div>`;
-  if(tab==="saya") body=mine.map(r=>`<div class="panel"><div class="row" style="justify-content:space-between"><b>${esc(r.judul||"")}</b><span class="chip ${RS_ST[r.status][1]}">${RS_ST[r.status][0]}</span></div><p style="margin:4px 0 0">${esc(r.teks||"")}</p>${r.catAdmin?`<p class="muted" style="margin:4px 0 0;font-size:13px">Catatan admin: ${esc(r.catAdmin)}</p>`:""}</div>`).join("")||`<div class="panel empty">Belum ada tanggapan.</div>`;
+  if(tab==="saya") body=mine.map(r=>`<div class="panel"><div class="row" style="justify-content:space-between"><b>${esc(r.judul||"")}</b><span class="chip ${RS_ST[r.status][1]}">${RS_ST[r.status][0]}</span></div><p style="margin:4px 0 0">${esc(r.teks||"")}</p>${r.catAdmin?`<p class="muted" style="margin:4px 0 0;font-size:13px">Catatan admin: ${esc(r.catAdmin)}</p>`:""}${r.status==="menunggu"&&!S.picPrev?`<div class="row" style="gap:6px;margin-top:8px"><button type="button" class="btn small" data-rsedit="${esc(r._id)}">Ubah</button><button type="button" class="btn small danger" data-rsdel="${esc(r._id)}">Tarik tanggapan</button></div>`:""}</div>`).join("")||`<div class="panel empty">Belum ada tanggapan.</div>`;
   return pv+`<h1>Area saya</h1><p class="sub">${esc(S.picPrev?(S.picPrev.nama||"Pratinjau"):akMyName())} · Akses Level I · bagian: ${bags.map(esc).join(", ")}</p>
    <div class="tiles"><button class="tile ${openT?"warn":""}" data-pict="patroli"><span class="num">${openT}</span>Temuan patroli belum selesai</button><button class="tile ${kurang?"warn":""}" data-pict="kotak"><span class="num">${kurang}</span>Kotak P3K perlu tindakan</button><button class="tile ${apBadN?"bad":""}" data-pict="apar"><span class="num">${apBadN}</span>APAR tidak baik</button></div>
    <div class="lkchips" style="margin:0 0 12px">${[["patroli","Temuan patroli"],["kotak","Kotak P3K"],["apar","APAR"],["saya","Tanggapan saya ("+mine.length+")"]].map(([k,l])=>`<button class="lkchip" data-pict="${k}" aria-pressed="${tab===k}">${l}</button>`).join("")}</div>
@@ -5523,7 +5580,7 @@ document.addEventListener("click",ev=>{ const t=ev.target, pane=document.querySe
 // Disinkronkan: karyawan & kartu APD, pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi, beserta pengaturannya.
 // Tetap lokal: track proses. Field "nik" tidak pernah dikirim ke server (NIK hanya ada di komputer kantor).
 const FB_CFG={apiKey:"AIzaSyDO6zLuw8sMEWTExa1UuEFxeGvBSx6Pn8o",authDomain:"k3-dewasutratex.firebaseapp.com",projectId:"k3-dewasutratex",storageBucket:"k3-dewasutratex.firebasestorage.app",messagingSenderId:"864608893325",appId:"1:864608893325:web:f12a06b2a9d4506ce9e5c4"};
-const FB_VER="10.12.2", SYNC_COLS=["respon","track","penanda","karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3","p2k3rapat"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org","track"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
+const FB_VER="10.12.2", SYNC_COLS=["respon","track","penanda","karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","p2k3","p2k3keg","patroli","progk3","p2k3rapat"], SYNC_SET=["p3k","hira","peta","aparpic","apd","masaPakai","matriks","p2k3","p2k3org","track","cetak"], SY_VER=2, BLOB_MIN=40000, CHUNK=700000;
 const SY_OWNER="adrisatriaputra3@gmail.com";
 const SY={me:null,users:new Map(),acc:null,ready:{},admins:null,fb:null,auth:null,db:null,user:null,meta:{base:{},seen:{},joined:"",blobs:{}},loaded:false,unsub:[],live:{},busy:0,inflight:{},err:"",lastOk:"",timer:null,dev:""};
 function syTrackOK(){ return !!(SY.user&&SY.meta.joined==="up"&&syLevel()==="super"); }
