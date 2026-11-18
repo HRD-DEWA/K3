@@ -730,6 +730,7 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
 .tpact{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px}.linkbtn.tpname{font-weight:700;color:var(--text);text-align:left}.linkbtn.tpname:hover{color:var(--accent);text-decoration:underline}
 .apisi{border:1.5px solid var(--amber);background:var(--amber-bg);border-radius:8px;padding:9px 12px;margin:10px 0 0;font-size:13.5px}.apisi b{color:var(--amber)}.apdone{margin:8px 0 0;padding:7px 10px;border-radius:8px;background:var(--gray-bg);font-size:13px}
 .sigcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.sigcol{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}.sigbtn{margin-left:6px}
+.impwarn{border:1.5px solid var(--red);background:var(--red-bg);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13.5px}.impdiff{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:6px 0}.impdiff summary{cursor:pointer}.ilrow{border-top:1px dashed var(--line);padding:8px 0;font-size:13.5px;display:flex;flex-direction:column;gap:4px}
 </style>
 </head>
 <body>
@@ -1012,7 +1013,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.14 · 18/11/2026 (ubah tanda tangan cetak & hapus data)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.16 · 18/11/2026 (riwayat update isi & peringatan bentrok impor)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2111,7 +2112,7 @@ function viewBox(route){
     ${(()=>{ const t=(b.isi||[]).filter(x=>{const e=expSt(x.exp); return e&&e.cls!=="green";}); return t.length?`<div class="banner" style="margin:12px 0 0">Perlu ditarik HRD dan ditukar baru: ${t.map(x=>`${esc(itemOf(x.kode).nama)} (${esc(x.bc)}, exp. ${fmt(x.exp)}${expSt(x.exp).cls==="red"?", sudah kadaluarsa":", batas tarik "+fmt(tarikTgl(x.exp))})`).join("; ")}. Catat penarikannya lewat Mulai pemeriksaan.</div>`:""; })()}
     ${s.kurangQty?`<p class="hint">Kebutuhan isi ulang: ${s.items.filter(i=>i.kurang).map(i=>esc(i.nama.toLowerCase())+" "+i.kurang).join(", ")}.</p>`:""}</section>
    <section class="panel"><details data-isiopen="${esc(b.kode)}" ${(S.isiOpen||{})[b.kode]?"open":""}><summary><h2 style="display:inline">Isi kotak per barcode (${isi.length})</h2></summary><div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Barcode</th><th>Item</th><th>Exp.</th><th>Masuk</th><th></th></tr></thead><tbody>${isiRows||`<tr><td colspan="5" class="empty">Isi kotak belum diimpor. Gunakan Impor data kotak atau Isi ulang item.</td></tr>`}</tbody></table></div></details></section>
-   ${tmBoxPanel(b)}
+   ${tmBoxPanel(b)}${isiLogPanel(b)}
    <section class="panel"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Riwayat pemeriksaan</h2><a href="#p3k-riwayat" class="linkbtn">Semua kotak</a></div>${pem.length?pmTable(pem.map(p=>Object.assign({_box:b.kode,_bag:b.bagian||""},p)),false):`<p class="muted" style="margin:0">Belum ada pemeriksaan.</p>`}</section>
    <section class="panel"><h2>Item keluar (terpakai, hilang, ditarik)</h2>${kel2.length?keluarTable(kel2,false):`<p class="muted" style="margin:0">Belum ada item yang keluar.</p>`}</section>`;
 }
@@ -2231,22 +2232,56 @@ function dlgInterval(){ openDlg(`<header><h2>Jadwal pemeriksaan kotak P3K</h2></
   await S.db.doc("pengaturan/p3k").set(Object.assign({},S.p3k||{},{items:p3kItems(),interval:+f.iv.value||30})); toast("Jadwal pemeriksaan disimpan."); }); }
 
 // ---------- Kotak P3K: impor & ekspor ----------
-function dlgImportP3k(p){
+function dlgImportP3k(p,fname){
   const d=(p&&p.data)||{}, boxes=Object.entries(d).filter(([k,v])=>k.startsWith("kotak/")&&v&&typeof v==="object").map(([,v])=>v), set=d["pengaturan/p3k"];
   if(!boxes.length&&!set){ toast("File ini tidak berisi data kotak P3K."); return; }
-  const baru=boxes.filter(b=>!S.kotak.has(b.kode)).length, gantiIsi=boxes.filter(b=>Array.isArray(b.isi)&&b.isi.length).length;
-  openDlg(`<header><h2>Impor data kotak P3K</h2></header><div class="body"><ul style="margin:0;padding-left:18px">
+  const sumber=(p&&p.sumber)||fname||"File impor", baru=boxes.filter(b=>!S.kotak.has(b.kode)).length;
+  const keluarOf=new Map(); S.kotak.forEach(bx=>(bx.keluar||[]).forEach(k=>{ const o=keluarOf.get(k.bc); if(!o||(k.tgl||"")>(o.tgl||"")) keluarOf.set(k.bc,Object.assign({kotak:bx.kode},k)); }));
+  const isiOf=new Map(); S.kotak.forEach(bx=>(bx.isi||[]).forEach(x=>isiOf.set(x.bc,bx.kode)));
+  const fileKodes=new Set(boxes.filter(z=>(z.isi||[]).length).map(z=>z.kode));
+  const plan=boxes.filter(b=>Array.isArray(b.isi)&&b.isi.length).map(b=>{ const cur=S.kotak.get(b.kode), oldB=new Set(((cur&&cur.isi)||[]).map(x=>x.bc)), newB=b.isi.map(x=>x.bc);
+    const add=newB.filter(x=>!oldB.has(x)), gone=[...oldB].filter(x=>!newB.includes(x));
+    const konf=add.filter(bc=>keluarOf.has(bc)).map(bc=>({bc,k:keluarOf.get(bc)}));
+    const lain=newB.filter(bc=>isiOf.has(bc)&&isiOf.get(bc)!==b.kode&&!fileKodes.has(isiOf.get(bc))).map(bc=>({bc,kotak:isiOf.get(bc)}));
+    const cnt={}; b.isi.forEach(x=>cnt[x.kode]=(cnt[x.kode]||0)+1); const kurang=p3kItems().filter(it=>it.std&&(cnt[it.kode]||0)<it.std).map(it=>`${it.nama} ${cnt[it.kode]||0}/${it.std}`);
+    return {b,add,gone,konf,lain,kurang}; });
+  const nKonf=plan.reduce((s,x)=>s+x.konf.length,0);
+  openDlg(`<header><h2>Impor data kotak P3K</h2><p class="hint" style="margin:4px 0 0">Sumber: ${esc(sumber)}</p></header><div class="body"><ul style="margin:0 0 8px;padding-left:18px">
    ${boxes.length?`<li>${boxes.length} kotak: ${baru} kotak baru, ${boxes.length-baru} kotak diperbarui datanya.</li>`:""}
-   ${gantiIsi?`<li>Isi barcode untuk <b>${gantiIsi} kotak</b> akan <b>diganti</b> dengan isi dari file. Riwayat pemeriksaan dan item keluar tetap disimpan.</li>`:""}
+   ${plan.length?`<li>Isi barcode untuk <b>${plan.length} kotak</b> disamakan dengan file. Tanggal expire yang sudah tercatat dipertahankan bila file tidak memuatnya. Riwayat pemeriksaan dan item keluar tetap disimpan, dan setiap perubahan isi dicatat di <b>Riwayat update isi</b> kotak.</li>`:""}
    ${set&&set.items?`<li>Master item: ${set.items.length} item (item dengan No. Stock yang sama diperbarui).</li>`:""}</ul>
-   <p class="hint">Data karyawan, Kartu APD, dan kecelakaan kerja tidak berubah.</p></div>${foot("Impor")}`, async ()=>{
+   ${nKonf?`<div class="impwarn"><b>⚠ ${nKonf} barcode di file sudah tercatat keluar</b> (terpakai/hilang/ditarik) di program ini. Kemungkinan pengeluarannya belum diinput di Program P3K. Barcode ini <b>tidak dimasukkan</b> ke isi kotak kecuali Anda centang (misalnya bila memang sudah diisi ulang dengan barcode yang sama).</div>`:""}
+   ${plan.map((x,pi)=>`<details class="impdiff" ${x.konf.length||x.lain.length?"open":""}><summary><b>${esc(x.b.kode)}</b> · ${x.b.isi.length} barcode di file · <span style="color:var(--green)">${x.add.length} baru</span> · <span style="color:var(--red)">${x.gone.length} tidak ada lagi</span> · ${x.b.isi.length-x.add.length} sama${x.konf.length?` · <b style="color:var(--red)">${x.konf.length} bentrok</b>`:""}</summary>
+     ${x.konf.length?`<div style="margin:6px 0 0">${x.konf.map(c=>`<label class="cb" style="font-size:13px"><input type="checkbox" data-impkonf="${pi}|${esc(c.bc)}"> <span><b class="num">${esc(c.bc)}</b> ${esc(itemOf(c.k.kode).nama)} – tercatat <b>${esc(((KELUAR[c.k.kat]||[c.k.kat])[0]||"").toLowerCase())}</b> ${fmt(c.k.tgl)}${c.k.kotak!==x.b.kode?" dari kotak "+esc(c.k.kotak):""}. Centang untuk tetap memasukkan.</span></label>`).join("")}</div>`:""}
+     ${x.lain.length?`<p style="margin:6px 0 0;font-size:13px;color:var(--amber)"><b>Terdaftar di kotak lain:</b> ${x.lain.map(l=>esc(l.bc)+" ("+esc(l.kotak)+")").join(", ")}</p>`:""}
+     ${x.add.length?`<p style="margin:6px 0 0;font-size:13px"><b>Baru:</b> ${x.add.filter(bc=>!x.konf.some(c=>c.bc===bc)).map(esc).join(", ")||"–"}</p>`:""}
+     ${x.gone.length?`<p style="margin:6px 0 0;font-size:13px"><b>Tidak ada lagi di file (dihapus dari isi kotak):</b> ${x.gone.map(esc).join(", ")}</p>`:""}
+     ${x.kurang.length?`<p class="muted" style="margin:6px 0 0;font-size:12.5px">Di bawah standar menurut file: ${x.kurang.map(esc).join("; ")}</p>`:""}</details>`).join("")}
+   <p class="hint" style="margin:8px 0 0">Data karyawan, Kartu APD, APAR, dan kecelakaan kerja tidak berubah. Sebaiknya unduh backup sebelum impor besar.</p></div>${foot("Impor")}`, async f=>{
+    const ok=new Set([...f.querySelectorAll("[data-impkonf]:checked")].map(c=>c.dataset.impkonf));
     if(set){ const list=clone(p3kItems()); (set.items||[]).forEach(it=>{ const ix=list.findIndex(x=>x.kode===it.kode); if(ix>=0) list[ix]=Object.assign(list[ix],it); else list.push(it); });
       await S.db.doc("pengaturan/p3k").set({items:list,interval:+set.interval||p3kInterval()}); }
+    const now=new Date().toISOString(), oleh=(typeof akMyName==="function"?akMyName():S.uid)||"";
     for(const b of boxes){ const cur=S.kotak.get(b.kode); const n=cur?clone(cur):{kode:b.kode,isi:[],pemeriksaan:[],keluar:[]}; delete n._id;
-      ["urut","bagianKode","bagian","penempatan"].forEach(k=>{ if(b[k]!==undefined) n[k]=b[k]; }); if(Array.isArray(b.isi)&&b.isi.length) n.isi=b.isi;
+      ["urut","bagianKode","bagian","penempatan"].forEach(k=>{ if(b[k]!==undefined) n[k]=b[k]; });
+      const pi=plan.findIndex(x=>x.b===b);
+      if(pi>=0){ const x=plan[pi], skip=x.konf.filter(c=>!ok.has(pi+"|"+c.bc)).map(c=>c.bc), old=new Map(((cur&&cur.isi)||[]).map(y=>[y.bc,y]));
+        n.isi=b.isi.filter(y=>!skip.includes(y.bc)).map(y=>{ const o=old.get(y.bc)||{}; return Object.assign({},o,y,{exp:y.exp||o.exp||"",masuk:y.masuk||o.masuk||""}); });
+        const nm=bc=>{ const z=b.isi.find(q=>q.bc===bc)||((cur&&cur.isi)||[]).find(q=>q.bc===bc)||{}; return {bc,kode:z.kode||""}; };
+        (n.isiLog=n.isiLog||[]).push({id:uidGen("il"),tgl:now,sumber,oleh,sebelum:old.size,sesudah:n.isi.length,tambah:x.add.filter(bc=>!skip.includes(bc)).map(nm),hapus:x.gone.map(nm),
+          lewati:skip.map(bc=>{ const k=keluarOf.get(bc); return Object.assign(nm(bc),{alasan:"tercatat "+(((KELUAR[k.kat]||[""])[0])||"").toLowerCase()+" "+fmt(k.tgl)}); })}); }
       STORE["kotak/"+b.kode]=n; }
-    await persist(); notify(); go("p3k"); toast(`Impor selesai: ${boxes.length} kotak${gantiIsi?`, isi ${gantiIsi} kotak diperbarui`:""}.`); });
+    await persist(); notify(); go("p3k"); toast(`Impor selesai: ${boxes.length} kotak${plan.length?`, isi ${plan.length} kotak diperbarui`:""}.`); });
 }
+function isiLogPanel(b){ const L=(b.isiLog||[]).slice().reverse(); if(!L.length) return "";
+  const nm=x=>esc(x.bc)+(x.kode?` <span class="muted">${esc(itemOf(x.kode).nama)}</span>`:"");
+  return `<section class="panel"><details><summary><h2 style="margin:0;display:inline">Riwayat update isi</h2> <span class="muted">(${L.length})</span></summary>
+   ${L.map(l=>`<div class="ilrow"><div><b>${(()=>{ const d=new Date(l.tgl); return fmt(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"))+" "+d.toTimeString().slice(0,5); })()}</b> · ${esc(l.sumber||"")}${l.oleh?" · oleh "+esc(l.oleh):""} · isi ${l.sebelum} → ${l.sesudah}</div>
+     ${l.tambah.length?`<div><span class="chip green">+${l.tambah.length} ditambahkan</span> ${l.tambah.map(nm).join(", ")}</div>`:""}
+     ${l.hapus.length?`<div><span class="chip red">−${l.hapus.length} dihapus</span> ${l.hapus.map(nm).join(", ")}</div>`:""}
+     ${(l.lewati||[]).length?`<div><span class="chip amber">${l.lewati.length} dilewati</span> ${l.lewati.map(x=>nm(x)+(x.alasan?" ("+esc(x.alasan)+")":"")).join(", ")}</div>`:""}
+     ${!l.tambah.length&&!l.hapus.length&&!(l.lewati||[]).length?`<div class="muted">Tidak ada perubahan isi.</div>`:""}</div>`).join("")}</details></section>`; }
+
 function exportP3k(){ const rows=[["No","Kode kotak","Kode bagian","Bagian","Penempatan","Isi","Standar","Kurang","Kadaluarsa","Pemeriksaan terakhir",...p3kItems().map(i=>i.kode+" "+i.nama)]];
   boxList().forEach(b=>{ const s=boxStat(b); rows.push([b.urut,b.kode,b.bagianKode,b.bagian,b.penempatan,s.ada,s.std,s.kurangQty,s.exp,s.last||"",...p3kItems().map(i=>(s.items.find(x=>x.kode===i.kode)||{}).ada||0)]); });
   exportCsv("master-kotak-p3k-"+todayISO()+".csv",rows); }
@@ -2381,7 +2416,7 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.id==="p3kF"){ S.p3kF=el.value; render(); }
   if(el.id==="p3kLogY"){ S.p3kLogY=el.value; render(); }
   if(el.id==="p3kLogK"){ S.p3kLogK=el.value; render(); }
-  if(el.id==="p3kImport"&&el.files[0]){ const fr=new FileReader(); fr.onload=()=>{ let p; try{ p=JSON.parse(fr.result); }catch(x){ toast("File tidak dapat dibaca. Pilih file impor kotak P3K (.json)."); return; } dlgImportP3k(p); }; fr.readAsText(el.files[0]); el.value=""; }
+  if(el.id==="p3kImport"&&el.files[0]){ const fn=el.files[0].name; const fr=new FileReader(); fr.onload=()=>{ let p; try{ p=JSON.parse(fr.result); }catch(x){ toast("File tidak dapat dibaca. Pilih file impor kotak P3K (.json)."); return; } dlgImportP3k(p,fn); }; fr.readAsText(el.files[0]); el.value=""; }
 });
 
 // ---------- events ----------
