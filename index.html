@@ -731,6 +731,9 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
 .apisi{border:1.5px solid var(--amber);background:var(--amber-bg);border-radius:8px;padding:9px 12px;margin:10px 0 0;font-size:13.5px}.apisi b{color:var(--amber)}.apdone{margin:8px 0 0;padding:7px 10px;border-radius:8px;background:var(--gray-bg);font-size:13px}
 .sigcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.sigcol{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}.sigbtn{margin-left:6px}
 .impwarn{border:1.5px solid var(--red);background:var(--red-bg);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:13.5px}.impdiff{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:6px 0}.impdiff summary{cursor:pointer}.ilrow{border-top:1px dashed var(--line);padding:8px 0;font-size:13.5px;display:flex;flex-direction:column;gap:4px}
+.navtools{display:flex;flex-direction:column;gap:6px;align-items:flex-start;margin:10px 4px 0;padding-top:8px;border-top:1px solid rgba(255,255,255,.15)}.navtools .linkbtn{color:inherit;opacity:.8;font-size:12.5px}
+.navmv{display:inline-flex;gap:2px;margin-left:auto;padding-left:6px}.navmv span{display:inline-grid;place-items:center;width:22px;height:20px;border-radius:5px;background:rgba(255,255,255,.18);font-size:10px;cursor:pointer}
+body.navedit nav.side .navgrp{outline:1px dashed rgba(255,255,255,.35)}
 </style>
 </head>
 <body>
@@ -745,32 +748,6 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
     <div class="navsub" id="ng-ms" data-navgs="ms" hidden>
      <a class="nsub" href="#master" data-nav="master">Daftar karyawan</a>
      <a class="nsub" href="#master-rekap" data-nav="master-rekap">Rekap per bagian</a></div>
-    <button type="button" class="navgrp" data-navg="apd" aria-expanded="false" aria-controls="ng-apd">Kartu APD</button>
-    <div class="navsub" id="ng-apd" data-navgs="apd" hidden>
-     <a class="nsub" href="#beranda" data-nav="beranda">Perlu tindakan</a>
-     <a class="nsub" href="#karyawan" data-nav="karyawan">Karyawan</a>
-     <a class="nsub" href="#matriks" data-nav="matriks">Matriks APD</a>
-     <a class="nsub" href="#pengaturan" data-nav="pengaturan">Jenis APD</a>
-     <a class="nsub" href="#bagi" data-nav="bagi">Pembagian APD</a></div>
-    <button type="button" class="navgrp" data-navg="hira" aria-expanded="false" aria-controls="ng-hira">HIRADC</button>
-    <div class="navsub" id="ng-hira" data-navgs="hira" hidden>
-     <a class="nsub" href="#hira" data-nav="hira">HIRA per area</a>
-     <a class="nsub" href="#hira-rekap" data-nav="hira-rekap">Prioritas & rekap risiko</a>
-     <a class="nsub" href="#matriks" data-nav="matriks">Matriks APD</a></div>
-    <button type="button" class="navgrp" data-navg="kk" aria-expanded="false" aria-controls="ng-kk">Kecelakaan kerja</button>
-    <div class="navsub" id="ng-kk" data-navgs="kk" hidden>
-     <a class="nsub" href="#kecelakaan" data-nav="kecelakaan">Daftar kejadian</a></div>
-    <button type="button" class="navgrp" data-navg="inv" aria-expanded="false" aria-controls="ng-inv">Investigasi</button>
-    <div class="navsub" id="ng-inv" data-navgs="inv" hidden>
-     <a class="nsub" href="#investigasi" data-nav="investigasi">Form investigasi</a>
-     <a class="nsub" href="#tindakan" data-nav="tindakan">Tindakan perbaikan</a></div>
-    <button type="button" class="navgrp" data-navg="p3k" aria-expanded="false" aria-controls="ng-p3k">Kotak P3K</button>
-    <div class="navsub" id="ng-p3k" data-navgs="p3k" hidden>
-     <a class="nsub" href="#p3k" data-nav="p3k">Master kotak</a>
-     <a class="nsub" href="#p3k-item" data-nav="p3k-item">Master item</a>
-     <a class="nsub" href="#p3k-log" data-nav="p3k-log">Pemakaian & item keluar</a>
-     <a class="nsub" href="#p3k-riwayat" data-nav="p3k-riwayat">Riwayat pemeriksaan</a>
-     <a class="nsub" href="#lapangan" data-nav="lapangan">Mode lapangan (HP)</a></div>
     <button type="button" class="navgrp" data-navg="track" aria-expanded="false" aria-controls="ng-track">Track proses</button>
     <div class="navsub" id="ng-track" data-navgs="track" hidden>
      <a class="nsub" href="#track" data-nav="track">Input proses</a>
@@ -782,18 +759,42 @@ ul.tphist li{display:grid;grid-template-columns:62px 1fr auto;gap:6px;padding:5p
      <a class="nsub" href="#p2k3-keg" data-nav="p2k3-keg">Kegiatan K3</a>
      <a class="nsub" href="#p2k3" data-nav="p2k3">Laporan P2K3</a>
      <a class="nsub" href="#p2k3-set" data-nav="p2k3-set">Data umum perusahaan</a></div>
+    <button type="button" class="navgrp" data-navg="pg" aria-expanded="false" aria-controls="ng-pg">Program K3</button>
+    <div class="navsub" id="ng-pg" data-navgs="pg" hidden>
+     <a class="nsub" href="#progk3" data-nav="progk3">Rencana & pelaksanaan</a></div>
+    <button type="button" class="navgrp" data-navg="hira" aria-expanded="false" aria-controls="ng-hira">HIRADC</button>
+    <div class="navsub" id="ng-hira" data-navgs="hira" hidden>
+     <a class="nsub" href="#hira" data-nav="hira">HIRA per area</a>
+     <a class="nsub" href="#hira-rekap" data-nav="hira-rekap">Prioritas & rekap risiko</a>
+     <a class="nsub" href="#matriks" data-nav="matriks">Matriks APD</a></div>
+    <button type="button" class="navgrp" data-navg="apd" aria-expanded="false" aria-controls="ng-apd">Kartu APD</button>
+    <div class="navsub" id="ng-apd" data-navgs="apd" hidden>
+     <a class="nsub" href="#beranda" data-nav="beranda">Perlu tindakan</a>
+     <a class="nsub" href="#karyawan" data-nav="karyawan">Karyawan</a>
+     <a class="nsub" href="#matriks" data-nav="matriks">Matriks APD</a>
+     <a class="nsub" href="#pengaturan" data-nav="pengaturan">Jenis APD</a>
+     <a class="nsub" href="#bagi" data-nav="bagi">Pembagian APD</a></div>
+    <button type="button" class="navgrp" data-navg="ptr" aria-expanded="false" aria-controls="ng-ptr">Patroli K3</button>
+    <div class="navsub" id="ng-ptr" data-navgs="ptr" hidden>
+     <a class="nsub" href="#patroli" data-nav="patroli">Patroli / Inspeksi K3</a></div>
+    <button type="button" class="navgrp" data-navg="kk" aria-expanded="false" aria-controls="ng-kk">Kecelakaan & investigasi</button>
+    <div class="navsub" id="ng-kk" data-navgs="kk" hidden>
+     <a class="nsub" href="#kecelakaan" data-nav="kecelakaan">Daftar kejadian</a>
+     <a class="nsub" href="#investigasi" data-nav="investigasi">Form investigasi</a>
+     <a class="nsub" href="#tindakan" data-nav="tindakan">Tindakan perbaikan</a></div>
+    <button type="button" class="navgrp" data-navg="p3k" aria-expanded="false" aria-controls="ng-p3k">Kotak P3K</button>
+    <div class="navsub" id="ng-p3k" data-navgs="p3k" hidden>
+     <a class="nsub" href="#p3k" data-nav="p3k">Master kotak</a>
+     <a class="nsub" href="#p3k-item" data-nav="p3k-item">Master item</a>
+     <a class="nsub" href="#p3k-log" data-nav="p3k-log">Pemakaian & item keluar</a>
+     <a class="nsub" href="#p3k-riwayat" data-nav="p3k-riwayat">Riwayat pemeriksaan</a>
+     <a class="nsub" href="#lapangan" data-nav="lapangan">Mode lapangan (HP)</a></div>
     <button type="button" class="navgrp" data-navg="apar" aria-expanded="false" aria-controls="ng-apar">APAR</button>
     <div class="navsub" id="ng-apar" data-navgs="apar" hidden>
      <a class="nsub" href="#apar" data-nav="apar">Master APAR</a>
      <a class="nsub" href="#apar-cek" data-nav="apar-cek">Pemeriksaan APAR</a>
      <a class="nsub" href="#apar-lap" data-nav="apar-lap">Laporan pemeriksaan</a>
      <a class="nsub" href="#apar-pic" data-nav="apar-pic">PIC APAR</a></div>
-    <button type="button" class="navgrp" data-navg="pg" aria-expanded="false" aria-controls="ng-pg">Program K3</button>
-    <div class="navsub" id="ng-pg" data-navgs="pg" hidden>
-     <a class="nsub" href="#progk3" data-nav="progk3">Rencana & pelaksanaan</a></div>
-    <button type="button" class="navgrp" data-navg="ptr" aria-expanded="false" aria-controls="ng-ptr">Patroli K3</button>
-    <div class="navsub" id="ng-ptr" data-navgs="ptr" hidden>
-     <a class="nsub" href="#patroli" data-nav="patroli">Patroli / Inspeksi K3</a></div>
     <button type="button" class="navgrp" data-navg="peta" aria-expanded="false" aria-controls="ng-peta">Peta K3</button>
     <div class="navsub" id="ng-peta" data-navgs="peta" hidden>
      <a class="nsub" href="#peta" data-nav="peta">Layout sarana K3</a></div>
@@ -1013,7 +1014,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.16 · 18/11/2026 (riwayat update isi & peringatan bentrok impor)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V9.17 · 19/11/2026 (menu disederhanakan & urutan bisa diatur)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -5217,6 +5218,25 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.dataset&&el.dataset.pgf&&el.tagName==="SELECT"){ const [ri,f]=el.dataset.pgf.split("|"); pgDoc(S.pg.th).items[+ri][f]=el.value; pgSave(); return; }
   if(el.id==="pgTh"){ if(el.value==="baru"){ const y=prompt("Tahun program K3:",String(S.pg.th+1)); if(y&&/^\d{4}$/.test(y)) S.pg.th=+y; } else S.pg.th=+el.value; S.pg.edit=false; render(); return; }
   if(el.id==="pgImp"&&el.files[0]){ const f=el.files[0]; el.value=""; pgImport(f); } });
+
+
+// ---------- urutan menu yang bisa diatur & dikunci (per perangkat) ----------
+const NAV_DEF=["ms","track","p2k3","pg","hira","apd","ptr","kk","p3k","apar","peta","pic","akses","data"];
+function navOrderGet(){ try{ const o=JSON.parse(localStorage.getItem("k3.navOrder")||"null"); if(Array.isArray(o)) return o.filter(k=>NAV_DEF.includes(k)).concat(NAV_DEF.filter(k=>!o.includes(k))); }catch(e){} return NAV_DEF.slice(); }
+function navOrderApply(){ const nav=document.querySelector("nav.side"), foot=nav&&nav.querySelector(".foot"); if(!nav||!foot) return; const tools=nav.querySelector(".navtools");
+  navOrderGet().forEach(k=>{ const b=nav.querySelector(`.navgrp[data-navg="${k}"]`), d=nav.querySelector(`.navsub[data-navgs="${k}"]`); if(b){ nav.insertBefore(b,tools||foot); if(d) nav.insertBefore(d,tools||foot); } }); }
+function navEditOn(){ return document.body.classList.contains("navedit"); }
+function navToolsDraw(){ const nav=document.querySelector("nav.side"); if(!nav) return; let t=nav.querySelector(".navtools"); if(!t){ t=document.createElement("div"); t.className="navtools"; nav.insertBefore(t,nav.querySelector(".foot")); }
+  t.innerHTML=navEditOn()?`<button type="button" class="btn small primary" data-navlock>🔒 Selesai & kunci urutan</button><button type="button" class="linkbtn" data-navreset>Kembalikan urutan bawaan</button>`:`<button type="button" class="linkbtn" data-navunlock>⇅ Atur urutan menu</button>`;
+  nav.querySelectorAll(".navgrp").forEach(b=>{ let a=b.querySelector(".navmv"); if(navEditOn()){ if(!a){ a=document.createElement("span"); a.className="navmv"; a.innerHTML=`<span role="button" tabindex="0" data-navmv="-1" aria-label="Naikkan">▲</span><span role="button" tabindex="0" data-navmv="1" aria-label="Turunkan">▼</span>`; b.appendChild(a); } } else if(a) a.remove(); }); }
+function navMove(k,dx){ const o=navOrderGet().filter(x=>document.querySelector(`nav.side .navgrp[data-navg="${x}"]`)&&getComputedStyle(document.querySelector(`nav.side .navgrp[data-navg="${x}"]`)).display!=="none"), all=navOrderGet(), i=o.indexOf(k), j=i+dx; if(i<0||j<0||j>=o.length) return;
+  const a=all.indexOf(o[i]), b=all.indexOf(o[j]); [all[a],all[b]]=[all[b],all[a]]; try{ localStorage.setItem("k3.navOrder",JSON.stringify(all)); }catch(e){} navOrderApply(); }
+document.addEventListener("click",ev=>{ const t=ev.target;
+  const mv=t.closest("[data-navmv]"); if(mv){ ev.preventDefault(); ev.stopPropagation(); navMove(mv.closest(".navgrp").dataset.navg,+mv.dataset.navmv); return; }
+  if(t.closest("[data-navunlock]")){ document.body.classList.add("navedit"); navToolsDraw(); toast("Gunakan ▲ ▼ untuk mengubah urutan menu, lalu kunci."); return; }
+  if(t.closest("[data-navlock]")){ document.body.classList.remove("navedit"); navToolsDraw(); toast("Urutan menu dikunci."); return; }
+  if(t.closest("[data-navreset]")){ try{ localStorage.removeItem("k3.navOrder"); }catch(e){} navOrderApply(); toast("Urutan menu dikembalikan ke bawaan."); return; } },true);
+setTimeout(()=>{ navOrderApply(); navToolsDraw(); },0);
 
 // ---------- Ubah teks tanda tangan dokumen cetak (per dokumen, tersimpan sebagai pengaturan) ----------
 const SIG_SEL="table.hsg td, table.ntsg td, table.p2sg td, table.psign td, table.ptrsg td";
