@@ -738,6 +738,7 @@ body.navedit nav.side .navgrp{outline:1px dashed rgba(255,255,255,.35)}
 body[data-unit="U1"] .unitsel select{border-color:#16a34a}body[data-unit="U2"] .unitsel select{border-color:#2563eb}body[data-unit="ALL"] .unitsel select{border-color:#d97706}
 .shgrid{display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start}@media (max-width:760px){.shgrid{grid-template-columns:1fr}}.qrbox{display:grid;place-items:center;min-height:240px;background:#fff;border-radius:8px;padding:8px}
 body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a,body.lvpend .navtools{display:none!important}.tunggu{max-width:640px}.akreq{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}.nvbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;margin-left:6px;padding:0 5px}
+.bantuinfo{margin:6px 0;font-size:13px}
 </style>
 </head>
 <body>
@@ -751,7 +752,8 @@ body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a
     <button type="button" class="navgrp" data-navg="ms" aria-expanded="false" aria-controls="ng-ms">Master karyawan</button>
     <div class="navsub" id="ng-ms" data-navgs="ms" hidden>
      <a class="nsub" href="#master" data-nav="master">Daftar karyawan</a>
-     <a class="nsub" href="#master-rekap" data-nav="master-rekap">Rekap per bagian</a></div>
+     <a class="nsub" href="#master-rekap" data-nav="master-rekap">Rekap per bagian</a>
+     <a class="nsub" href="#bantu" data-nav="bantu">Karyawan diperbantukan</a></div>
     <button type="button" class="navgrp" data-navg="track" aria-expanded="false" aria-controls="ng-track">Track proses</button>
     <div class="navsub" id="ng-track" data-navgs="track" hidden>
      <a class="nsub" href="#track" data-nav="track">Input proses</a>
@@ -941,7 +943,7 @@ function writeErr(e){
 function readRoute(){
   const h=(location.hash||"").replace(/^#/,"");
   if(["k-","inv-","box-","itm-","cek-","prt-","lap-","hira-","bagi-","p2k3-e-","p2k3-r-","ptr-","ptrv-","p2k3-n-","p2k3-nv-"].some(p=>h.startsWith(p))) return h;
-  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi","peta","apar","apar-cek","apar-lap","apar-pic","patroli","progk3","pengguna","respon","pic","bagikan","tunggu","p2k3-rapat","p2k3","p2k3-org","p2k3-keg","p2k3-set"].includes(h)?h:"ringkasan";
+  return ["ringkasan","beranda","karyawan","matriks","pengaturan","backup","kecelakaan","investigasi","tindakan","p3k","p3k-item","p3k-log","track","track-riwayat","master","master-rekap","lapangan","hira","hira-rekap","p3k-riwayat","bagi","peta","apar","apar-cek","apar-lap","apar-pic","patroli","progk3","pengguna","respon","pic","bagikan","tunggu","bantu","p2k3-rapat","p2k3","p2k3-org","p2k3-keg","p2k3-set"].includes(h)?h:"ringkasan";
 }
 window.addEventListener("hashchange",()=>{S.route=readRoute(); render(); window.scrollTo(0,0);});
 function go(r){ if(location.hash!=="#"+r) location.hash=r; else {S.route=r; render();} }
@@ -981,6 +983,7 @@ function render(){
   else if(S.route==="patroli") m.innerHTML=ro+viewPatroli();
   else if(S.route==="progk3") m.innerHTML=ro+viewProgK3();
   else if(S.route==="bagikan") m.innerHTML=viewBagikan();
+  else if(S.route==="bantu") m.innerHTML=viewBantu();
   else if(S.route==="tunggu") m.innerHTML=SY.user?viewTunggu():"<div class=\"panel\">Silakan masuk atau ajukan akun lewat tombol status.</div>";
   else if(S.route==="pengguna") m.innerHTML=viewPengguna();
   else if(S.route==="respon") m.innerHTML=viewRespon();
@@ -1021,7 +1024,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.2 · 19/11/2026 (pengajuan & persetujuan akun)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.3 · 19/11/2026 (karyawan diperbantukan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -1071,7 +1074,7 @@ function viewList(){
     const miss=missingWajib(k).length; const nW=Object.values(k.wajib||{}).filter(w=>w&&w.on).length;
     let st = k.aktif===false?`<span class="chip gray">Tidak aktif</span>`:
       red?`<span class="chip red">${red} habis</span>`: miss?`<span class="chip amber">${miss} APD wajib belum diterima</span>`: amb?`<span class="chip amber">${amb} segera habis</span>`: !nW?`<span class="chip gray">APD wajib belum ditentukan</span>`:`<span class="chip green">Lengkap</span>`;
-    return `<tr class="click" data-open="${esc(k._id)}" tabindex="0"><td><b>${esc(k.nama)}</b></td><td class="num nikc">${esc(k.nik)}</td><td class="num">${esc(k.nrp||"–")}</td><td>${esc(k.bagian||"–")}</td><td>${esc(k.status||"–")}</td><td>${st}</td></tr>`;
+    return `<tr class="click" data-open="${esc(k._id)}" tabindex="0"><td><b>${esc(k.nama)}</b>${bantuMark(k)}</td><td class="num nikc">${esc(k.nik)}</td><td class="num">${esc(k.nrp||"–")}</td><td>${esc(k.bagian||"–")}</td><td>${esc(k.status||"–")}</td><td>${st}</td></tr>`;
   }).join("");
   return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Karyawan</h1>
    <div class="row">${S.canWrite?`<button class="btn primary" data-act="add-k">Tambah karyawan</button>`:""}<button class="btn" data-act="export-all">Ekspor CSV</button></div></div>
@@ -2716,7 +2719,7 @@ function tpSearch(inp){ const nm=inp.dataset.pick==="tp-nama", q=inp.value.trim(
   const ks=[...S.list.values()].filter(k=>k.nrp&&k.aktif!==false&&hit(k.nrp,k.nama)); if(nm) ks.sort((a,b)=>(b.nama.toLowerCase().startsWith(ql))-(a.nama.toLowerCase().startsWith(ql)));
   ks.slice(0,8).forEach(k=>add(tpPerson(k.nrp)));
   if(res.length<8) for(const h of tpPeople().values()){ if(hit(h.nrp,h.nama)) add(tpPerson(h.nrp)); if(res.length>=8) break; }
-  box.innerHTML=res.length?res.map((p,i)=>`<button type="button" data-tpnrp="${esc(p.nrp)}" class="${i?"":"on"}"><span><b>${esc(p.nama)}</b>${pndMark(p.nrp)} <span class="muted">${esc(p.jabatan||(p.src==="riwayat"?"dari riwayat proses":""))}</span></span><span class="muted num">${esc(p.nrp)}${p.bagian?" · "+esc(p.bagian):""}${p.grup?" · Grup "+esc(grupShort(p.grup)):""}${p.ku?" · KU "+esc(p.ku):""}</span></button>`).join("")
+  box.innerHTML=res.length?res.map((p,i)=>`<button type="button" data-tpnrp="${esc(p.nrp)}" class="${i?"":"on"}"><span><b>${esc(p.nama)}</b>${pndMark(p.nrp)}${bantuMark(kByNrp(p.nrp))} <span class="muted">${esc(p.jabatan||(p.src==="riwayat"?"dari riwayat proses":""))}</span></span><span class="muted num">${esc(p.nrp)}${p.bagian?" · "+esc(p.bagian):""}${p.grup?" · Grup "+esc(grupShort(p.grup)):""}${p.ku?" · KU "+esc(p.ku):""}</span></button>`).join("")
     :`<p class="muted" style="margin:0;padding:8px 10px">${nm?"Tidak ada nama yang cocok. Nama tetap bisa diketik manual.":"NRP belum dikenal. Lanjutkan, lalu isi nama secara manual."}</p>`;
   box.hidden=false; }
 function tpPick(p){ const t=S.tp; t.nrp=p.nrp; t.nama=p.nama; if(p.ku) t.ku=p.ku; t.bagian=p.bagian||""; t.grup=p.grup||"";
@@ -2754,7 +2757,7 @@ function viewTrack(){
       ${picker("tp-nama","Nama",t.nama)}
       <label class="f"><span>KU</span><input type="text" data-tpf="ku" value="${v("ku")}" list="tpKuDL" maxlength="4"><datalist id="tpKuDL"><option value="M"><option value="H"><option value="M2"><option value="K"><option value="Z"></datalist></label>
       <label class="f"><span>Grup</span><input type="text" data-tpf="grup" value="${v("grup")}" list="tpGrDL" placeholder="Otomatis"><datalist id="tpGrDL"><option value="Non-shift">${"ABCDEFG".split("").map(x=>`<option value="Group ${x}">`).join("")}</datalist></label></div>
-     ${t.nrp?pndBox(t.nrp,t.nama):""}${t.nrp?`<div class="tpact"><button type="button" class="btn small" data-pndadd="${esc(t.nrp)}">⚑ Tambah penanda</button><button type="button" class="btn small" data-pfnrp="${esc(t.nrp)}">Profil & riwayat proses</button>${(()=>{ const n=tpList().filter(r=>r.nrp===t.nrp&&r.id!==t.id), y=todayISO().slice(0,4), ny=n.filter(r=>(r.tgl||"").startsWith(y)), m=ny.filter(r=>(r.kode||[]).includes("M")).length, sp=n.filter(r=>r.sp)[0]; return n.length?`<span class="muted" style="font-size:12.5px">${n.length} proses sebelumnya (${y}: ${ny.length}${m?`, mangkir ${m}`:""})${sp?` · terakhir ${esc(sp.sp)} ${fmt(sp.tgl)}`:""}</span>`:`<span class="muted" style="font-size:12.5px">Belum ada proses sebelumnya</span>`; })()}</div>`:""}${t.nrp&&(t.bagian||t.grup)?`<p class="tpinfo"><span>Bagian: <b>${esc(t.bagian||"–")}</b></span><span>Grup: <b>${esc(t.grup||"–")}</b></span>${t.ku?`<span>KU: <b>${esc(t.ku)}</b></span>`:""}</p>`:""}
+     ${t.nrp?pndBox(t.nrp,t.nama):""}${t.nrp&&bantuMark(kByNrp(t.nrp))?`<div class="bantuinfo">${bantuMark(kByNrp(t.nrp))}${kByNrp(t.nrp).bantu.bagian?` · bagian di sini: <b>${esc(kByNrp(t.nrp).bantu.bagian)}</b>`:""}</div>`:""}${t.nrp?`<div class="tpact"><button type="button" class="btn small" data-pndadd="${esc(t.nrp)}">⚑ Tambah penanda</button><button type="button" class="btn small" data-pfnrp="${esc(t.nrp)}">Profil & riwayat proses</button>${(()=>{ const n=tpAll().filter(r=>r.nrp===t.nrp&&r.id!==t.id), y=todayISO().slice(0,4), ny=n.filter(r=>(r.tgl||"").startsWith(y)), m=ny.filter(r=>(r.kode||[]).includes("M")).length, sp=n.filter(r=>r.sp)[0]; return n.length?`<span class="muted" style="font-size:12.5px">${n.length} proses sebelumnya (${y}: ${ny.length}${m?`, mangkir ${m}`:""})${sp?` · terakhir ${esc(sp.sp)} ${fmt(sp.tgl)}`:""}</span>`:`<span class="muted" style="font-size:12.5px">Belum ada proses sebelumnya</span>`; })()}</div>`:""}${t.nrp&&(t.bagian||t.grup)?`<p class="tpinfo"><span>Bagian: <b>${esc(t.bagian||"–")}</b></span><span>Grup: <b>${esc(t.grup||"–")}</b></span>${t.ku?`<span>KU: <b>${esc(t.ku)}</b></span>`:""}</p>`:""}
      <label class="f"><span>Alasan</span><input type="text" data-tpf="alasan" value="${v("alasan")}" placeholder="Misal: Demam, istri melahirkan, ban bocor, lepas ketokan"></label>
      <div class="tpr2"><label class="f"><span>Tanggal absen</span><input type="date" data-tpf="tglAbsen" value="${v("tglAbsen")}"></label>
       <label class="f"><span>Sampai tanggal</span><input type="date" data-tpf="tglAbsen2" value="${v("tglAbsen2")}" min="${v("tglAbsen")}"></label>
@@ -2923,7 +2926,7 @@ function msNrp(v){ v=String(v??"").trim(); if(/^\d+(\.0+)?$/.test(v)){ v=v.repla
 function msKontrakSisa(k){ if(k.status!=="Kontrak"||!k.kontrakAkhir||k.aktif===false) return null; return daysBetween(todayISO(),k.kontrakAkhir); }
 function msIncomplete(k){ return k.aktif!==false&&(!k.nrp||!k.bagian||!k.kodeBagian); }
 function msRows(){ const f=S.ms, q=f.q.trim().toLowerCase();
-  return [...S.list.values()].filter(k=>{
+  return [...S.list.values()].filter(k=>{ if(S.unit!=="ALL"&&unitOf(k)!==S.unit) return false;
     if(f.aktif==="aktif"&&k.aktif===false) return false; if(f.aktif==="keluar"&&k.aktif!==false) return false;
     if(f.bag&&k.bagian!==f.bag) return false; if(f.st&&(k.status||"Tetap")!==f.st) return false; if(f.ku&&msKu(k)!==f.ku) return false;
     if(f.f==="habis"){ const s=msKontrakSisa(k); if(s==null||s>30) return false; }
@@ -5235,7 +5238,7 @@ function unitOf(d){ return (d&&d.unit)||"U2"; }
 function unitChip(d){ const u=unitOf(d); return ` <span class="chip ${u==="U1"?"green":""}" style="${u==="U2"?"background:#dbeafe;color:#1d4ed8":""}">${u==="U1"?"Unit 1":"Unit 2"}</span>`; }
 function unitName(u){ return u==="ALL"?"Gabungan (semua unit)":(UNITS[u||S.unit]||UNITS.U2).nama; }
 function unitCo(){ return S.unit==="ALL"?"PT. DEWASUTRATEX":(UNITS[S.unit]||UNITS.U2).co; }
-function unitOk(k){ const c=k.split("/")[0]; if(!UNIT_COLS.includes(c)||S.unit==="ALL") return true; return unitOf(STORE[k])===S.unit; }
+function unitOk(k){ const c=k.split("/")[0]; if(!UNIT_COLS.includes(c)||S.unit==="ALL") return true; if(c==="karyawan"&&bantuAktif(STORE[k],S.unit)) return true; return unitOf(STORE[k])===S.unit; }
 function unitNew(){ return S.unit==="ALL"?"U2":S.unit; }
 function unitStamp(def){ let n=0; Object.keys(STORE).forEach(k=>{ const p=k.split("/"); if(p.length===2&&UNIT_COLS.includes(p[0])&&STORE[k]&&typeof STORE[k]==="object"&&!STORE[k].unit){ const synced=typeof SY!=="undefined"&&SY.meta&&SY.meta.base&&SY.meta.base[k]; STORE[k].unit=def||(synced?"U2":unitNew()); n++; } }); return n; }
 function unitMigrate(){ const n=unitStamp("U2"); const st=STORE["pengaturan/p2k3"]; if(st&&st.kop&&/Cibaligo KM\. 2\.8, Leuwigajah 40235, Cimahi, Jawa Barat/.test(st.kop.l1||"")) st.kop.l1="Unit 1: Jl. Cibaligo No. 76, Leuwigajah 40535 · Unit 2: Jl. Cibaligo KM 2.8, Leuwigajah 40235, Cimahi"; return n; }
@@ -5270,9 +5273,45 @@ function dlgMutasiUnit(id){ const k=STORE["karyawan/"+id]; if(!k) return; const 
     Object.keys(STORE).forEach(x=>{ if(x.startsWith("track/")&&STORE[x].nrp===oldN&&unitOf(STORE[x])===dari){ STORE[x].unit=ke; if(newN!==oldN) STORE[x].nrp=newN; } });
     const pd=STORE["penanda/"+oldN]; if(pd&&unitOf(pd)===dari){ pd.unit=ke; if(newN!==oldN){ pd.nrp=newN; STORE["penanda/"+newN]=pd; delete STORE["penanda/"+oldN]; } }
     await persist(); notify(); render(); toast(k.nama+" dimutasi ke "+unitName(ke)+"."); }); }
-function mutasiHtml(k){ const L=(k&&k.mutasi)||[]; if(!L.length) return ""; return `<section class="pfsec"><h3>Riwayat mutasi</h3>${L.slice().reverse().map(m=>`<div style="font-size:13px">${fmt(m.tgl)} · ${m.jenis==="unit"?`Unit: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}${m.nrpBaru&&m.nrpBaru!==m.nrpLama?` (NRP ${esc(m.nrpLama)} → ${esc(m.nrpBaru)})`:""}`:`${esc(m.field==="kodeBagian"?"Kode bagian/grup":m.field==="shift"?"Grup/shift":"Bagian")}: ${esc(m.dari||"–")} → ${esc(m.ke||"–")}`}${m.ket?" · "+esc(m.ket):""}<span class="muted">${m.oleh?" · "+esc(m.oleh):""}</span></div>`).join("")}</section>`; }
+function mutasiHtml(k){ const h=mutasiHtml_(k); const b=k&&k.bantu; return (b?`<section class="pfsec"><h3>Diperbantukan</h3><div style="font-size:13px">${bantuAktif(k)?`<span class="chip amber">Aktif</span>`:`<span class="chip gray">Selesai</span>`} Ke ${esc(unitName(b.unit))}${b.bagian?" · bagian "+esc(b.bagian):""} · ${fmt(b.mulai)}${b.sampai?" – "+fmt(b.sampai):""}${b.ket?" · "+esc(b.ket):""}</div></section>`:"")+h; }
+function mutasiHtml_(k){ const L=(k&&k.mutasi)||[]; if(!L.length) return ""; return `<section class="pfsec"><h3>Riwayat mutasi</h3>${L.slice().reverse().map(m=>`<div style="font-size:13px">${fmt(m.tgl)} · ${m.jenis==="unit"?`Unit: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}${m.nrpBaru&&m.nrpBaru!==m.nrpLama?` (NRP ${esc(m.nrpLama)} → ${esc(m.nrpBaru)})`:""}`:m.jenis==="bantu"?`Diperbantukan: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}`:`${esc(m.field==="kodeBagian"?"Kode bagian/grup":m.field==="shift"?"Grup/shift":"Bagian")}: ${esc(m.dari||"–")} → ${esc(m.ke||"–")}`}${m.ket?" · "+esc(m.ket):""}<span class="muted">${m.oleh?" · "+esc(m.oleh):""}</span></div>`).join("")}</section>`; }
 document.addEventListener("click",ev=>{ const m=ev.target.closest("[data-mutunit]"); if(m){ const d=$("#dlg"); if(d.open) d.close(); setTimeout(()=>dlgMutasiUnit(m.dataset.mutunit),40); } });
 
+
+// ---------- Karyawan diperbantukan antar unit ----------
+function bantuAktif(k,u){ const b=k&&k.bantu; if(!b||b.aktif===false) return false; if(u&&b.unit!==u) return false; if(b.sampai&&b.sampai<todayISO()) return false; return true; }
+function bantuMark(k){ return k&&S.unit!=="ALL"&&unitOf(k)!==S.unit&&bantuAktif(k,S.unit)?` <span class="chip amber" title="Master data di ${esc(unitName(unitOf(k)))}">Diperbantukan dari ${esc(unitName(unitOf(k)))}</span>`:""; }
+function tpAll(){ return Object.keys(STORE).filter(k=>/^track\/[^/]+$/.test(k)).map(k=>Object.assign({id:k.slice(6)},STORE[k])); }
+function bantuList(){ const masuk=[], keluar=[]; Object.keys(STORE).forEach(x=>{ if(!/^karyawan\/[^/]+$/.test(x)) return; const k=STORE[x]; if(!k||!k.bantu) return; const o=Object.assign({_id:x.slice(9)},k); if(k.bantu.unit===S.unit&&unitOf(k)!==S.unit) masuk.push(o); else if(unitOf(k)===S.unit&&k.bantu.unit!==S.unit) keluar.push(o); });
+  const srt=(a,b)=>(bantuAktif(b)?1:0)-(bantuAktif(a)?1:0)||String(a.nama||"").localeCompare(String(b.nama||""),"id"); return {masuk:masuk.sort(srt),keluar:keluar.sort(srt)}; }
+function viewBantu(){ if(S.unit==="ALL") return `<h1>Karyawan diperbantukan</h1><div class="panel empty">Pilih unit (Dewasutratex 1 atau 2) untuk melihat dan mengatur karyawan diperbantukan.</div>`;
+  const {masuk,keluar}=bantuList(), lain=S.unit==="U1"?"U2":"U1", row=(k,dir)=>{ const b=k.bantu, on=bantuAktif(k);
+    return `<tr><td><button type="button" class="linkbtn tpname" data-pfnrp="${esc(k.nrp||"")}">${esc(k.nama)}</button><div class="muted num" style="font-size:12px">NRP ${esc(k.nrp||"–")}</div></td><td>${esc(k.bagian||"–")}<div class="muted" style="font-size:12px">${esc(unitName(unitOf(k)))}</div></td><td>${esc(b.bagian||"–")}</td><td class="num">${fmt(b.mulai)}${b.sampai?" – "+fmt(b.sampai):" – sekarang"}</td><td>${on?`<span class="chip green">Aktif</span>`:`<span class="chip gray">Selesai${b.selesai?" "+fmt(b.selesai):""}</span>`}${b.ket?`<div class="muted" style="font-size:12px">${esc(b.ket)}</div>`:""}</td>
+     <td>${S.canWrite&&dir==="masuk"?`<div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn small" data-bantuedit="${esc(k._id)}">Ubah</button>${on?`<button class="btn small" data-bantustop="${esc(k._id)}">Selesai</button>`:""}<button class="btn small danger" data-bantudel="${esc(k._id)}" aria-label="Hapus">✕</button></div>`:""}</td></tr>`; };
+  const head=`<thead><tr><th>Nama / NRP</th><th>Bagian asal</th><th>Bagian di ${esc(unitName(S.unit))}</th><th>Periode</th><th>Status</th><th></th></tr></thead>`;
+  return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Karyawan diperbantukan</h1>${S.canWrite?`<button class="btn primary" data-act="bantu-add">+ Tambah karyawan diperbantukan</button>`:""}</div>
+   <p class="sub">Karyawan dari ${esc(unitName(lain))} yang diperbantukan di ${esc(unitName(S.unit))}. Master datanya tetap di unit asal, tetapi NRP dan namanya bisa dicari di Track proses dan form lain di unit ini selama status Aktif.</p>
+   <section class="panel" style="padding:4px 8px"><h2 style="margin:10px 6px">Diperbantukan ke ${esc(unitName(S.unit))} (${masuk.filter(k=>bantuAktif(k)).length} aktif)</h2><div class="tablewrap"><table>${head}<tbody>${masuk.map(k=>row(k,"masuk")).join("")||`<tr><td colspan="6" class="empty">Belum ada karyawan diperbantukan.</td></tr>`}</tbody></table></div></section>
+   ${keluar.length?`<section class="panel" style="padding:4px 8px"><h2 style="margin:10px 6px">Karyawan ${esc(unitName(S.unit))} yang diperbantukan ke unit lain</h2><div class="tablewrap"><table>${head.replace("Bagian di "+esc(unitName(S.unit)),"Bagian tujuan")}<tbody>${keluar.map(k=>row(k,"keluar")).join("")}</tbody></table></div></section>`:""}`; }
+function dlgBantu(id){ const lain=S.unit==="U1"?"U2":"U1", x=id?STORE["karyawan/"+id]:null, b=(x&&x.bantu)||{};
+  openDlg(`<header><h2>${x?"Ubah karyawan diperbantukan":"Tambah karyawan diperbantukan"}</h2><p class="hint" style="margin:4px 0 0">Dari ${esc(unitName(lain))} ke ${esc(unitName(S.unit))}</p></header><div class="body">
+   ${x?`<p style="margin:0 0 8px"><b>${esc(x.nama)}</b> · NRP ${esc(x.nrp||"")} · ${esc(x.bagian||"")}</p>`:`<label class="f full"><span>Cari karyawan ${esc(unitName(lain))} (NRP atau nama)</span><input type="text" id="bantuQ" autocomplete="off" placeholder="Ketik NRP atau nama"><div class="picklist" id="bantuL" hidden></div></label><input type="hidden" name="id" value=""><p id="bantuSel" class="muted" style="margin:6px 0 0">Belum dipilih.</p>`}
+   <div class="grid2" style="margin-top:8px"><label class="f"><span>Mulai diperbantukan</span><input type="date" name="mulai" value="${esc(b.mulai||todayISO())}" required></label><label class="f"><span>Sampai (opsional)</span><input type="date" name="sampai" value="${esc(b.sampai||"")}"></label>
+   <label class="f full"><span>Bagian di ${esc(unitName(S.unit))}</span><input type="text" name="bagian" value="${esc(b.bagian||"")}" placeholder="Misal: Weaving WJL I"></label><label class="f full"><span>Keterangan</span><input type="text" name="ket" value="${esc(b.ket||"")}" placeholder="Misal: membantu produksi akhir tahun"></label></div></div>${foot(x?"Simpan":"Tambah")}`, async f=>{
+    const kid=x?id:f.id.value; if(!kid){ toast("Pilih karyawan terlebih dahulu."); return false; } const k=STORE["karyawan/"+kid]; if(!k) return false; const v=Object.fromEntries(new FormData(f)), now=new Date().toISOString();
+    if(!x&&k.bantu&&bantuAktif(k)) (k.bantuLog=k.bantuLog||[]).push(clone(k.bantu));
+    k.bantu=Object.assign(x?k.bantu:{},{unit:S.unit,dari:unitOf(k),mulai:v.mulai,sampai:v.sampai||"",bagian:String(v.bagian||"").trim(),ket:String(v.ket||"").trim(),aktif:true,oleh:(typeof akMyName==="function"?akMyName():S.uid)||"",dicatat:x?(k.bantu.dicatat||now):now,diubah:now});
+    if(!x) (k.mutasi=k.mutasi||[]).push({jenis:"bantu",tgl:v.mulai,dari:unitOf(k),ke:S.unit,ket:"Diperbantukan"+(v.bagian?" ke bagian "+v.bagian:""),oleh:k.bantu.oleh});
+    k.diubah=now; await persist(); notify(); render(); toast((x?"Data diperbarui: ":"Ditambahkan: ")+k.nama+" diperbantukan di "+unitName(S.unit)+"."); });
+  const q=$("#bantuQ"); if(q){ q.addEventListener("input",()=>{ const t=q.value.trim().toLowerCase(), L=$("#bantuL"); if(t.length<2){ L.hidden=true; return; }
+    const r=Object.keys(STORE).filter(k=>/^karyawan\/[^/]+$/.test(k)).map(k=>Object.assign({_id:k.slice(9)},STORE[k])).filter(k=>unitOf(k)===lain&&k.aktif!==false&&(String(k.nrp||"").includes(t)||String(k.nama||"").toLowerCase().includes(t))).slice(0,12);
+    L.innerHTML=r.map(k=>`<button type="button" class="pick" data-bantupick="${esc(k._id)}"><span><b>${esc(k.nama)}</b> <span class="muted">${esc(k.jabatan||"")}</span></span><span class="muted">${esc(k.nrp||"")} · ${esc(k.bagian||"")}</span></button>`).join("")||`<div class="muted" style="padding:8px">Tidak ditemukan di ${esc(unitName(lain))}.</div>`; L.hidden=false; }); setTimeout(()=>q.focus(),50); } }
+document.addEventListener("click",ev=>{ const t=ev.target;
+  if(t.closest('[data-act="bantu-add"]')){ dlgBantu(null); return; }
+  const p=t.closest("[data-bantupick]"); if(p){ const k=STORE["karyawan/"+p.dataset.bantupick]; const f=$("#dlg form"); f.id.value=p.dataset.bantupick; $("#bantuSel").innerHTML=`Dipilih: <b>${esc(k.nama)}</b> · NRP ${esc(k.nrp||"")} · ${esc(k.bagian||"")}`; $("#bantuL").hidden=true; $("#bantuQ").value=k.nama; if(f.bagian&&!f.bagian.value) f.bagian.value=k.bagian||""; return; }
+  const e=t.closest("[data-bantuedit]"); if(e){ dlgBantu(e.dataset.bantuedit); return; }
+  const s=t.closest("[data-bantustop]"); if(s){ const k=STORE["karyawan/"+s.dataset.bantustop]; openDlg(`<header><h2>Selesai diperbantukan?</h2></header><div class="body"><p style="margin:0 0 8px">${esc(k.nama)} kembali ke ${esc(unitName(unitOf(k)))}. NRP-nya tidak lagi muncul di pencarian ${esc(unitName(S.unit))}; riwayat proses selama diperbantukan tetap tersimpan.</p><label class="f"><span>Tanggal selesai</span><input type="date" name="tgl" value="${todayISO()}"></label></div>${foot("Selesai")}`, async f=>{ k.bantu.aktif=false; k.bantu.selesai=f.tgl.value||todayISO(); (k.mutasi=k.mutasi||[]).push({jenis:"bantu",tgl:k.bantu.selesai,dari:k.bantu.unit,ke:unitOf(k),ket:"Selesai diperbantukan",oleh:(typeof akMyName==="function"?akMyName():S.uid)||""}); k.diubah=new Date().toISOString(); await persist(); notify(); render(); }); return; }
+  const d=t.closest("[data-bantudel]"); if(d){ const k=STORE["karyawan/"+d.dataset.bantudel]; openDlg(`<header><h2>Hapus data diperbantukan ${esc(k.nama)}?</h2></header><div class="body"><p style="margin:0">Hanya catatan diperbantukannya yang dihapus. Master data dan riwayat proses tidak berubah.</p></div>${foot("Hapus")}`, async ()=>{ delete k.bantu; k.diubah=new Date().toISOString(); await persist(); notify(); render(); }); return; } });
 
 // ---------- Pengajuan akun mandiri & persetujuan oleh Akses Level III ----------
 const KEPERLUAN={tim:"Tim K3 (pemeriksa / petugas)",pic:"Kepala bagian / PIC area",lain:"Lainnya (mis. auditor, manajemen)"};
@@ -5527,7 +5566,7 @@ function dlgPndEdit(nrp,id){ const d=pndDoc(nrp), items=d?clone(d.items||[]):[],
 // ---- profil karyawan
 function dlgProfil(kOrNrp){ const k=typeof kOrNrp==="string"?kByNrp(kOrNrp):kOrNrp, nrp=k?k.nrp:String(kOrNrp||""); if(!k&&!nrp) return;
   const p=typeof tpPerson==="function"?tpPerson(nrp):null, nama=k?k.nama:(p?p.nama:nrp), d=pndDoc(nrp), items=(d&&d.items)||[], t=todayISO(), y=t.slice(0,4);
-  const tp=(typeof tpList==="function"?tpList():[]).filter(r=>r.nrp===nrp), tpY=tp.filter(r=>(r.tgl||"").startsWith(y)), sp=tp.filter(r=>r.sp).sort((a,b)=>(b.tgl||"").localeCompare(a.tgl||""));
+  const tp=tpAll().filter(r=>r.nrp===nrp), tpY=tp.filter(r=>(r.tgl||"").startsWith(y)), sp=tp.filter(r=>r.sp).sort((a,b)=>(b.tgl||"").localeCompare(a.tgl||""));
   const cnt={}; tp.forEach(r=>(r.kode||[]).forEach(c=>{ cnt[c]=(cnt[c]||0)+1; })); const cntY={}; tpY.forEach(r=>(r.kode||[]).forEach(c=>{ cntY[c]=(cntY[c]||0)+1; }));
   const inc=[...(S.inc||new Map()).values()].filter(c=>c.korban&&(c.korban.nrp===nrp||(!c.korban.nrp&&(c.korban.nama||"").toLowerCase()===(nama||"").toLowerCase()))).sort((a,b)=>(b.tglKej||"").localeCompare(a.tglKej||""));
   const rw=k&&Array.isArray(k.riwayat)?k.riwayat:[], lastApd=rw.slice().sort((a,b)=>(b.tgl||"").localeCompare(a.tgl||""))[0];
