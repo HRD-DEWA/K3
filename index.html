@@ -1025,7 +1025,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.4 · 20/11/2026 (judul foto investigasi bisa diubah)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.5 · 20/11/2026 (perbaikan sinkron: data tidak ikut terhapus)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -2849,7 +2849,7 @@ function tpCsv(){ const rows=tpFiltered().slice().reverse(); const out=[["No","N
   const f=tpFilter(); exportCsv("track-proses-"+(f.dari||"awal")+"_sd_"+(f.sampai||todayISO())+".csv",out); }
 function tpImport(p){
   const d=(p&&p.data)||{}, keys=Object.keys(d).filter(k=>/^track\/[^/]+$/.test(k)); if(!keys.length){ toast("File ini tidak berisi data track proses."); return; }
-  const baru=keys.filter(k=>!S.track.has(k.slice(6))), ada=keys.length-baru.length, tg=baru.map(k=>d[k].tgl).filter(Boolean).sort();
+  const baru=keys.filter(k=>!(k in STORE)), ada=keys.length-baru.length, tg=baru.map(k=>d[k].tgl).filter(Boolean).sort();
   openDlg(`<header><h2>Impor riwayat track proses?</h2></header><div class="body"><p style="margin:0 0 8px">File berisi <b>${keys.length.toLocaleString("id-ID")}</b> data proses${tg.length?` dari ${fmt(tg[0])} sampai ${fmt(tg[tg.length-1])}`:""}.</p>
     <p style="margin:0">${baru.length.toLocaleString("id-ID")} data baru akan ditambahkan.${ada?` ${ada.toLocaleString("id-ID")} data sudah ada di aplikasi dan dilewati.`:""} Data yang sudah ada tidak diubah.</p></div>${foot(baru.length?"Impor "+baru.length.toLocaleString("id-ID")+" data":"Tutup")}`,
     async ()=>{ if(!baru.length) return; baru.forEach(k=>{ STORE[k]=clone(d[k]); }); await persist(); notify(); S.tpF=null; toast(baru.length.toLocaleString("id-ID")+" data proses diimpor."); go("track-riwayat"); });
@@ -5232,6 +5232,10 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.id==="pgImp"&&el.files[0]){ const f=el.files[0]; el.value=""; pgImport(f); } });
 
 
+
+// ---------- pengaman hapus: hanya data yang memang dihapus pengguna yang ikut terhapus di server ----------
+{ const _p2=persist; persist=async function(){ try{ if(!S._keysPrev) S._keysPrev=new Set(Object.keys(STORE)); else { const now=Object.keys(STORE), cur=new Set(now); if(!S._restoring&&typeof SY!=="undefined"&&SY.meta){ SY.meta.dels=SY.meta.dels||{}; let ch=false; S._keysPrev.forEach(k=>{ if(!cur.has(k)&&SY.meta.base&&SY.meta.base[k]&&syncKey(k)){ SY.meta.dels[k]=Date.now(); ch=true; } }); if(ch&&typeof syMetaSave==="function") syMetaSave(); } S._keysPrev=cur; } }catch(e){} return _p2.apply(this,arguments); }; }
+
 // ---------- Multi-unit: Dewasutratex 1, Dewasutratex 2, dan Gabungan ----------
 const UNITS={U1:{nama:"Dewasutratex 1",co:"PT. DEWASUTRATEX 1",alamat:"Jl. Cibaligo No. 76, Leuwigajah 40535, Cimahi, West Java, Indonesia"},U2:{nama:"Dewasutratex 2",co:"PT. DEWASUTRATEX 2",alamat:"Jl. Cibaligo KM 2.8, Leuwigajah 40235, Cimahi, Jawa Barat"}};
 const UNIT_COLS=["karyawan","pembagian","kotak","apar","peta","hira","kecelakaan","track","patroli","penanda","lapapar","lapangan"];
@@ -5893,6 +5897,7 @@ const SY_PENDING=[];
 async function syApply(col,docs){ let changed=false, maxT=SY.meta.seen[col]||0;
   for(const d of docs){ const data=d.data()||{}; const t=data._t&&data._t.toMillis?data._t.toMillis():0; if(t>maxT) maxT=t;
     if((col==="pengaturan"&&!SYNC_SET.includes(d.id))||!syncKey(col+"/"+d.id)) continue; const k=col+"/"+d.id, base=SY.meta.base[k]??null, lj=syLocalJson(k);
+    if(data._del&&!data._int){ delete SY.meta.base[k]; continue; }
     if(data._del){ if(lj===null){ delete SY.meta.base[k]; continue; } if(lj===base){ delete STORE[k]; delete SY.meta.base[k]; changed=true; } else delete SY.meta.base[k]; continue; }
     const rj=data.j; if(typeof rj!=="string"||rj===base) continue; if(SY.force){ SY.meta.base[k]=rj; continue; } let R; try{ R=JSON.parse(rj); }catch(e){ continue; }
     const need=new Set(); syNeedBlobs(R,need); if(need.size){ const ok=await syFetchBlobs([...need]); if(!ok){ SY_PENDING.push([col,d]); continue; } }
@@ -5900,21 +5905,25 @@ async function syApply(col,docs){ let changed=false, maxT=SY.meta.seen[col]||0;
     const local=STORE[k]; let merged;
     if(lj===null||lj===base) merged=R; else merged=syMerge(base?JSON.parse(base):undefined,JSON.parse(lj),R);
     STORE[k]=syRestoreNik(syInt(merged),local); SY.meta.base[k]=rj; changed=true; }
-  SY.meta.seen[col]=maxT; syMetaSave(); SY.lastOk=new Date().toTimeString().slice(0,5);
-  if(changed){ await persist(); notify(); } }
+  SY.meta.seen[col]=maxT; if(changed){ await persist(); } syMetaSave(); SY.lastOk=new Date().toTimeString().slice(0,5);
+  if(changed) notify(); }
 async function syFetchBlobs(hs){ try{ for(const h of hs){ const snap=await SY.db.collection("blobs").where("h","==",h).get(); const parts=snap.docs.map(d=>d.data()).sort((a,b)=>a.i-b.i); if(!parts.length||parts.length!==parts[0].n) return false; SY_BLOB.set(h,parts.map(p=>p.d).join("")); SY.meta.blobs[h]=1; } return true; }catch(e){ return false; } }
 async function syPutBlob(h){ if(SY.meta.blobs[h]) return; const s=SY_BLOB.get(h); if(s==null) return; const n=Math.ceil(s.length/CHUNK);
   for(let i=0;i<n;i++) await SY.db.collection("blobs").doc(h+"_"+i).set({h,i,n,d:s.slice(i*CHUNK,(i+1)*CHUNK)}); SY.meta.blobs[h]=1; syMetaSave(); }
 function syKick(){ clearTimeout(SY.timer); SY.timer=setTimeout(syPush,600); syBadge(); }
 async function syPush(){ if(!SY.db||!SY.user||!SY.meta.joined||!navigator.onLine||SY._pushing) return; SY._pushing=true; SY.busy=1; syBadge();
+  const refetch=new Set();
   try{ const keys=[...new Set([...syncKeys(),...Object.keys(SY.meta.base)])], now=Date.now(); let n=0;
     for(const k of keys){ const lj=syLocalJson(k), base=SY.meta.base[k]??null; if(lj===base) continue; if(SY.inflight[k]&&now-SY.inflight[k]<30000) continue;
-      const [col,id]=k.split("/"); if(!SY.ready[col]) continue; if((syLevel()==="pic"&&col!=="respon")||syLevel()==="observer") continue; SY.inflight[k]=now;
-      const work=(async()=>{ if(lj===null){ await SY.db.collection(col).doc(id).set({_del:true,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); delete SY.meta.base[k]; return; }
+      const [col,id]=k.split("/"); if(!SY.ready[col]) continue; if((syLevel()==="pic"&&col!=="respon")||syLevel()==="observer") continue;
+      if(lj===null){ const dl=SY.meta.dels||{}; if(!syncKey(k)||!dl[k]){ delete SY.meta.base[k]; if(syncKey(k)) refetch.add(col); continue; } delete dl[k]; }
+      SY.inflight[k]=now;
+      const work=(async()=>{ if(lj===null){ await SY.db.collection(col).doc(id).set({_del:true,_int:1,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); delete SY.meta.base[k]; return; }
         if(lj.length>950000){ SY.err="Data "+k+" terlalu besar untuk disinkronkan"; return; }
         const hs=new Set(); syExt(syStrip(STORE[k]),hs); for(const h of hs) await syPutBlob(h);
         await SY.db.collection(col).doc(id).set({j:lj,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); SY.meta.base[k]=lj; })();
       await Promise.race([work,new Promise(r=>setTimeout(r,20000))]).catch(e=>{ SY.err=e.message||String(e); }); delete SY.inflight[k]; n++; if(n%20===0){ syMetaSave(); syBadge(); } }
+    if(refetch.size){ refetch.forEach(c=>{ delete SY.meta.seen[c]; }); SY.err="Data lokal yang hilang diambil ulang dari server ("+[...refetch].join(", ")+")."; setTimeout(()=>{ if(SY.db&&SY.user) sySubscribe(); },300); }
     syMetaSave(); if(SY_PENDING.length){ const p=SY_PENDING.splice(0); for(const [col,d] of p) await syApply(col,[d]); }
     if(!syDirty()){ SY.lastOk=new Date().toTimeString().slice(0,5); if(SY.force&&[...SYNC_COLS,"pengaturan"].every(c=>SY.ready[c])){ SY.force=false; toast("Data server sudah disamakan dengan perangkat ini."); } }
   }finally{ SY._pushing=false; SY.busy=0; syBadge(); if(syDirty()&&navigator.onLine) setTimeout(syKick,5000); } }
@@ -6059,7 +6068,7 @@ function doRestore(file){
     if(!n&&nk){ dlgImportInc(p); return; }
     if(!n&&nb){ dlgImportP3k(p); return; }
     openDlg(`<header><h2>Pulihkan data dari backup?</h2></header><div class="body"><p style="margin:0">Backup tanggal <b>${esc(fmt((p.dibuat||"").slice(0,10)))}</b> berisi ${n} karyawan, ${nk} kejadian kecelakaan, dan ${nt} data track proses. Seluruh data di komputer ini (${S.list.size} karyawan, ${S.inc.size} kejadian) akan diganti dan tidak dapat dikembalikan.</p></div>${foot("Ganti dengan data backup")}`, async ()=>{
-      STORE=clone(p.data); unitMigrate(); S.ed=null; await persist(); notify(); toast("Data dipulihkan: "+n+" karyawan."); go("karyawan");
+      STORE=clone(p.data); unitMigrate(); S.ed=null; S._restoring=true; try{ await persist(); } finally{ S._restoring=false; S._keysPrev=new Set(Object.keys(STORE)); } notify(); toast("Data dipulihkan: "+n+" karyawan."); go("karyawan");
     });
   };
   rd.readAsText(file); $("#restoreFile").value="";
@@ -6070,7 +6079,7 @@ S.route=readRoute(); render();
 (async()=>{
   try{ idb=await idbOpen(); const v=await idbGet(); STORE=v||{}; STORAGE_LABEL="IndexedDB browser"; }
   catch(e){ idb=null; try{ STORE=JSON.parse(localStorage.getItem("kartuAPD.store")||"{}"); STORAGE_LABEL="localStorage browser"; }catch(e2){ STORE={}; STORAGE_LABEL="memori sementara – data hilang saat ditutup, segera simpan backup"; } }
-  try{ if(unitMigrate()) await persist(); }catch(e){}
+  try{ S._keysPrev=new Set(Object.keys(STORE)); if(unitMigrate()) await persist(); }catch(e){}
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
   try{ S.uid=localStorage.getItem("kartuAPD.petugas")||""; }catch(e){}
   setTimeout(()=>{ try{ syInit(); }catch(e){} },0);
