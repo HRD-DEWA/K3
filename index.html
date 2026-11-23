@@ -740,6 +740,7 @@ body[data-unit="U1"] .unitsel select{border-color:#16a34a}body[data-unit="U2"] .
 body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a,body.lvpend .navtools{display:none!important}.tunggu{max-width:640px}.akreq{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}.nvbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;margin-left:6px;padding:0 5px}
 .bantuinfo{margin:6px 0;font-size:13px}
 .fotojudul{font-size:13px;padding:5px 8px;margin:2px 0 4px;width:100%}
+.tarikbtns{display:flex;flex-direction:column;gap:8px}.tarikbtns .btn{padding:12px;font-size:15px}
 </style>
 </head>
 <body>
@@ -1025,7 +1026,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.6 · 21/11/2026 (slot foto investigasi 0–6)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.7 · 21/11/2026 (konfirmasi scan item yang harus ditarik)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
@@ -3292,7 +3293,7 @@ function lapBeep(ok){ try{ if(navigator.vibrate) navigator.vibrate(ok?60:[80,60,
 function lkMark(bc,src){ const lk=S.lk; if(!lk) return "none"; const b=S.kotak.get(lk.kode); bc=String(bc||"").trim().toUpperCase();
   const x=(b.isi||[]).find(i=>i.bc.toUpperCase()===bc);
   if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other){ slAdd("lk",bc,other); return "other:"+other; } const tl=tmState("lk"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); lapDraftSave(); return "temu:"+bc; }
-  if(lk.scan[x.bc]||(lk.st[x.bc]&&lk.st[x.bc].k==="ada")) return "dup:"+x.bc; lk.scan[x.bc]=true; if(lk.st[x.bc]&&lk.st[x.bc].k==="hilang") delete lk.st[x.bc]; if(!lk.st[x.bc]) lk.st[x.bc]={k:"ada"}; lapDraftSave(); return "ok:"+x.bc; }
+  if(lk.scan[x.bc]||(lk.st[x.bc]&&lk.st[x.bc].k==="ada")) return "dup:"+x.bc; if(tarikPerlu(x)&&!lk.st[x.bc]){ setTimeout(()=>dlgTarik("lk",x.bc),60); return "tarik:"+x.bc; } lk.scan[x.bc]=true; if(lk.st[x.bc]&&lk.st[x.bc].k==="hilang") delete lk.st[x.bc]; if(!lk.st[x.bc]) lk.st[x.bc]={k:"ada"}; lapDraftSave(); return "ok:"+x.bc; }
 function lkMsg(r,bc){ const [t,v]=r.split(":"); if(t==="ok") return {ok:true,txt:"✓ "+v}; if(t==="dup") return {ok:true,txt:v+" sudah dipindai"}; if(t==="other") return {ok:false,txt:bc+" milik kotak "+v}; if(t==="temu") return {ok:false,txt:v+" belum tercatat di program, ditambahkan ke Item belum tercatat"}; return {ok:false,txt:bc+" tidak ada di kotak ini"}; }
 let LAP_CAM=null;
 async function lapCamOpen(mode){
@@ -3304,7 +3305,7 @@ async function lapCamOpen(mode){
   video.srcObject=stream; await video.play().catch(()=>{});
   const st={on:true,last:"",lastT:0}; LAP_CAM={ov,stream,st}; LAP_CAM.redraw=camControls(ov,video);
   const upd=()=>{ if(S.lk){ const b=S.kotak.get(S.lk.kode), n=(b.isi||[]).filter(x=>lkStOf(x.bc)).length; cnt.textContent=n+"/"+(b.isi||[]).length+" diperiksa"; } }; upd();
-  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=await det.detect(video); const now=Date.now();
+  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=st.pause?[]:await det.detect(video); const now=Date.now();
         for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v||(v===st.last&&now-st.lastT<1800)) continue; st.last=v; st.lastT=now;
           if(mode==="box"){ const kb=v.toUpperCase(); if(S.kotak.has(kb)){ lapBeep(true); lapCamClose(); go("lap-"+kb); return; } lapBeep(false); msg.textContent=v+" bukan kode kotak"; msg.className="cammsg bad"; continue; }
           const s=scanInfo(lkMark(v),v,S.lk&&S.lk.kode); if(S.lk) S.lk.lastScan=s; lapBeep(s.ok); scanSound(s.ok); card.className="camres "+s.cls; card.innerHTML=`<b>${s.cls==="dup"?"↻ ":s.ok?"✓ ":s.cls==="warn"||s.cls==="temu"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}`; card.hidden=false;
@@ -4480,6 +4481,7 @@ document.addEventListener("click",ev=>{ const t=ev.target.closest('[data-act="pt
 function bcItemName(bc,boxKode){ let nm="", box=""; S.kotak.forEach(k=>{ if(nm||(boxKode&&k.kode!==boxKode)) return; const x=(k.isi||[]).find(i=>i.bc.toUpperCase()===String(bc).toUpperCase()); if(x){ nm=itemOf(x.kode).nama; box=k.kode; } }); return {nm,box}; }
 function scanInfo(r,bc,boxKode){ const [t,v]=String(r).split(":"); bc=String(bc||"").trim().toUpperCase();
   if(t==="ok"){ const i=bcItemName(v,boxKode), c=scanTypeCount(boxKode,v); return {ok:true,cls:"good",title:`${i.nm||"Item"} ditemukan${c?` · ${c.done}/${c.tot}`:""}`,sub:`${v} · otomatis dicentang Ada${c?` · ${c.nama}: ${c.done} dari ${c.tot} sudah diperiksa (${c.ada} ada)`:""}`}; }
+  if(t==="tarik"){ const i=bcItemName(v,boxKode), b=S.kotak.get(boxKode)||{}, x=(b.isi||[]).find(q=>q.bc===v); return {ok:false,cls:"bad",title:`${i.nm||"Item"} seharusnya DITARIK`,sub:`${v} · ${x?tarikTxt(x):""} · tidak otomatis dicentang Ada, pilih tindakan`}; }
   if(t==="dup"){ const i=bcItemName(v,boxKode), c=scanTypeCount(boxKode,v); return {ok:true,cls:"dup",title:`${i.nm||"Item"} sudah discan sebelumnya${c?` · ${c.done}/${c.tot}`:""}`,sub:v+" · sudah tercentang Ada"+(c?` · ${c.nama}: ${c.done} dari ${c.tot} sudah diperiksa`:"")}; }
   if(t==="other"){ const i=bcItemName(bc,v), ob=S.kotak.get(v)||{}, bg=[ob.bagian,ob.penempatan].filter(Boolean).join(" · "); return {ok:false,cls:"bad",title:`${bc} milik kotak ${v}${bg?" ("+bg+")":""}`,sub:`${i.nm?i.nm+" · ":""}bukan isi kotak ini · dicatat sebagai item salah penempatan`}; }
   if(t==="temu") return {ok:false,cls:"temu",title:`${bc} belum terdaftar di kotak ini`,sub:"Barcode belum ada di program · dicatat di bagian Item belum tercatat"};
@@ -4491,7 +4493,7 @@ let SC_AC=null; function scanSound(ok){ try{ SC_AC=SC_AC||new (window.AudioConte
 function ckMark(bc){ const ck=S.ck, b=S.kotak.get(ck.kode); bc=String(bc||"").trim().toUpperCase(); const x=ckIsi(b).find(i=>i.bc.toUpperCase()===bc);
   if(!x){ let other=null; S.kotak.forEach(k=>{ if(!other&&(k.isi||[]).some(i=>i.bc.toUpperCase()===bc)) other=k.kode; }); if(other){ slAdd("ck",bc,other); return "other:"+other; }
     const tl=tmState("ck"); if(tl&&!tl.some(r=>String(r.bc||"").toUpperCase()===bc)) tl.push({bc,kode:"",nama:"",exp:"",catatan:"Perlu diinput ke program"}); return "temu:"+bc; }
-  if(ck.scan[x.bc]||(ck.st[x.bc]&&ck.st[x.bc].k==="ada")) return "dup:"+x.bc; ck.scan[x.bc]=true; if(ck.st[x.bc]&&ck.st[x.bc].k==="hilang") delete ck.st[x.bc]; if(!ck.st[x.bc]) ck.st[x.bc]={k:"ada"}; return "ok:"+x.bc; }
+  if(ck.scan[x.bc]||(ck.st[x.bc]&&ck.st[x.bc].k==="ada")) return "dup:"+x.bc; if(tarikPerlu(x)&&!ck.st[x.bc]){ setTimeout(()=>dlgTarik("ck",x.bc),60); return "tarik:"+x.bc; } ck.scan[x.bc]=true; if(ck.st[x.bc]&&ck.st[x.bc].k==="hilang") delete ck.st[x.bc]; if(!ck.st[x.bc]) ck.st[x.bc]={k:"ada"}; return "ok:"+x.bc; }
 function ckScanBar(){ const ck=S.ck; return `<form id="ckScanF" class="scanbar" autocomplete="off"><input type="text" id="ckBc" data-bcsug="ck" data-bcsubmit placeholder="Scan barcode item (scanner atau ketik), lalu Enter" aria-label="Scan barcode item" autocapitalize="characters" autocomplete="off"><button class="btn" type="submit">Centang</button></form>${scanResHtml(ck.lastScan)}`; }
 document.addEventListener("submit",ev=>{ if(ev.target.id!=="ckScanF"||!S.ck) return; ev.preventDefault(); const v=$("#ckBc").value.trim(); if(!v) return;
   const s=scanInfo(ckMark(v),v,S.ck.kode); S.ck.lastScan=s; scanSound(s.ok); const y=window.scrollY; render(); window.scrollTo(0,y); const n=$("#ckBc"); if(n) n.focus(); });
@@ -4636,7 +4638,7 @@ async function apSave(){ const c=apCState(), a=S.apar.get(c.bc); if(!a) return; 
 async function apCam(){ const det=lapDet(); if(!det) return; const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="cambar"><span class="cammsg">Arahkan kamera ke barcode APAR</span><button class="btn" data-act="cam-close">Tutup</button></div>`;
   document.body.appendChild(ov); let stream; try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}); }catch(e){ ov.remove(); toast("Kamera tidak bisa dibuka. Ketik barcode secara manual."); return; }
   const video=ov.querySelector("video"); video.srcObject=stream; await video.play().catch(()=>{}); LAP_CAM={ov,stream,st:{on:true}}; const st=LAP_CAM.st;
-  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=await det.detect(video); for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v) continue; const ok=apScan(v); lapBeep(ok); scanSound(ok); lapCamClose(); render(); return; } } }catch(e){} setTimeout(loop,200); }; loop(); }
+  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=st.pause?[]:await det.detect(video); for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v) continue; const ok=apScan(v); lapBeep(ok); scanSound(ok); lapCamClose(); render(); return; } } }catch(e){} setTimeout(loop,200); }; loop(); }
 // ---- laporan pemeriksaan
 function apLapRows(){ const L=S.apL, y=L.y||apMonth(), out=[]; apList().forEach(a=>(a.pemeriksaan||[]).forEach(p=>{ if((y==="semua"||(p.tgl||"").startsWith(y))&&(!L.bag||a.bagian===L.bag)&&(!L.hasil||(L.hasil==="bad")===!!apBad(p).length)) out.push({a,p}); }));
   return out.sort((x,z)=>(x.a.bagian||"").localeCompare(z.a.bagian||"","id")||(+x.a.urut||0)-(+z.a.urut||0)||(x.p.tgl||"").localeCompare(z.p.tgl||"")); }
@@ -4705,7 +4707,7 @@ async function camScanOnce(cb,label){ const det=lapDet(); if(!det) return; const
   const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="cambar"><span class="cammsg">${esc(label||"Arahkan kamera ke barcode")}</span><button type="button" class="btn" data-act="cam-close">Tutup</button></div>`;
   host.appendChild(ov); let stream; try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}); }catch(e){ ov.remove(); toast("Kamera tidak bisa dibuka. Ketik barcode secara manual."); return; }
   const video=ov.querySelector("video"); video.srcObject=stream; await video.play().catch(()=>{}); LAP_CAM={ov,stream,st:{on:true}}; const st=LAP_CAM.st;
-  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=await det.detect(video); for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v) continue; lapCamClose(); cb(v); return; } } }catch(e){} setTimeout(loop,200); }; loop(); }
+  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=st.pause?[]:await det.detect(video); for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v) continue; lapCamClose(); cb(v); return; } } }catch(e){} setTimeout(loop,200); }; loop(); }
 
 // ---------- Saran barcode saat diketik (APAR & item kotak P3K) ----------
 function bcSugSource(kind){
@@ -5290,6 +5292,22 @@ function mutasiHtml(k){ const h=mutasiHtml_(k); const b=k&&k.bantu; return (b?`<
 function mutasiHtml_(k){ const L=(k&&k.mutasi)||[]; if(!L.length) return ""; return `<section class="pfsec"><h3>Riwayat mutasi</h3>${L.slice().reverse().map(m=>`<div style="font-size:13px">${fmt(m.tgl)} · ${m.jenis==="unit"?`Unit: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}${m.nrpBaru&&m.nrpBaru!==m.nrpLama?` (NRP ${esc(m.nrpLama)} → ${esc(m.nrpBaru)})`:""}`:m.jenis==="bantu"?`Diperbantukan: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}`:`${esc(m.field==="kodeBagian"?"Kode bagian/grup":m.field==="shift"?"Grup/shift":"Bagian")}: ${esc(m.dari||"–")} → ${esc(m.ke||"–")}`}${m.ket?" · "+esc(m.ket):""}<span class="muted">${m.oleh?" · "+esc(m.oleh):""}</span></div>`).join("")}</section>`; }
 document.addEventListener("click",ev=>{ const m=ev.target.closest("[data-mutunit]"); if(m){ const d=$("#dlg"); if(d.open) d.close(); setTimeout(()=>dlgMutasiUnit(m.dataset.mutunit),40); } });
 
+
+// ---------- konfirmasi saat scan item yang seharusnya ditarik ----------
+function tarikPerlu(x){ if(!x||!x.exp) return false; const e=expSt(x.exp); return e.cls==="red"||e.cls==="amber"; }
+function tarikTxt(x){ if(!x||!x.exp) return ""; const e=expSt(x.exp), d=daysBetween(todayISO(),x.exp); return e.cls==="red"?`sudah kadaluarsa sejak ${fmt(x.exp)}`:`kadaluarsa ${fmt(x.exp)} (${d} hari lagi, sudah masuk masa tarik H-6 bulan)`; }
+function dlgTarik(kind,bc){ const o=kind==="lk"?S.lk:S.ck; if(!o) return; const b=S.kotak.get(o.kode), x=((kind==="ck"&&typeof ckIsi==="function")?ckIsi(b):(b.isi||[])).find(i=>i.bc===bc); if(!x) return;
+  if(typeof LAP_CAM!=="undefined"&&LAP_CAM&&LAP_CAM.st) LAP_CAM.st.pause=true;
+  openDlg(`<header><h2 style="color:var(--red)">⚠ Item ini seharusnya ditarik</h2></header><div class="body"><p style="margin:0 0 6px;font-size:16px"><b>${esc(itemOf(x.kode).nama)}</b> · <span class="num">${esc(x.bc)}</span></p>
+   <p style="margin:0 0 10px">Item ini <b>${esc(tarikTxt(x))}</b>. Jangan dikembalikan ke kotak tanpa pengecekan.</p>
+   <div class="tarikbtns"><button type="button" class="btn danger" data-tarik="exp">Tarik item (dikeluarkan dari kotak)</button><button type="button" class="btn" data-tarik="ada">Tetap di kotak (sudah dicek, masih layak)</button></div>
+   <button type="button" class="btn" data-tarik="batal" style="margin-top:8px">Batal (belum diputuskan)</button><p class="hint" style="margin:8px 0 0">Pilih "Tarik item" bila item dikeluarkan sekarang. Bila dibatalkan, item tetap berstatus belum diperiksa.</p></div>`, async ()=>{});
+  const dl=$("#dlg"); dl.dataset.tarik=kind+"|"+bc; dl.addEventListener("close",()=>{ if(typeof LAP_CAM!=="undefined"&&LAP_CAM&&LAP_CAM.st) LAP_CAM.st.pause=false; },{once:true}); }
+document.addEventListener("click",ev=>{ const t=ev.target.closest("[data-tarik]"); if(!t) return; ev.preventDefault(); ev.stopPropagation(); const dl=$("#dlg"), [kind,bc]=(dl.dataset.tarik||"").split("|"), o=kind==="lk"?S.lk:S.ck; if(t.dataset.tarik==="batal"||!o){ dl.close(); return; }
+  o.scan[bc]=true; o.st[bc]=t.dataset.tarik==="exp"?{k:"exp"}:{k:"ada",tetapExp:true}; if(kind==="lk") lapDraftSave(); dl.close();
+  const b=S.kotak.get(o.kode), x=(b.isi||[]).find(i=>i.bc===bc)||{}; const res={ok:t.dataset.tarik==="ada",cls:t.dataset.tarik==="ada"?"good":"warn",title:`${itemOf(x.kode).nama} ${t.dataset.tarik==="ada"?"tetap di kotak":"ditandai ditarik"}`,sub:bc+" · "+tarikTxt(x)};
+  o.lastScan=res; const card=document.querySelector(".camres"); if(card){ card.className="camres "+res.cls; card.innerHTML=`<b>${res.ok?"✓ ":"! "}${esc(res.title)}</b><span>${esc(res.sub)}</span>`; }
+  const y=window.scrollY; render(); window.scrollTo(0,y); toast(res.title+"."); });
 
 // ---------- Karyawan diperbantukan antar unit ----------
 function bantuAktif(k,u){ const b=k&&k.bantu; if(!b||b.aktif===false) return false; if(u&&b.unit!==u) return false; if(b.sampai&&b.sampai<todayISO()) return false; return true; }
