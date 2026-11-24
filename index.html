@@ -741,6 +741,16 @@ body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a
 .bantuinfo{margin:6px 0;font-size:13px}
 .fotojudul{font-size:13px;padding:5px 8px;margin:2px 0 4px;width:100%}
 .tarikbtns{display:flex;flex-direction:column;gap:8px}.tarikbtns .btn{padding:12px;font-size:15px}
+.todo .todol{display:flex;flex-direction:column;gap:6px}.todoi{display:grid;grid-template-columns:28px 1fr auto 16px;gap:10px;align-items:center;text-align:left;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.todoi.red{border-left:4px solid var(--red)}.todoi.amber{border-left:4px solid var(--amber)}.todoi:hover{border-color:var(--line-strong)}.todoi .tdn{font-size:17px}.todoi.red .tdn{color:var(--red)}.todoi.amber .tdn{color:var(--amber)}.todoi .tda{color:var(--muted)}
+.qsbtn{display:flex;justify-content:space-between;align-items:center;width:100%;margin:4px 0 6px;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:13.5px;cursor:pointer}.qsbtn kbd{font-size:11px;opacity:.7;font-family:inherit;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:0 4px}
+.qsout{max-height:60vh;overflow:auto;margin-top:8px}.qsg{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 4px 4px}.qsi{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;padding:8px 10px;border-radius:8px;border:0;background:none;color:var(--text);font:inherit;cursor:pointer}.qsi .muted{font-size:12.5px}.qsi.on,.qsi:hover{background:var(--gray-bg)}
+#bnav{display:none}
+@media (max-width:760px){ #bnav{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);padding:4px 2px calc(4px + env(safe-area-inset-bottom,0px));box-shadow:0 -2px 10px rgba(0,0,0,.08)}
+ #bnav button{display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;color:var(--muted);font:inherit;font-size:11px;padding:4px 0;cursor:pointer}#bnav button.on{color:var(--accent);font-weight:700}#bnav .bni{font-size:20px;line-height:1.1;position:relative}#bnav .bnb{position:absolute;top:-4px;right:-12px;background:#dc2626;color:#fff;font-style:normal;font-size:10px;font-weight:700;border-radius:8px;padding:0 4px;min-width:14px;text-align:center}
+ #bnav button[data-bn="scan"] .bni{background:var(--accent);color:#fff;border-radius:50%;width:38px;height:38px;display:grid;place-items:center;margin-top:-14px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+ body.laproute #bnav,body.lvpend #bnav,body.lvpic #bnav,body.printing #bnav{display:none} nav.side .qsbtn{display:none}body.laproute,body.lvpend,body.lvpic{padding-bottom:0} }
 </style>
 </head>
 <body>
@@ -1026,7 +1036,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.9 · 22/11/2026 (penyimpanan per data)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.0 · 23/11/2026 (perlu tindakan, cari cepat, navigasi HP)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
@@ -5296,6 +5306,70 @@ function mutasiHtml(k){ const h=mutasiHtml_(k); const b=k&&k.bantu; return (b?`<
 function mutasiHtml_(k){ const L=(k&&k.mutasi)||[]; if(!L.length) return ""; return `<section class="pfsec"><h3>Riwayat mutasi</h3>${L.slice().reverse().map(m=>`<div style="font-size:13px">${fmt(m.tgl)} · ${m.jenis==="unit"?`Unit: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}${m.nrpBaru&&m.nrpBaru!==m.nrpLama?` (NRP ${esc(m.nrpLama)} → ${esc(m.nrpBaru)})`:""}`:m.jenis==="bantu"?`Diperbantukan: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}`:`${esc(m.field==="kodeBagian"?"Kode bagian/grup":m.field==="shift"?"Grup/shift":"Bagian")}: ${esc(m.dari||"–")} → ${esc(m.ke||"–")}`}${m.ket?" · "+esc(m.ket):""}<span class="muted">${m.oleh?" · "+esc(m.oleh):""}</span></div>`).join("")}</section>`; }
 document.addEventListener("click",ev=>{ const m=ev.target.closest("[data-mutunit]"); if(m){ const d=$("#dlg"); if(d.open) d.close(); setTimeout(()=>dlgMutasiUnit(m.dataset.mutunit),40); } });
 
+
+// ---------- Tahap C: Perlu tindakan hari ini, pencarian cepat, navigasi bawah HP & scan serbaguna ----------
+function todoItems(){ if(!S.loaded) return []; const L=[], t=todayISO(), ym=t.slice(0,7), add=(sev,ik,teks,route,n)=>{ if(n) L.push({sev,ik,teks,route,n}); };
+  try{ const ap=apList().filter(a=>(a.status||"aktif")!=="afkir"&&a.status!=="dipinjam");
+    add("amber","🧯",`APAR belum diperiksa bulan ini`,"apar-cek",ap.filter(a=>!(a.pemeriksaan||[]).some(p=>(p.tgl||"").startsWith(ym))).length);
+    add("red","🧯",`APAR hasil pemeriksaan terakhir tidak baik`,"apar",ap.filter(a=>apBad(apLast(a)).length).length);
+    add("red","🧯",`APAR sudah lewat tanggal expire`,"apar",ap.filter(a=>a.tglExp&&a.tglExp<t).length);
+    add("amber","⏳",`APAR menunggu isi ulang`,"apar",ap.filter(a=>typeof apPakaiAktif==="function"&&apPakaiAktif(a)).length); }catch(e){}
+  try{ const bx=[...S.kotak.values()].map(b=>boxStat(b));
+    add("amber","🩹",`Kotak P3K sudah jatuh tempo diperiksa`,"p3k",bx.filter(s=>s.due&&!s.kosong).length);
+    add("red","🩹",`Item P3K harus ditarik (kadaluarsa / H-6 bulan)`,"p3k",bx.reduce((a,s)=>a+s.exp+s.soon,0));
+    add("amber","🩹",`Item P3K kurang dari standar`,"p3k",bx.reduce((a,s)=>a+s.kurangQty,0)); }catch(e){}
+  try{ let lewat=0, buka=0; ptrList().forEach(p=>(p.temuan||[]).forEach(x=>{ if(x.status==="selesai") return; buka++; if(x.target&&x.target<t) lewat++; }));
+    add("red","🔍",`Temuan patroli lewat batas waktu`,"patroli",lewat); add("amber","🔍",`Temuan patroli belum selesai`,"patroli",buka-lewat); }catch(e){}
+  try{ let late=0; [...S.inc.values()].forEach(r=>(r.rek||[]).forEach(x=>{ if((x.t||"").trim()&&x.st!=="Selesai"&&x.tgt&&x.tgt<t) late++; })); add("red","📋",`Tindakan perbaikan investigasi terlambat`,"tindakan",late);
+    add("amber","📋",`Investigasi kecelakaan belum final`,"investigasi",[...S.inc.values()].filter(r=>r.status!=="final").length); }catch(e){}
+  try{ if(S.canWrite&&typeof rsList==="function") add("amber","💬",`Tanggapan Level I menunggu persetujuan`,"respon",rsList().filter(r=>r.status==="menunggu").length); }catch(e){}
+  try{ if(typeof SY!=="undefined"&&SY.user&&syLevel()==="super"&&typeof akPendingList==="function") add("amber","👤",`Pengajuan akun baru`,"pengguna",akPendingList().length); }catch(e){}
+  try{ const d30=new Date(Date.now()+30*864e5).toISOString().slice(0,10); add("amber","📄",`Kontrak karyawan berakhir ≤ 30 hari`,"master",[...S.list.values()].filter(k=>k.aktif!==false&&k.status==="Kontrak"&&k.kontrakAkhir&&k.kontrakAkhir>=t&&k.kontrakAkhir<=d30&&(S.unit==="ALL"||unitOf(k)===S.unit)).length); }catch(e){}
+  try{ const th=+t.slice(0,4), d=typeof pgDoc==="function"&&pgDoc(th); if(d) add("amber","📅",`Jadwal Program K3 terlewat belum dicatat`,"progk3",d.items.reduce((a,it)=>a+pgStat(it,th).late,0)); }catch(e){}
+  return L.sort((a,b)=>(a.sev==="red"?0:1)-(b.sev==="red"?0:1)); }
+function todoPanel(){ const L=todoItems(); return `<section class="panel todo"><h2 style="margin:0 0 8px">Perlu tindakan hari ini ${L.length?`<span class="chip ${L.some(x=>x.sev==="red")?"red":"amber"}">${L.length}</span>`:""}</h2>
+  ${L.length?`<div class="todol">${L.map(x=>`<button type="button" class="todoi ${x.sev}" data-go="${x.route}"><span class="tdi">${x.ik}</span><span class="tdt">${esc(x.teks)}</span><b class="tdn">${x.n.toLocaleString("id-ID")}</b><span class="tda">›</span></button>`).join("")}</div>`:`<p class="muted" style="margin:0">✓ Tidak ada yang perlu ditindaklanjuti saat ini.</p>`}</section>`; }
+{ const _vr=viewRingkasan; viewRingkasan=function(){ const h=_vr.apply(this,arguments); if(!S.loaded) return h; const i=h.indexOf("</p>"); return i>0?h.slice(0,i+4)+todoPanel()+h.slice(i+4):todoPanel()+h; }; }
+// ---- pencarian cepat
+function qsResults(q){ q=String(q||"").trim().toLowerCase(); if(q.length<2) return []; const R=[], has=v=>String(v||"").toLowerCase().includes(q), max=6;
+  const kar=[...S.list.values()].filter(k=>has(k.nrp)||has(k.nama)).slice(0,max); kar.forEach(k=>R.push({g:"Karyawan",t:k.nama,s:[k.nrp,k.bagian,unitOf(k)!==S.unit&&S.unit!=="ALL"?"diperbantukan":""].filter(Boolean).join(" · "),a:{pf:k.nrp||""}}));
+  [...S.kotak.values()].filter(b=>has(b.kode)||has(b.bagian)||has(b.penempatan)).slice(0,max).forEach(b=>R.push({g:"Kotak P3K",t:b.kode,s:[b.bagian,b.penempatan].filter(Boolean).join(" · "),a:{go:"box-"+b.kode}}));
+  if(q.length>=4){ let n=0; S.kotak.forEach(b=>(b.isi||[]).forEach(x=>{ if(n<max&&String(x.bc).toLowerCase().includes(q)){ n++; R.push({g:"Barcode item P3K",t:x.bc,s:itemOf(x.kode).nama+" · di kotak "+b.kode+(x.exp?" · exp "+fmt(x.exp):""),a:{go:"box-"+b.kode}}); } })); }
+  apList().filter(a=>has(a.bc)||has(apLabel(a))||has(a.penempatan)).slice(0,max).forEach(a=>R.push({g:"APAR",t:a.bc,s:[apLabel(a),a.penempatan,a.status==="afkir"?"afkir":""].filter(Boolean).join(" · "),a:{ap:a.bc}}));
+  [...S.inc.values()].filter(r=>has(r.korban&&r.korban.nama)||has(r.lokasi)||has(r.noKK)||has(r.noDok)).slice(0,max).forEach(r=>R.push({g:"Kecelakaan & investigasi",t:(r.korban&&r.korban.nama)||r.lokasi||"Kejadian",s:[fmt(r.tglKej),r.lokasi,r.noKK].filter(Boolean).join(" · "),a:{go:"inv-"+r._id}}));
+  let n2=0; ptrList().forEach(p=>(p.temuan||[]).forEach(x=>{ if(n2<max&&(has(x.area)||has(x.sumber)||has(x.lokasi))){ n2++; R.push({g:"Temuan patroli",t:x.sumber||x.area,s:[x.area,x.lokasi,fmt(p.tgl)].filter(Boolean).join(" · "),a:{go:"ptr-"+p._id}}); } }));
+  return R; }
+function dlgCari(){ openDlg(`<header><h2>Cari cepat</h2></header><div class="body"><input type="search" id="qsIn" placeholder="NRP, nama, kode kotak, barcode item/APAR, lokasi…" autocomplete="off" style="width:100%;font-size:16px"><div id="qsOut" class="qsout"><p class="muted" style="margin:10px 2px">Ketik minimal 2 huruf.</p></div></div><footer><button class="btn" value="cancel">Tutup</button></footer>`, async ()=>{});
+  const inp=$("#qsIn"), out=$("#qsOut"); let sel=0, res=[];
+  const draw=()=>{ res=qsResults(inp.value); if(inp.value.trim().length<2){ out.innerHTML=`<p class="muted" style="margin:10px 2px">Ketik minimal 2 huruf.</p>`; return; } if(!res.length){ out.innerHTML=`<p class="muted" style="margin:10px 2px">Tidak ditemukan.</p>`; return; }
+    let g=""; out.innerHTML=res.map((r,i)=>{ const h=r.g!==g?`<div class="qsg">${esc(r.g)}</div>`:""; g=r.g; return h+`<button type="button" class="qsi${i===sel?" on":""}" data-qs="${i}"><b>${esc(r.t)}</b><span class="muted">${esc(r.s)}</span></button>`; }).join(""); };
+  const pick=i=>{ const r=res[i]; if(!r) return; $("#dlg").close(); setTimeout(()=>{ if(r.a.pf!=null){ dlgProfil(r.a.pf); } else if(r.a.ap){ go("apar"); setTimeout(()=>dlgApar(S.apar.get(r.a.ap)),150); } else go(r.a.go); },60); };
+  inp.addEventListener("input",()=>{ sel=0; draw(); });
+  inp.addEventListener("keydown",e=>{ if(e.key==="ArrowDown"){ e.preventDefault(); sel=Math.min(res.length-1,sel+1); draw(); } else if(e.key==="ArrowUp"){ e.preventDefault(); sel=Math.max(0,sel-1); draw(); } else if(e.key==="Enter"){ e.preventDefault(); pick(sel); } });
+  out.addEventListener("click",e=>{ const b=e.target.closest("[data-qs]"); if(b) pick(+b.dataset.qs); }); setTimeout(()=>inp.focus(),30); }
+document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){ e.preventDefault(); if(!document.body.classList.contains("lvpend")) dlgCari(); } });
+// ---- scan serbaguna (kamera)
+async function uniScan(){ const det=lapDet(); if(!det){ toast("Pemindaian kamera tidak tersedia di browser ini. Gunakan Cari cepat."); dlgCari(); return; }
+  const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="camres" hidden></div><div class="cambar"><span class="cammsg">Arahkan ke barcode kotak P3K, item P3K, APAR, atau NRP</span><button class="btn" data-act="cam-close">Tutup</button></div>`;
+  document.body.appendChild(ov); const video=ov.querySelector("video"), msg=ov.querySelector(".cammsg"), card=ov.querySelector(".camres");
+  let stream; try{ let pref=""; try{ pref=localStorage.getItem("k3.camId")||""; }catch(e){} stream=await camPickStream(pref); }catch(e){ ov.remove(); toast("Kamera tidak bisa dibuka."); return; }
+  video.srcObject=stream; await video.play().catch(()=>{}); const st={on:true,last:"",lastT:0}; LAP_CAM={ov,stream,st}; LAP_CAM.redraw=camControls(ov,video);
+  const done=(fn,ok)=>{ lapBeep(true); scanSound(true); lapCamClose(); setTimeout(fn,80); };
+  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=st.pause?[]:await det.detect(video), now=Date.now();
+      for(const r of res){ const v=String(r.rawValue||"").trim(), V=v.toUpperCase(); if(!v||(v===st.last&&now-st.lastT<1800)) continue; st.last=v; st.lastT=now;
+        if(S.kotak.has(V)){ done(()=>go((typeof lapRole==="function"&&lapRole()==="hp")?"lap-"+V:"box-"+V)); return; }
+        if(S.apar.has(V)){ done(()=>{ go("apar-cek"); setTimeout(()=>{ apScan(V); render(); },150); }); return; }
+        let kb=null; S.kotak.forEach(b=>{ if(!kb&&(b.isi||[]).some(x=>x.bc.toUpperCase()===V)) kb=b.kode; }); if(kb){ done(()=>{ go("box-"+kb); toast("Barcode "+V+" ada di kotak "+kb+"."); }); return; }
+        const k=kByNrp(v); if(k){ done(()=>dlgProfil(k)); return; }
+        lapBeep(false); scanSound(false); card.className="camres bad"; card.innerHTML=`<b>✗ ${esc(v)}</b><span>Tidak dikenali sebagai kotak, item P3K, APAR, atau NRP</span>`; card.hidden=false; } } }catch(e){} if(st.on) setTimeout(loop,180); }; loop(); }
+// ---- navigasi bawah HP
+function bnavDraw(){ let n=document.getElementById("bnav"); if(!n){ n=document.createElement("nav"); n.id="bnav"; n.setAttribute("aria-label","Navigasi cepat"); document.body.appendChild(n); }
+  const c=(()=>{ try{ return todoItems().length; }catch(e){ return 0; } })(), r=S.route||"", hasTrack=!document.body.classList.contains("hprole")&&!document.body.classList.contains("lvobs");
+  const it=(k,ik,l,on,extra)=>`<button type="button" data-bn="${k}" class="${on?"on":""}" aria-label="${l}"><span class="bni">${ik}${extra||""}</span><span class="bnl">${l}</span></button>`;
+  n.innerHTML=it("ringkasan","🏠","Ringkasan",r==="ringkasan",c?`<i class="bnb">${c}</i>`:"")+it("cari","🔎","Cari",false)+it("scan","📷","Scan",false)+it("patroli","🛡️","Patroli",/^(patroli|ptrv?-)/.test(r))+(hasTrack?it("track","🗂️","Track",/^track/.test(r)):"")+it("menu","☰","Lainnya",false); }
+document.addEventListener("click",ev=>{ const b=ev.target.closest("[data-bn]"); if(b){ const k=b.dataset.bn; if(k==="scan") uniScan(); else if(k==="cari") dlgCari(); else if(k==="menu"){ const t=document.getElementById("navToggle"); if(t){ t.click(); window.scrollTo({top:0,behavior:"smooth"}); } } else go(k); return; }
+  if(ev.target.closest('[data-act="qs-open"]')) dlgCari(); });
+{ const _r=render; render=function(){ const x=_r.apply(this,arguments); try{ bnavDraw(); const brand=document.querySelector("nav.side .unitsel")||document.querySelector("nav.side .brand"); if(brand&&!document.querySelector("nav.side .qsbtn")){ const q=document.createElement("button"); q.type="button"; q.className="qsbtn"; q.dataset.act="qs-open"; q.innerHTML=`🔎 Cari <kbd>Ctrl K</kbd>`; brand.insertAdjacentElement("afterend",q); } }catch(e){} return x; }; }
 
 // ---------- Tahap A: cadangan otomatis harian & pemulihan data yang hilang ----------
 const SNAP_KEEP=7, SNAP_LBL={karyawan:"Karyawan & Kartu APD",pembagian:"Pembagian APD",track:"Track proses",penanda:"Penanda karyawan",kotak:"Kotak P3K",apar:"APAR",peta:"Peta K3",hira:"HIRADC",kecelakaan:"Kecelakaan & investigasi",patroli:"Patroli K3",p2k3:"Laporan P2K3",p2k3keg:"Kegiatan K3",p2k3rapat:"Notulen rapat P2K3",progk3:"Program K3",respon:"Tanggapan Level I",pengaturan:"Pengaturan"};
