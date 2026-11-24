@@ -1026,7 +1026,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.8 · 22/11/2026 (cadangan otomatis & pulihkan data yang hilang)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.9 · 22/11/2026 (penyimpanan per data)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
@@ -6079,13 +6079,28 @@ function dlgSyncAdmins(){ const list=(SY.admins||[]).slice();
 let STORE={}; let STORAGE_LABEL="penyimpanan browser"; let idb=null;
 const subs=new Set();
 function notify(){ setTimeout(()=>subs.forEach(f=>f()),0); }
-function idbOpen(){ return new Promise((res,rej)=>{ try{ const q=indexedDB.open("kartuAPD",1); q.onupgradeneeded=()=>q.result.createObjectStore("kv"); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error);}catch(e){rej(e);} }); }
-function idbGet(){ return new Promise((res,rej)=>{ const t=idb.transaction("kv","readonly").objectStore("kv").get("store"); t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); }); }
-function idbPut(v){ return new Promise((res,rej)=>{ const tx=idb.transaction("kv","readwrite"); tx.objectStore("kv").put(v,"store"); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+// Penyimpanan per data (Tahap B): setiap data disimpan sendiri di IndexedDB "docs"; yang ditulis hanya data yang berubah.
+let IDB_PERDOC=false, IDB_SNAP=null;
+function idbOpen(){ return new Promise((res,rej)=>{ try{ const q=indexedDB.open("kartuAPD",2); q.onupgradeneeded=()=>{ const db=q.result; if(!db.objectStoreNames.contains("kv")) db.createObjectStore("kv"); if(!db.objectStoreNames.contains("docs")) db.createObjectStore("docs"); };
+  q.onblocked=()=>{ try{ toast("Tutup tab/jendela program K3 lain agar pembaruan penyimpanan bisa berjalan."); }catch(e){} }; q.onsuccess=()=>{ const db=q.result; db.onversionchange=()=>db.close(); res(db); }; q.onerror=()=>rej(q.error);}catch(e){rej(e);} }); }
+function idbReq(r){ return new Promise((res,rej)=>{ r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbGet(){ const tx=idb.transaction(["kv","docs"],"readonly"), kv=tx.objectStore("kv"), dc=tx.objectStore("docs");
+  const [mig,keys,vals,old]=await Promise.all([idbReq(kv.get("perdoc")),idbReq(dc.getAllKeys()),idbReq(dc.getAll()),idbReq(kv.get("store"))]);
+  if(mig){ const o={}; keys.forEach((k,i)=>{ o[k]=vals[i]; }); IDB_PERDOC=true; IDB_SNAP=new Map(keys.map((k,i)=>[k,JSON.stringify(vals[i])])); return o; }
+  return old||{}; }
+async function idbMigrate(){ if(!idb||IDB_PERDOC) return; const keys=Object.keys(STORE);
+  await new Promise((res,rej)=>{ const tx=idb.transaction(["kv","docs"],"readwrite"), dc=tx.objectStore("docs"), kv=tx.objectStore("kv"); dc.clear(); keys.forEach(k=>dc.put(STORE[k],k)); kv.put({tgl:new Date().toISOString(),jumlah:keys.length},"perdoc"); kv.put(new Date().toISOString(),"store_lama_sejak");
+    tx.oncomplete=res; tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error||new Error("Migrasi dibatalkan")); });
+  IDB_PERDOC=true; IDB_SNAP=new Map(keys.map(k=>[k,JSON.stringify(STORE[k])])); }
+let IDB_BUSY=Promise.resolve();
 async function persist(){
-  const v=JSON.parse(JSON.stringify(STORE));
-  if(idb){ await idbPut(v); }
-  else { try{ localStorage.setItem("kartuAPD.store",JSON.stringify(v)); }catch(e){ throw {code:"quota_exceeded",message:"Penyimpanan penuh. Simpan backup lalu hubungi IT."}; } }
+  if(idb&&IDB_PERDOC){ const run=async()=>{ const cur=new Map(); for(const k in STORE) cur.set(k,JSON.stringify(STORE[k])); const put=[], del=[];
+      cur.forEach((js,k)=>{ if(IDB_SNAP.get(k)!==js) put.push(k); }); IDB_SNAP.forEach((_,k)=>{ if(!cur.has(k)) del.push(k); });
+      if(put.length||del.length) await new Promise((res,rej)=>{ const tx=idb.transaction("docs","readwrite"), st=tx.objectStore("docs"); put.forEach(k=>st.put(JSON.parse(cur.get(k)),k)); del.forEach(k=>st.delete(k)); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error||new Error("Penyimpanan dibatalkan")); });
+      IDB_SNAP=cur; };
+    IDB_BUSY=IDB_BUSY.then(run,run); await IDB_BUSY; }
+  else if(idb){ await new Promise((res,rej)=>{ const tx=idb.transaction("kv","readwrite"); tx.objectStore("kv").put(JSON.parse(JSON.stringify(STORE)),"store"); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+  else { try{ localStorage.setItem("kartuAPD.store",JSON.stringify(STORE)); }catch(e){ throw {code:"quota_exceeded",message:"Penyimpanan penuh. Simpan backup lalu hubungi IT."}; } }
   if(typeof syKick==="function") syKick();
 }
 const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
@@ -6146,7 +6161,7 @@ function doRestore(file){
 // ---------- boot ----------
 S.route=readRoute(); render();
 (async()=>{
-  try{ idb=await idbOpen(); const v=await idbGet(); STORE=v||{}; STORAGE_LABEL="IndexedDB browser"; }
+  try{ idb=await idbOpen(); const v=await idbGet(); STORE=v||{}; if(!IDB_PERDOC){ try{ await idbMigrate(); }catch(e){ console.error("migrasi penyimpanan",e); } } STORAGE_LABEL=IDB_PERDOC?"IndexedDB browser, disimpan per data":"IndexedDB browser"; }
   catch(e){ idb=null; try{ STORE=JSON.parse(localStorage.getItem("kartuAPD.store")||"{}"); STORAGE_LABEL="localStorage browser"; }catch(e2){ STORE={}; STORAGE_LABEL="memori sementara – data hilang saat ditutup, segera simpan backup"; } }
   try{ S._keysPrev=new Set(Object.keys(STORE)); if(unitMigrate()) await persist(); }catch(e){}
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
