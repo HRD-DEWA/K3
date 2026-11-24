@@ -1026,13 +1026,17 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.7 · 21/11/2026 (konfirmasi scan item yang harus ditarik)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V10.8 · 22/11/2026 (cadangan otomatis & pulihkan data yang hilang)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
-    <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>
+    <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
     <button class="btn primary" data-act="backup">Simpan backup sekarang</button></section>
-   <section class="panel"><h2>Pulihkan dari backup</h2>
-    <p style="margin-top:0" class="muted">Dipakai bila data hilang atau saat pindah ke komputer lain. Seluruh data di komputer ini akan <b>diganti</b> dengan isi file backup.</p>
+   ${snapPanel()}
+   <section class="panel"><h2>Pulihkan data yang hilang dari file backup</h2>
+    <p style="margin-top:0" class="muted">Pilih file backup (.json). Program hanya <b>menambahkan data yang tidak ada</b> di program sekarang, per menu, tanpa mengubah data yang sudah ada. Aman dipakai walaupun file backup lebih lama.</p>
+    <input type="file" id="restoreMissFile" accept=".json,application/json" style="display:none">${S.canWrite?`<button class="btn primary" data-act="restore-missing">Pilih file backup…</button>`:""}</section>
+   <section class="panel"><h2>Ganti seluruh data dengan backup</h2>
+    <p style="margin-top:0" class="muted">Hanya untuk pindah ke komputer baru atau bila semua data rusak. Seluruh data di perangkat ini akan <b>diganti</b> dengan isi file backup, termasuk data yang lebih baru.</p>
     <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
     <button class="btn" data-act="restore">Pilih file backup…</button></section>`;
 }
@@ -5292,6 +5296,46 @@ function mutasiHtml(k){ const h=mutasiHtml_(k); const b=k&&k.bantu; return (b?`<
 function mutasiHtml_(k){ const L=(k&&k.mutasi)||[]; if(!L.length) return ""; return `<section class="pfsec"><h3>Riwayat mutasi</h3>${L.slice().reverse().map(m=>`<div style="font-size:13px">${fmt(m.tgl)} · ${m.jenis==="unit"?`Unit: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}${m.nrpBaru&&m.nrpBaru!==m.nrpLama?` (NRP ${esc(m.nrpLama)} → ${esc(m.nrpBaru)})`:""}`:m.jenis==="bantu"?`Diperbantukan: ${esc(unitName(m.dari))} → ${esc(unitName(m.ke))}`:`${esc(m.field==="kodeBagian"?"Kode bagian/grup":m.field==="shift"?"Grup/shift":"Bagian")}: ${esc(m.dari||"–")} → ${esc(m.ke||"–")}`}${m.ket?" · "+esc(m.ket):""}<span class="muted">${m.oleh?" · "+esc(m.oleh):""}</span></div>`).join("")}</section>`; }
 document.addEventListener("click",ev=>{ const m=ev.target.closest("[data-mutunit]"); if(m){ const d=$("#dlg"); if(d.open) d.close(); setTimeout(()=>dlgMutasiUnit(m.dataset.mutunit),40); } });
 
+
+// ---------- Tahap A: cadangan otomatis harian & pemulihan data yang hilang ----------
+const SNAP_KEEP=7, SNAP_LBL={karyawan:"Karyawan & Kartu APD",pembagian:"Pembagian APD",track:"Track proses",penanda:"Penanda karyawan",kotak:"Kotak P3K",apar:"APAR",peta:"Peta K3",hira:"HIRADC",kecelakaan:"Kecelakaan & investigasi",patroli:"Patroli K3",p2k3:"Laporan P2K3",p2k3keg:"Kegiatan K3",p2k3rapat:"Notulen rapat P2K3",progk3:"Program K3",respon:"Tanggapan Level I",pengaturan:"Pengaturan"};
+function snapDb(){ return new Promise((res,rej)=>{ try{ const q=indexedDB.open("k3-cadangan",1); q.onupgradeneeded=()=>q.result.createObjectStore("snap"); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }catch(e){ rej(e); } }); }
+async function snapTx(mode,fn){ const db=await snapDb(); return new Promise((res,rej)=>{ const tx=db.transaction("snap",mode), st=tx.objectStore("snap"); let out; Promise.resolve(fn(st,v=>out=v)).catch(rej); tx.oncomplete=()=>{ db.close(); res(out); }; tx.onerror=()=>{ db.close(); rej(tx.error); }; }); }
+async function snapList(){ try{ return await snapTx("readonly",(st,set)=>{ const r=st.getAll(); r.onsuccess=()=>set((r.result||[]).map(x=>({tgl:x.tgl,dibuat:x.dibuat,jumlah:x.jumlah,ukuran:x.ukuran})).sort((a,b)=>b.tgl.localeCompare(a.tgl))); }); }catch(e){ return []; } }
+async function snapGet(tgl){ return snapTx("readonly",(st,set)=>{ const r=st.get(tgl); r.onsuccess=()=>set(r.result); }); }
+function snapCount(data){ const c={}; Object.keys(data||{}).forEach(k=>{ const p=k.split("/"); if(p.length!==2) return; c[p[0]]=(c[p[0]]||0)+1; }); return c; }
+async function snapTake(force){ if(!S.loaded||!Object.keys(STORE).length) return; const tgl=todayISO(); const ada=await snapList(); if(!force&&ada.some(x=>x.tgl===tgl)) return;
+  const data=JSON.parse(JSON.stringify(STORE)), txt=JSON.stringify(data);
+  await snapTx("readwrite",st=>{ st.put({tgl,dibuat:new Date().toISOString(),jumlah:snapCount(data),ukuran:txt.length,data},tgl); });
+  const L=(await snapList()).slice(SNAP_KEEP); if(L.length) await snapTx("readwrite",st=>{ L.forEach(x=>st.delete(x.tgl)); });
+  S._snaps=null; if(S.route==="backup") render(); }
+setTimeout(()=>{ snapTake(false).catch(()=>{}); },15000); setInterval(()=>{ snapTake(false).catch(()=>{}); },60*60*1000);
+// pemulihan: hanya menambah data yang tidak ada
+function restoreMissingPlan(data){ const by={}; Object.keys(data||{}).forEach(k=>{ const p=k.split("/"); if(p.length!==2||k in STORE) return; if(["lapangan","lapapar"].includes(p[0])) return; (by[p[0]]=by[p[0]]||[]).push(k); }); return by; }
+function dlgRestoreMissing(data,sumber){ const by=restoreMissingPlan(data), cols=Object.keys(by).sort((a,b)=>(SNAP_LBL[a]||a).localeCompare(SNAP_LBL[b]||b,"id")), total=cols.reduce((s,c)=>s+by[c].length,0);
+  if(!total){ toast("Tidak ada data yang hilang dibanding "+sumber+". Semua data di file sudah ada di program."); return; }
+  openDlg(`<header><h2>Pulihkan data yang hilang</h2><p class="hint" style="margin:4px 0 0">Sumber: ${esc(sumber)}</p></header><div class="body">
+   <p style="margin:0 0 8px">Ditemukan <b>${total}</b> data yang ada di backup tetapi tidak ada di program sekarang. Hanya data ini yang ditambahkan; data yang sudah ada <b>tidak diubah</b>.</p>
+   ${cols.map(c=>`<label class="cb"><input type="checkbox" name="c" value="${esc(c)}" ${c==="pengaturan"?"":"checked"}> <span><b>${esc(SNAP_LBL[c]||c)}</b>: ${by[c].length} data${c==="track"?` <span class="muted">(${esc(by[c].map(k=>data[k]).filter(Boolean).map(r=>r.tgl||"").filter(Boolean).sort().slice(0,1).concat(by[c].map(k=>data[k]).filter(Boolean).map(r=>r.tgl||"").filter(Boolean).sort().slice(-1)).map(fmt).join(" s.d. "))})</span>`:""}</span></label>`).join("")}
+   <p class="hint" style="margin:8px 0 0">Data yang memang sengaja dihapus setelah tanggal backup juga ikut kembali bila dicentang. Setelah dipulihkan, data otomatis tersinkron ke perangkat lain.</p></div>${foot("Pulihkan")}`, async f=>{
+    const sel=[...f.querySelectorAll("[name=c]:checked")].map(x=>x.value); let n=0;
+    sel.forEach(c=>by[c].forEach(k=>{ const d=JSON.parse(JSON.stringify(data[k])); if(typeof UNIT_COLS!=="undefined"&&UNIT_COLS.includes(c)&&d&&typeof d==="object"&&!d.unit) d.unit="U2"; STORE[k]=d; n++; }));
+    await persist(); notify(); render(); toast(n+" data dipulihkan dari "+sumber+"."); }); }
+async function snapRestoreMissing(tgl){ const x=await snapGet(tgl); if(!x) return; dlgRestoreMissing(x.data,"cadangan otomatis "+fmt(tgl)); }
+async function snapDownload(tgl){ const x=await snapGet(tgl); if(!x) return; await localDownloads.save({filename:"cadangan-otomatis-k3-"+tgl+".json",data:JSON.stringify({aplikasi:"K3 Dewasutratex – PT. Dewasutratex",versi:2,dibuat:x.dibuat,data:x.data},null,1)}); toast("File cadangan "+fmt(tgl)+" disimpan ke folder Unduhan."); }
+function snapPanel(){ if(!S._snaps){ S._snaps=[]; snapList().then(l=>{ S._snaps=l; if(S.route==="backup") render(); }); }
+  const L=S._snaps, kb=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.round(n/1024)+" KB";
+  return `<section class="panel"><div class="row" style="justify-content:space-between;gap:8px"><h2 style="margin:0">Cadangan otomatis di perangkat ini</h2><button class="btn small" data-act="snap-now">Buat cadangan sekarang</button></div>
+   <p class="muted" style="margin:6px 0 8px">Program menyimpan salinan seluruh data satu kali sehari secara otomatis, ${SNAP_KEEP} hari terakhir. Dipakai untuk memulihkan data yang hilang tanpa mengganti data yang sudah ada.</p>
+   ${L.length?`<div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Isi</th><th>Ukuran</th><th></th></tr></thead><tbody>${L.map(x=>`<tr><td class="num"><b>${fmt(x.tgl)}</b><div class="muted" style="font-size:12px">${x.dibuat?new Date(x.dibuat).toTimeString().slice(0,5):""}</div></td><td style="font-size:13px">${["karyawan","track","kotak","apar","kecelakaan","patroli"].filter(c=>(x.jumlah||{})[c]).map(c=>esc(SNAP_LBL[c])+" "+x.jumlah[c].toLocaleString("id-ID")).join(" · ")}</td><td class="num">${kb(x.ukuran||0)}</td>
+     <td><div class="row" style="gap:6px;flex-wrap:nowrap">${S.canWrite?`<button class="btn small primary" data-snaprest="${esc(x.tgl)}">Pulihkan yang hilang</button>`:""}<button class="btn small" data-snapdl="${esc(x.tgl)}">Unduh</button></div></td></tr>`).join("")}</tbody></table></div>`:`<p class="muted" style="margin:0">Belum ada cadangan otomatis. Cadangan pertama dibuat beberapa detik setelah program dibuka.</p>`}</section>`; }
+document.addEventListener("click",ev=>{ const t=ev.target;
+  if(t.closest('[data-act="snap-now"]')){ snapTake(true).then(()=>toast("Cadangan hari ini disimpan.")).catch(e=>toast("Cadangan gagal: "+(e.message||e))); return; }
+  const r=t.closest("[data-snaprest]"); if(r){ snapRestoreMissing(r.dataset.snaprest); return; }
+  const d=t.closest("[data-snapdl]"); if(d){ snapDownload(d.dataset.snapdl); return; }
+  if(t.closest('[data-act="restore-missing"]')){ $("#restoreMissFile").click(); return; } });
+document.addEventListener("change",ev=>{ if(ev.target.id!=="restoreMissFile"||!ev.target.files[0]) return; const f=ev.target.files[0]; ev.target.value=""; const fr=new FileReader();
+  fr.onload=()=>{ let p; try{ p=JSON.parse(fr.result); }catch(e){ toast("File tidak dapat dibaca."); return; } if(!p||!p.data){ toast("File ini bukan file backup K3 Dewasutratex."); return; } dlgRestoreMissing(p.data,"file "+f.name+(p.dibuat?" ("+fmt(String(p.dibuat).slice(0,10))+")":"")); }; fr.readAsText(f); });
 
 // ---------- konfirmasi saat scan item yang seharusnya ditarik ----------
 function tarikPerlu(x){ if(!x||!x.exp) return false; const e=expSt(x.exp); return e.cls==="red"||e.cls==="amber"; }
