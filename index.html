@@ -751,6 +751,7 @@ body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a
  #bnav button[data-bn="scan"] .bni{background:var(--accent);color:#fff;border-radius:50%;width:38px;height:38px;display:grid;place-items:center;margin-top:-14px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
  body.laproute #bnav,body.lvpend #bnav,body.lvpic #bnav,body.printing #bnav{display:none} nav.side .qsbtn{display:none}body.laproute,body.lvpend,body.lvpic{padding-bottom:0} }
+.linkbtn.kxc{font-size:13px;color:var(--muted)}.linkbtn.kxc.on{color:var(--green);font-weight:700}
 </style>
 </head>
 <body>
@@ -1036,7 +1037,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.2 · 25/11/2026 (tanggal terpakai tidak otomatis)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.3 · 26/11/2026 (penyimpanan kembali ke sistem semula & penanda cetak laporan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
@@ -2091,7 +2092,7 @@ function viewP3k(){
   const body=rows.map(b=>{ const s=st.get(b.kode), pct=s.std?Math.min(100,Math.round(s.ada/s.std*100)):0;
     return `<tr class="click${S.p3kSel.has(b.kode)?" selrow":""}" data-gobox="${esc(b.kode)}" tabindex="0"><td class="c"><input type="checkbox" class="selbox" data-p3ksel="${esc(b.kode)}" data-act="p3k-sel" ${S.p3kSel.has(b.kode)?"checked":""} aria-label="Pilih ${esc(b.kode)}"></td><td class="num">${esc(b.urut||"")}</td><td class="num"><b>${esc(b.kode)}</b>${S.unit==="ALL"?unitChip(b):""}</td><td>${esc(b.bagian||"–")}<div class="muted" style="font-size:12.5px">Kode ${esc(b.bagianKode||"–")}</div></td><td>${esc(b.penempatan||"–")}${b.picNama?`<div class="muted" style="font-size:12.5px">PIC: ${esc(b.picNama)}</div>`:""}</td>
      <td style="min-width:120px"><span class="num">${s.ada} / ${s.std}</span>${s.kosong?"":`<div class="life ${pct<90?"red":pct<100?"amber":""}"><i style="width:${pct}%"></i></div>`}</td>
-     <td class="num">${s.last?fmt(s.last):"–"}</td><td>${boxChip(s)}</td>
+     <td class="num">${s.last?fmt(s.last):"–"}</td><td>${boxChip(s)}</td><td style="white-space:nowrap">${kxCetakCell(b)}</td>
      <td><button class="btn small" data-act="box-print" data-kode="${esc(b.kode)}" aria-label="Cetak form pemeriksaan ${esc(b.kode)}" style="white-space:nowrap">Cetak</button></td></tr>`; }).join("");
   const opt=(v,l)=>`<option value="${v}" ${f===v?"selected":""}>${l}</option>`;
   return tarikBanner()+`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h1>Master kotak P3K</h1>
@@ -2104,8 +2105,8 @@ function viewP3k(){
    <div class="toolbar"><input type="search" id="p3kQ" placeholder="Cari kode kotak, bagian, penempatan" value="${esc(S.p3kQ||"")}" aria-label="Cari kotak">
     <select id="p3kF" aria-label="Filter">${opt("","Semua kotak")}${opt("kurang","Kurang isi")}${opt("exp","Ada item kadaluarsa / H-6 bulan")}${opt("due","Perlu diperiksa")}${opt("kosong","Isi belum diimpor")}</select></div>
    ${all.length?bulkBar():""}
-   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th class="c"><input type="checkbox" class="selbox" id="p3kSelAll" data-act="p3k-sel" ${rows.length&&rows.every(b=>S.p3kSel.has(b.kode))?"checked":""} aria-label="Pilih semua kotak yang tampil"></th><th>No</th><th>Kode kotak</th><th>Bagian</th><th>Penempatan</th><th>Isi / standar</th><th>Diperiksa</th><th>Status</th><th></th></tr></thead>
-   <tbody>${body||`<tr><td colspan="9" class="empty">${all.length?"Tidak ada kotak yang cocok dengan filter.":"Belum ada data kotak. Klik Impor data kotak untuk memasukkan master kotak dari file JSON."}</td></tr>`}</tbody></table></div></div>`;
+   <div class="panel" style="padding:4px 8px"><div class="tablewrap"><table><thead><tr><th class="c"><input type="checkbox" class="selbox" id="p3kSelAll" data-act="p3k-sel" ${rows.length&&rows.every(b=>S.p3kSel.has(b.kode))?"checked":""} aria-label="Pilih semua kotak yang tampil"></th><th>No</th><th>Kode kotak</th><th>Bagian</th><th>Penempatan</th><th>Isi / standar</th><th>Diperiksa</th><th>Status</th><th>Lap. pemakaian dicetak</th><th></th></tr></thead>
+   <tbody>${body||`<tr><td colspan="10" class="empty">${all.length?"Tidak ada kotak yang cocok dengan filter.":"Belum ada data kotak. Klik Impor data kotak untuk memasukkan master kotak dari file JSON."}</td></tr>`}</tbody></table></div></div>`;
 }
 function viewP3kItem(){
   const all=boxList(), st=all.map(b=>boxStat(b));
@@ -3297,6 +3298,7 @@ function lkSave(force){
     const d=STORE["kotak/"+lk.kode]; if(tm.length) d.temuan=(d.temuan||[]).concat(tm); lapApplyRemove(d,{keluar}); d.keluar=(d.keluar||[]).concat(keluar); (d.pemeriksaan=d.pemeriksaan||[]).push(pm); if(pm.pic){ d.picNama=pm.pic; d.picNrp=pm.picNrp; }
     if(lapRole()==="hp") STORE["lapangan/"+pid]={id:pid,kode:lk.kode,tgl:lk.tgl,keluar,temuan:tm,pemeriksaan:pm,pic:pm.pic,picNrp:pm.picNrp,dibuat:new Date().toISOString()};
     try{ localStorage.setItem("k3.lapPem",JSON.stringify({pem:pm.pemeriksa,pemNrp:pm.pemNrp})); }catch(e){}
+    toast("Menyimpan pemeriksaan… jangan tutup aplikasi.");
     try{ await persist(); }catch(e){ console.error("simpan pemeriksaan",e); setTimeout(()=>openDlg(`<header><h2 style="color:var(--red)">Pemeriksaan belum tersimpan</h2></header><div class="body"><p style="margin:0 0 8px">Penyimpanan di perangkat gagal: <b>${esc((e&&(e.message||e.name))||String(e))}</b></p><p style="margin:0">Isian pemeriksaan masih ada. Tutup tab/jendela K3 lain, pastikan memori HP tidak penuh, lalu tekan Simpan lagi.</p></div><footer><button class="btn primary" value="cancel">Mengerti</button></footer>`,async()=>{}),80); return; }
     notify(); try{ liveDone(lk.kode); }catch(e){} lapDraftDel(lk.kode); const k=lk.kode; S.lk=null; toast("Pemeriksaan "+k+" disimpan."+(lapRole()==="hp"?" Jangan lupa kirim hasil ke komputer.":"")); go("lapangan"); });
 }
@@ -3889,9 +3891,9 @@ function kxDocHtml(){ const {rows,y,k,bg}=kxRows(), list=rows.slice().reverse();
    ${[...groups.entries()].map(([n,g])=>`<p class="ksub">Bagian: ${esc(g[0]._bag)}${g[0]._pen?" &nbsp;·&nbsp; Penempatan: "+esc(g[0]._pen):""}</p>${tbl(g)}`).join("")}
    ${(()=>{ const N=kxNotes(); return N.length?`<p class="ksub">Catatan pemeriksaan</p><table class="ktb"><colgroup><col style="width:7mm"><col style="width:17mm"><col style="width:19mm"><col style="width:36mm"><col style="width:24mm"><col style="width:87mm"></colgroup><thead><tr><th>No</th><th>Tgl. periksa</th><th>Kotak</th><th>Bagian · penempatan</th><th>Pemeriksa</th><th>Catatan, item belum tercatat & item salah penempatan</th></tr></thead><tbody>${N.map((n,i)=>`<tr><td class="c">${i+1}</td><td class="c">${fmt(n.p.tgl)}</td><td class="c">${esc(n.b.kode)}</td><td>${esc(n.grp)}</td><td>${esc(n.p.pemeriksa||"")}</td><td>${kxNotesTxt(n).map(esc).join("<br>")}</td></tr>`).join("")}</tbody></table>`:""; })()}
    <table class="hsg"><tr><td>Dibuat oleh,<br><br><br><br><b>( ____________________ )</b><br>Petugas K3</td><td></td><td>Mengetahui,<br><br><br><br><b>( ____________________ )</b><br>Kepala Bagian / HRD</td></tr></table></div>`; }
-function kxPrint(){ const pa=$("#printArea"); pa.innerHTML=kxDocHtml(); document.body.classList.add("printing");
+function kxPrint(){ kxMarkPrinted("cetak"); const pa=$("#printArea"); pa.innerHTML=kxDocHtml(); document.body.classList.add("printing");
   const done=()=>{ document.body.classList.remove("printing"); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done); setTimeout(()=>{ window.print(); setTimeout(done,500); },60); }
-async function kxDownload(fmtX){ const {rows,y,bg}=kxRows(); if(!rows.length&&!kxNotes().length) return; const base=("Item-Keluar-P3K-"+(bg?kxLabel(bg).replace(" (semua penempatan)",""):"Keseluruhan")+"-"+(y==="semua"?"semua":y)).replace(/[^\w.-]+/g,"_"); let st=null;
+async function kxDownload(fmtX){ const {rows,y,bg}=kxRows(); if(!rows.length&&!kxNotes().length) return; kxMarkPrinted(fmtX); const base=("Item-Keluar-P3K-"+(bg?kxLabel(bg).replace(" (semua penempatan)",""):"Keseluruhan")+"-"+(y==="semua"?"semua":y)).replace(/[^\w.-]+/g,"_"); let st=null;
   toast("Menyiapkan file "+fmtX.toUpperCase()+"…");
   try{ if(fmtX==="pdf"){ st=xStage(kxDocHtml()); await new Promise(r=>setTimeout(r,30)); await saveBlob(base+".pdf",await pdfFromStage(st,{sel:".kdoc"}),"application/pdf"); }
     else if(fmtX==="odt"){ const m=xModel(null,kxDocHtml(),".kdoc",190); st=m.st; await saveBlob(base+".odt",buildOdtForm(m.model,[],"Laporan item keluar P3K"),"application/vnd.oasis.opendocument.text"); }
@@ -5414,6 +5416,24 @@ document.addEventListener("change",ev=>{ if(ev.target.id!=="restoreMissFile"||!e
 
 // tanggal terpakai: kosong bila tidak diisi (data lama yang otomatis memakai tanggal pemeriksaan tanpa NRP/pengguna dianggap kosong)
 function pakaiRaw(x){ if(!x||!x.tglPakai) return ""; if(x.tglPakai===x.tgl&&!String(x.nrp||"").trim()&&!String(x.pengguna||"").trim()) return ""; return x.tglPakai; }
+
+// ---------- penanda kotak yang laporan pemakaiannya sudah dicetak / diunduh ----------
+async function kxMarkPrinted(fmtX){ try{ const {rows,y}=kxRows(), boxes=new Set(rows.map(x=>x._box)); (typeof kxNotes==="function"?kxNotes():[]).forEach(n=>boxes.add(n.b.kode)); if(!boxes.size) return;
+  const now=new Date().toISOString(), oleh=(typeof akMyName==="function"?akMyName():S.uid)||"", per=kxPeriod(y);
+  boxes.forEach(k=>{ const d=STORE["kotak/"+k]; if(!d) return; d.cetakKx={at:now,oleh,periode:per,fmt:fmtX}; (d.cetakLog=d.cetakLog||[]).push({at:now,oleh,periode:per,fmt:fmtX}); if(d.cetakLog.length>12) d.cetakLog=d.cetakLog.slice(-12); });
+  await persist(); notify(); }catch(e){ console.error(e); } }
+function kxCetakCell(b){ const c=b.cetakKx; if(!c) return `<button type="button" class="linkbtn kxc" data-kxcetak="${esc(b.kode)}" title="Tandai manual">– belum</button>`;
+  const d=new Date(c.at); return `<button type="button" class="linkbtn kxc on" data-kxcetak="${esc(b.kode)}" title="Ubah atau hapus tanda cetak">✓ ${fmt(c.at.slice(0,10))} ${d.toTimeString().slice(0,5)}</button>${c.periode?`<div class="muted" style="font-size:12px">${esc(c.periode)}</div>`:""}`; }
+function dlgKxCetak(kode){ const d=STORE["kotak/"+kode]; if(!d) return; const c=d.cetakKx||{}, dt=c.at?new Date(c.at):new Date(), p2=n=>String(n).padStart(2,"0");
+  const tgl=dt.getFullYear()+"-"+p2(dt.getMonth()+1)+"-"+p2(dt.getDate()), jam=p2(dt.getHours())+":"+p2(dt.getMinutes());
+  openDlg(`<header><h2>Laporan pemakaian ${esc(kode)}</h2><p class="hint" style="margin:4px 0 0">Penanda bahwa laporan pemakaian & item keluar kotak ini sudah dicetak / diunduh.</p></header><div class="body">
+   <label class="cb"><input type="checkbox" name="on" ${d.cetakKx?"checked":""}> <span><b>Sudah dicetak</b></span></label>
+   <div class="grid3" style="margin-top:8px"><label class="f"><span>Tanggal</span><input type="date" name="tgl" value="${tgl}"></label><label class="f"><span>Jam</span><input type="time" name="jam" value="${jam}"></label><label class="f"><span>Periode laporan</span><input type="text" name="per" value="${esc(c.periode||kxPeriod(todayISO().slice(0,7)))}"></label></div>
+   ${(d.cetakLog||[]).length?`<p class="hint" style="margin:10px 0 4px">Riwayat cetak:</p><div style="font-size:12.5px">${d.cetakLog.slice().reverse().map(x=>`${fmt(x.at.slice(0,10))} ${new Date(x.at).toTimeString().slice(0,5)} · ${esc(x.periode||"")} · ${esc((x.fmt||"").toUpperCase())}${x.oleh?" · "+esc(x.oleh):""}`).join("<br>")}</div>`:""}</div>${foot("Simpan")}`, async f=>{
+    if(!f.on.checked){ delete d.cetakKx; } else { const at=new Date(f.tgl.value+"T"+(f.jam.value||"00:00")+":00"); d.cetakKx=Object.assign({},d.cetakKx||{},{at:isNaN(at)?new Date().toISOString():at.toISOString(),periode:f.per.value.trim(),oleh:(d.cetakKx&&d.cetakKx.oleh)||((typeof akMyName==="function"?akMyName():S.uid)||""),manual:true}); }
+    d.diubah=new Date().toISOString(); await persist(); notify(); render(); toast("Penanda cetak "+kode+" disimpan."); }); }
+document.addEventListener("click",ev=>{ const t=ev.target.closest("[data-kxcetak]"); if(!t) return; ev.preventDefault(); ev.stopPropagation(); if(!S.canWrite) return; dlgKxCetak(t.dataset.kxcetak); },true);
+
 // ---------- konfirmasi saat scan item yang seharusnya ditarik ----------
 function tarikPerlu(x){ if(!x||!x.exp) return false; const e=expSt(x.exp); return e.cls==="red"||e.cls==="amber"; }
 function tarikTxt(x){ if(!x||!x.exp) return ""; const e=expSt(x.exp), d=daysBetween(todayISO(),x.exp); return e.cls==="red"?`sudah kadaluarsa sejak ${fmt(x.exp)}`:`kadaluarsa ${fmt(x.exp)} (${d} hari lagi, sudah masuk masa tarik H-6 bulan)`; }
@@ -6163,14 +6183,16 @@ function idbOpen(){ return new Promise((res,rej)=>{ try{ const q=indexedDB.open(
 function idbReq(r){ return new Promise((res,rej)=>{ r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
 async function idbGet(){ const tx=idb.transaction(["kv","docs"],"readonly"), kv=tx.objectStore("kv"), dc=tx.objectStore("docs");
   const [mig,keys,vals,old]=await Promise.all([idbReq(kv.get("perdoc")),idbReq(dc.getAllKeys()),idbReq(dc.getAll()),idbReq(kv.get("store"))]);
-  if(mig){ const o={}; keys.forEach((k,i)=>{ o[k]=vals[i]; }); IDB_PERDOC=true; IDB_SNAP=new Map(keys.map((k,i)=>[k,JSON.stringify(vals[i])])); return o; }
+  if(mig){ const o={}; keys.forEach((k,i)=>{ o[k]=vals[i]; }); IDB_REVERT=true; return o; }
   return old||{}; }
+let IDB_REVERT=false;
+async function idbRevert(){ if(!IDB_REVERT) return; await new Promise((res,rej)=>{ const tx=idb.transaction(["kv","docs"],"readwrite"), kv=tx.objectStore("kv"); kv.put(JSON.parse(JSON.stringify(STORE)),"store"); kv.delete("perdoc"); kv.delete("store_lama_sejak"); tx.objectStore("docs").clear(); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error||new Error("batal")); }); IDB_REVERT=false; }
 async function idbMigrate(){ if(!idb||IDB_PERDOC) return; const keys=Object.keys(STORE);
   await new Promise((res,rej)=>{ const tx=idb.transaction(["kv","docs"],"readwrite"), dc=tx.objectStore("docs"), kv=tx.objectStore("kv"); dc.clear(); keys.forEach(k=>dc.put(STORE[k],k)); kv.put({tgl:new Date().toISOString(),jumlah:keys.length},"perdoc"); kv.put(new Date().toISOString(),"store_lama_sejak");
     tx.oncomplete=res; tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error||new Error("Migrasi dibatalkan")); });
   IDB_PERDOC=true; IDB_SNAP=new Map(keys.map(k=>[k,JSON.stringify(STORE[k])])); }
 let IDB_BUSY=Promise.resolve();
-async function idbFreeSpace(){ try{ await new Promise(res=>{ const tx=idb.transaction("kv","readwrite"); tx.objectStore("kv").delete("store"); tx.oncomplete=res; tx.onerror=res; tx.onabort=res; }); }catch(e){} try{ if(typeof snapList==="function"){ const L=(await snapList()).slice(1); if(L.length) await snapTx("readwrite",st=>{ L.forEach(x=>st.delete(x.tgl)); }); } }catch(e){} }
+async function idbFreeSpace(){ try{ await new Promise(res=>{ const tx=idb.transaction("docs","readwrite"); tx.objectStore("docs").clear(); tx.oncomplete=res; tx.onerror=res; tx.onabort=res; }); }catch(e){} try{ if(typeof snapList==="function"){ const L=(await snapList()).slice(1); if(L.length) await snapTx("readwrite",st=>{ L.forEach(x=>st.delete(x.tgl)); }); } }catch(e){} }
 async function persist(){
   if(idb&&IDB_PERDOC){ const run=async()=>{ const cur=new Map(); for(const k in STORE) cur.set(k,JSON.stringify(STORE[k])); const put=[], del=[];
       cur.forEach((js,k)=>{ if(IDB_SNAP.get(k)!==js) put.push(k); }); IDB_SNAP.forEach((_,k)=>{ if(!cur.has(k)) del.push(k); });
@@ -6179,7 +6201,8 @@ async function persist(){
       if(put.length||del.length){ try{ await write(); }catch(e){ if(e&&/Quota/i.test(e.name||e.message||"")){ await idbFreeSpace(); await write(); } else throw e; } }
       IDB_SNAP=cur; };
     IDB_BUSY=IDB_BUSY.then(run,run); await IDB_BUSY; }
-  else if(idb){ await new Promise((res,rej)=>{ const tx=idb.transaction("kv","readwrite"); tx.objectStore("kv").put(JSON.parse(JSON.stringify(STORE)),"store"); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+  else if(idb){ const w=()=>Promise.race([new Promise((res,rej)=>{ const tx=idb.transaction("kv","readwrite"); tx.objectStore("kv").put(JSON.parse(JSON.stringify(STORE)),"store"); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error||new Error("Penyimpanan dibatalkan")); }),new Promise((_,rej)=>setTimeout(()=>rej(new Error("Penyimpanan di perangkat tidak merespons. Tutup tab/jendela K3 lain lalu coba lagi.")),20000))]);
+    try{ await w(); }catch(e){ if(e&&/Quota/i.test(e.name||e.message||"")){ await idbFreeSpace(); await w(); } else throw e; } }
   else { try{ localStorage.setItem("kartuAPD.store",JSON.stringify(STORE)); }catch(e){ throw {code:"quota_exceeded",message:"Penyimpanan penuh. Simpan backup lalu hubungi IT."}; } }
   if(typeof syKick==="function") syKick();
 }
@@ -6241,7 +6264,7 @@ function doRestore(file){
 // ---------- boot ----------
 S.route=readRoute(); render();
 (async()=>{
-  try{ idb=await idbOpen(); const v=await idbGet(); STORE=v||{}; if(!IDB_PERDOC){ try{ await idbMigrate(); }catch(e){ console.error("migrasi penyimpanan",e); } } STORAGE_LABEL=IDB_PERDOC?"IndexedDB browser, disimpan per data":"IndexedDB browser"; if(IDB_PERDOC){ try{ const tx=idb.transaction("kv","readwrite"), kv=tx.objectStore("kv"), q=kv.get("store_lama_sejak"); q.onsuccess=()=>{ const t=q.result; if(t&&Date.now()-new Date(t).getTime()>7*864e5) kv.delete("store"); }; }catch(e){} } }
+  try{ idb=await idbOpen(); const v=await idbGet(); STORE=v||{}; if(IDB_REVERT){ try{ await idbRevert(); }catch(e){ console.error("kembali ke penyimpanan lama",e); } } STORAGE_LABEL="IndexedDB browser"; }
   catch(e){ idb=null; try{ STORE=JSON.parse(localStorage.getItem("kartuAPD.store")||"{}"); STORAGE_LABEL="localStorage browser"; }catch(e2){ STORE={}; STORAGE_LABEL="memori sementara – data hilang saat ditutup, segera simpan backup"; } }
   try{ S._keysPrev=new Set(Object.keys(STORE)); if(unitMigrate()) await persist(); }catch(e){}
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
