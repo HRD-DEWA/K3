@@ -1036,7 +1036,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.1 · 24/11/2026 (perbaikan simpan pemeriksaan HP)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.2 · 25/11/2026 (tanggal terpakai tidak otomatis)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
@@ -2203,7 +2203,7 @@ function ckSave(force){
    <p>${out.length?`${out.length} item dikeluarkan dari kotak: terpakai ${c("terpakai")}, hilang ${c("hilang")}, ditarik kadaluarsa ${c("exp")}.`:"Semua item ada. Tidak ada item yang dikeluarkan."}</p>
    ${nTm?`<p>${nTm} item temuan (belum tercatat di program) dicatat untuk ditindaklanjuti di halaman kotak.</p>`:""}
    <p class="hint">Item yang dikeluarkan dihapus dari isi kotak dan tercatat di riwayat item keluar. Kekurangan dibanding standar bisa dilihat di halaman kotak untuk permintaan isi ulang ke Gudang Sparepart.</p></div>${foot("Simpan pemeriksaan")}`, async ()=>{
-    const pid=uidGen("pm"), keluar=out.map(x=>{ const v=ck.st[x.bc]; return {bc:x.bc,kode:x.kode,exp:x.exp||"",kat:v.k,nrp:v.k==="terpakai"?(v.nrp||"").trim():"",pengguna:v.k==="terpakai"?(v.nama||"").trim():"",alasan:(v.alasan||"").trim(),tgl:ck.tgl,tglPakai:v.k==="terpakai"?(v.tglPakai||ck.tgl):"",pid,petugas:S.uid}; });
+    const pid=uidGen("pm"), keluar=out.map(x=>{ const v=ck.st[x.bc]; return {bc:x.bc,kode:x.kode,exp:x.exp||"",kat:v.k,nrp:v.k==="terpakai"?(v.nrp||"").trim():"",pengguna:v.k==="terpakai"?(v.nama||"").trim():"",alasan:(v.alasan||"").trim(),tgl:ck.tgl,tglPakai:v.k==="terpakai"?(v.tglPakai||""):"",pid,petugas:S.uid}; });
     const d=clone(b); delete d._id; const ids=new Set(keluar.map(x=>x.bc));
     d.isi=(d.isi||[]).filter(x=>!ids.has(x.bc)); d.keluar=(d.keluar||[]).concat(keluar);
     (d.pemeriksaan=d.pemeriksaan||[]).push({id:pid,tgl:ck.tgl,petugas:S.uid,sebelum:(b.isi||[]).length,scan:Object.keys(ck.scan).length,diperiksa:(b.isi||[]).length,keluar:keluar.map(x=>({bc:x.bc,kat:x.kat})),catatan:ck.catatan.trim(),pemeriksa:ck.pem.trim(),pemNrp:ck.pemNrp.trim(),pic:ck.pic.trim(),picNrp:ck.picNrp.trim()});
@@ -3291,7 +3291,7 @@ function lkSave(force){
   const isi=b.isi||[], out=isi.filter(x=>KELUAR[lkStOf(x.bc)]), c=k=>out.filter(x=>lk.st[x.bc].k===k).length, nScan=isi.filter(x=>lk.scan[x.bc]).length;
   openDlg(`<header><h2>Simpan pemeriksaan ${esc(lk.kode)}?</h2></header><div class="body"><p style="margin-top:0">${fmt(lk.tgl)} · ${esc(lk.pem)} · ${isi.length} item diperiksa${nScan?`, ${nScan} di antaranya dipindai`:""}.</p>
    <p style="margin-bottom:0">${out.length?`${out.length} item dikeluarkan: terpakai ${c("terpakai")}, hilang ${c("hilang")}, ditarik ${c("exp")}.`:"Semua item ada."}</p></div>${foot("Simpan")}`, async ()=>{
-    const pid=uidGen("pm"), keluar=out.map(x=>{ const v=lk.st[x.bc]; return {bc:x.bc,kode:x.kode,exp:x.exp||"",kat:v.k,nrp:v.k==="terpakai"?(v.nrp||"").trim():"",pengguna:v.k==="terpakai"?(v.nama||"").trim():"",alasan:(v.alasan||"").trim(),tgl:lk.tgl,tglPakai:v.k==="terpakai"?(v.tglPakai||lk.tgl):"",pid,petugas:S.uid}; });
+    const pid=uidGen("pm"), keluar=out.map(x=>{ const v=lk.st[x.bc]; return {bc:x.bc,kode:x.kode,exp:x.exp||"",kat:v.k,nrp:v.k==="terpakai"?(v.nrp||"").trim():"",pengguna:v.k==="terpakai"?(v.nama||"").trim():"",alasan:(v.alasan||"").trim(),tgl:lk.tgl,tglPakai:v.k==="terpakai"?(v.tglPakai||""):"",pid,petugas:S.uid}; });
     const pm={id:pid,tgl:lk.tgl,petugas:S.uid,sebelum:isi.length,scan:nScan,keluar:keluar.map(x=>({bc:x.bc,kat:x.kat})),catatan:lk.catatan.trim(),pemeriksa:lk.pem.trim(),pemNrp:lk.pemNrp.trim(),pic:lk.pic.trim(),picNrp:lk.picNrp.trim(),lapangan:true,diperiksa:isi.length};
     const tm=tmCollect(lk.baru,lk.tgl,pid); if(tm.length) pm.temuan=tm.length; const sl=slCollect("lk"); if(sl.length) pm.salah=sl; if(tm.length) pm.temuanList=tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}));
     const d=STORE["kotak/"+lk.kode]; if(tm.length) d.temuan=(d.temuan||[]).concat(tm); lapApplyRemove(d,{keluar}); d.keluar=(d.keluar||[]).concat(keluar); (d.pemeriksaan=d.pemeriksaan||[]).push(pm); if(pm.pic){ d.picNama=pm.pic; d.picNrp=pm.picNrp; }
@@ -3482,9 +3482,9 @@ async function ckFixSave(){ const ck=S.ck, fx=ck.fix, b=S.kotak.get(ck.kode); if
   const now=new Date().toISOString(), nm=x=>itemOf(x.kode).nama+" ("+x.bc+")", lbl=k=>k==="ada"?"Ada":(KELUAR[k]||[k])[0];
   rows.forEach(x=>{ const o=fx.orig[x.bc]||{k:"ada"}, n=ck.st[x.bc]&&ck.st[x.bc].k?ck.st[x.bc]:(ck.scan[x.bc]?{k:"ada"}:o), nk=n.k||o.k;
     const det=v=>JSON.stringify({k:v.k,nrp:v.nrp||"",nama:v.nama||"",alasan:v.alasan||"",tglPakai:v.tglPakai||""}); if(nk===o.k&&(nk==="ada"||det(n)===det(o))) return;
-    if(o.k==="ada"&&KELUAR[nk]){ d.isi=(d.isi||[]).filter(i=>i.bc!==x.bc); (d.keluar=d.keluar||[]).push({bc:x.bc,kode:x.kode,exp:x.exp||"",kat:nk,nrp:nk==="terpakai"?(n.nrp||""):"",pengguna:nk==="terpakai"?(n.nama||""):"",alasan:n.alasan||"",tglPakai:nk==="terpakai"?(n.tglPakai||p.tgl):"",tgl:p.tgl,pid:fx.pid,petugas:S.uid,koreksi:now}); changes.push(nm(x)+": Ada → "+lbl(nk)); }
+    if(o.k==="ada"&&KELUAR[nk]){ d.isi=(d.isi||[]).filter(i=>i.bc!==x.bc); (d.keluar=d.keluar||[]).push({bc:x.bc,kode:x.kode,exp:x.exp||"",kat:nk,nrp:nk==="terpakai"?(n.nrp||""):"",pengguna:nk==="terpakai"?(n.nama||""):"",alasan:n.alasan||"",tglPakai:nk==="terpakai"?(n.tglPakai||""):"",tgl:p.tgl,pid:fx.pid,petugas:S.uid,koreksi:now}); changes.push(nm(x)+": Ada → "+lbl(nk)); }
     else if(KELUAR[o.k]&&nk==="ada"){ d.keluar=(d.keluar||[]).filter(k=>!(k.bc===x.bc&&k.pid===fx.pid)); if(!(d.isi||[]).some(i=>i.bc===x.bc)) (d.isi=d.isi||[]).push({bc:x.bc,kode:x.kode,exp:x.exp||"",masuk:""}); changes.push(nm(x)+": "+lbl(o.k)+" → Ada (dikembalikan ke kotak)"); }
-    else if(KELUAR[o.k]&&KELUAR[nk]){ const e=(d.keluar||[]).find(k=>k.bc===x.bc&&k.pid===fx.pid); if(e) Object.assign(e,{kat:nk,nrp:nk==="terpakai"?(n.nrp||""):"",pengguna:nk==="terpakai"?(n.nama||""):"",alasan:n.alasan||"",tglPakai:nk==="terpakai"?(n.tglPakai||p.tgl):"",diubah:now}); changes.push(nm(x)+": "+lbl(o.k)+(o.k!==nk?" → "+lbl(nk):" (keterangan diperbarui)")); } });
+    else if(KELUAR[o.k]&&KELUAR[nk]){ const e=(d.keluar||[]).find(k=>k.bc===x.bc&&k.pid===fx.pid); if(e) Object.assign(e,{kat:nk,nrp:nk==="terpakai"?(n.nrp||""):"",pengguna:nk==="terpakai"?(n.nama||""):"",alasan:n.alasan||"",tglPakai:nk==="terpakai"?(n.tglPakai||""):"",diubah:now}); changes.push(nm(x)+": "+lbl(o.k)+(o.k!==nk?" → "+lbl(nk):" (keterangan diperbarui)")); } });
   if((ck.catatan||"")!==(p.catatan||"")){ changes.push("Catatan diperbarui"); p.catatan=ck.catatan; }
   const rowsTm=(ck.baru||[]).filter(r=>String(r.bc||"").trim()||(r.kode&&r.kode!=="_lain")||String(r.nama||"").trim());
   if(JSON.stringify((ck.baru||[]).map(({_id,...r})=>r))!==fx.origTm){ const keep=new Set(), fresh=[];
@@ -3819,7 +3819,7 @@ function kxUpdCell(x){ const p=kxPem(x), on=kxUpd(x), tgl=p?p.updTgl:x.updTgl;
 function keluarTable(rows,withBox){ const ed=S.canWrite;
   return `<div class="tablewrap"><table><thead><tr><th>Tgl. periksa</th>${withBox?"<th>Kotak</th>":""}<th>Barcode</th><th>Item</th><th>Kategori</th><th>Tgl. terpakai</th><th>Pengguna</th><th>Alasan / keterangan</th><th>Program P3K</th>${ed?"<th></th>":""}</tr></thead><tbody>
   ${rows.map(x=>`<tr><td class="num">${fmt(x.tgl)}</td>${withBox?`<td class="num"><button class="linkbtn tpn" data-gobox="${esc(x._box)}">${esc(x._box)}</button><div class="muted" style="font-size:12.5px">${esc([(S.kotak.get(x._box)||{}).bagian,(S.kotak.get(x._box)||{}).penempatan].filter(Boolean).join(" · "))}</div></td>`:""}<td class="num">${esc(x.bc)}</td><td>${esc(itemOf(x.kode).nama)}</td>
-   <td><span class="chip ${KELUAR[x.kat][1]}">${KELUAR[x.kat][0]}</span></td><td class="num">${x.kat==="terpakai"?fmt(x.tglPakai||x.tgl):"–"}</td><td>${x.pengguna?esc(x.pengguna)+(x.nrp?`<div class="muted" style="font-size:12.5px">NRP ${esc(x.nrp)}</div>`:""):"–"}</td><td>${esc(x.alasan||"–")}</td><td class="${kxUpd(x)?"":"kxbelum"}">${kxUpdCell(x)}</td>
+   <td><span class="chip ${KELUAR[x.kat][1]}">${KELUAR[x.kat][0]}</span></td><td class="num">${x.kat==="terpakai"&&pakaiRaw(x)?fmt(pakaiRaw(x)):"–"}</td><td>${x.pengguna?esc(x.pengguna)+(x.nrp?`<div class="muted" style="font-size:12.5px">NRP ${esc(x.nrp)}</div>`:""):"–"}</td><td>${esc(x.alasan||"–")}</td><td class="${kxUpd(x)?"":"kxbelum"}">${kxUpdCell(x)}</td>
    ${ed?`<td><button class="btn small" data-act="kx-edit" data-box="${esc(x._box)}" data-i="${x._i}">Ubah</button></td>`:""}</tr>`).join("")}</tbody></table></div>`; }
 const BULAN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 function kxMatch(x,bg){ if(!bg) return true; if(bg.startsWith("g:")) return x._grp===bg.slice(2); return x._bag===(bg.startsWith("b:")?bg.slice(2):bg); }
@@ -3850,14 +3850,14 @@ function viewP3kLog(){
    ${(()=>{ const N=kxNotes(); return N.length?`<section class="panel"><h2>Catatan pemeriksaan (${N.length})</h2><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Kotak</th><th>Bagian · penempatan</th><th>Pemeriksa</th><th>Catatan, item belum tercatat & salah penempatan</th></tr></thead><tbody>${N.map(n=>`<tr><td class="num">${fmt(n.p.tgl)}</td><td class="num"><button class="linkbtn tpn" data-gobox="${esc(n.b.kode)}">${esc(n.b.kode)}</button></td><td style="font-size:13px">${esc(n.grp)}</td><td>${esc(n.p.pemeriksa||"")}</td><td style="font-size:13px">${kxNotesTxt(n).map(esc).join("<br>")}</td></tr>`).join("")}</tbody></table></div></section>`:""; })()}`;
 }
 function exportP3kLog(){ const {rows}=kxRows(); const out=[["Tgl. pemeriksaan","Kotak","Bagian","Penempatan","Barcode","No. Stock","Item","Kategori","Tgl. terpakai","NRP pengguna","Nama pengguna","Alasan / keterangan","Tgl. kadaluarsa"]];
-  rows.slice().reverse().forEach(x=>out.push([fmt(x.tgl),x._box,x._bag,x._pen,x.bc,x.kode,itemOf(x.kode).nama,KELUAR[x.kat][0],x.kat==="terpakai"?fmt(x.tglPakai||x.tgl):"",x.nrp||"",x.pengguna||"",x.alasan||"",x.exp?fmt(x.exp):""]));
+  rows.slice().reverse().forEach(x=>out.push([fmt(x.tgl),x._box,x._bag,x._pen,x.bc,x.kode,itemOf(x.kode).nama,KELUAR[x.kat][0],x.kat==="terpakai"&&pakaiRaw(x)?fmt(pakaiRaw(x)):"",x.nrp||"",x.pengguna||"",x.alasan||"",x.exp?fmt(x.exp):""]));
   exportCsv("item-keluar-p3k-"+todayISO()+".csv",out); }
 function dlgKeluar(box,i){ const b=S.kotak.get(box), x=b&&(b.keluar||[])[i]; if(!x) return;
   const o=(v,l,c)=>`<option value="${v}" ${c===v?"selected":""}>${l}</option>`;
   openDlg(`<header><h2>Ubah item keluar</h2><p class="hint" style="margin:4px 0 0">${esc(box)} · ${esc(x.bc)} · ${esc(itemOf(x.kode).nama)}</p></header><div class="body"><div class="grid2">
    <label class="f"><span>Kategori</span><select name="kat">${Object.entries(KELUAR).map(([k,[l]])=>o(k,l,x.kat)).join("")}</select></label>
    <label class="f"><span>Tanggal pemeriksaan</span><input type="date" name="tgl" value="${esc(x.tgl||"")}" max="${todayISO()}" required></label>
-   <label class="f"><span>Tanggal terpakai</span><input type="date" name="tglPakai" value="${esc(x.tglPakai||"")}" max="${todayISO()}"></label><span></span>
+   <label class="f"><span>Tanggal terpakai</span><input type="date" name="tglPakai" value="${esc(pakaiRaw(x))}" max="${todayISO()}"></label><span></span>
    ${picker("kx-nrp","NRP pengguna",x.nrp||"")}<label class="f"><span>Nama pengguna</span><input type="text" name="pengguna" value="${esc(x.pengguna||"")}"></label>
    <label class="f full"><span>Alasan / keterangan</span><input type="text" name="alasan" value="${esc(x.alasan||"")}"></label></div>
    <p class="hint" style="margin:10px 0 0">Tanggal terpakai dan pengguna hanya dipakai untuk kategori Terpakai.</p>
@@ -3878,7 +3878,7 @@ function kxBack(box,i){ const b=S.kotak.get(box), x=b&&(b.keluar||[])[i]; if(!x)
 function kxDocHtml(){ const {rows,y,k,bg}=kxRows(), list=rows.slice().reverse(); let groups=new Map();
   list.forEach(x=>{ const g=groups.get(x._grp)||[]; g.push(x); groups.set(x._grp,g); }); groups=new Map([...groups.entries()].sort((a,c)=>a[0].localeCompare(c[0],"id")));
   const W=[7,17,17,19,22,29,15,15,24,25], c=(g,kk)=>g.filter(x=>x.kat===kk).length;
-  const rowH=(x,i)=>`<tr><td class="c">${i+1}</td><td class="c">${fmt(x.tgl)}</td><td class="c">${x.kat==="terpakai"?fmt(x.tglPakai||x.tgl):"–"}</td><td class="c">${esc(x._box)}</td><td>${esc(x.bc)}</td><td>${esc(itemOf(x.kode).nama)}</td><td class="c">${esc(KELUAR[x.kat][0].replace(/ \(.*\)/,""))}</td><td class="c">${esc(x.nrp||"")}</td><td>${esc(x.pengguna||"")}</td><td>${esc(x.alasan||"")}</td></tr>`;
+  const rowH=(x,i)=>`<tr><td class="c">${i+1}</td><td class="c">${fmt(x.tgl)}</td><td class="c">${x.kat==="terpakai"&&pakaiRaw(x)?fmt(pakaiRaw(x)):"–"}</td><td class="c">${esc(x._box)}</td><td>${esc(x.bc)}</td><td>${esc(itemOf(x.kode).nama)}</td><td class="c">${esc(KELUAR[x.kat][0].replace(/ \(.*\)/,""))}</td><td class="c">${esc(x.nrp||"")}</td><td>${esc(x.pengguna||"")}</td><td>${esc(x.alasan||"")}</td></tr>`;
   const head=`<thead><tr><th>No</th><th>Tgl. periksa</th><th>Tgl. terpakai</th><th>Kotak</th><th>Barcode</th><th>Item</th><th>Kategori</th><th>NRP</th><th>Pengguna</th><th>Alasan / ket.</th></tr></thead>`;
   const tbl=g=>`<table class="ktb"><colgroup>${W.map(w=>`<col style="width:${w}mm">`).join("")}</colgroup>${head}<tbody>${g.map(rowH).join("")}</tbody></table>`;
   return `<div class="kdoc"><table class="hhd"><tr><td><div class="hco">${esc(unitCo())} · Departemen HRD / K3</div><div class="hti">LAPORAN PEMAKAIAN & ITEM KELUAR KOTAK P3K</div>
@@ -3899,7 +3899,7 @@ async function kxDownload(fmtX){ const {rows,y,bg}=kxRows(); if(!rows.length&&!k
   }catch(e){ console.error(e); toast("File gagal dibuat. "+(e.message||"")); } finally{ if(st) st.remove(); } }
 function kxOds(){ const {rows,y,k,bg}=kxRows(), list=rows.slice().reverse(); let groups=new Map(); list.forEach(x=>{ const g=groups.get(x._grp)||[]; g.push(x); groups.set(x._grp,g); }); groups=new Map([...groups.entries()].sort((a,c)=>a[0].localeCompare(c[0],"id")));
   const head=["No","Tgl. pemeriksaan","Tgl. terpakai","Kotak","Bagian","Penempatan","Barcode","No. Stock","Item","Kategori","NRP","Pengguna","Alasan / keterangan"], wid=[0.8,2.3,2.3,2.2,3.2,3.2,2.6,1.8,3.6,2.4,1.6,3.4,4.5];
-  const dr=g=>g.map((x,i)=>[i+1,fmt(x.tgl),x.kat==="terpakai"?fmt(x.tglPakai||x.tgl):"",x._box,x._bag,x._pen,x.bc,x.kode,itemOf(x.kode).nama,KELUAR[x.kat][0],x.nrp||"",x.pengguna||"",x.alasan||""]);
+  const dr=g=>g.map((x,i)=>[i+1,fmt(x.tgl),x.kat==="terpakai"&&pakaiRaw(x)?fmt(pakaiRaw(x)):"",x._box,x._bag,x._pen,x.bc,x.kode,itemOf(x.kode).nama,KELUAR[x.kat][0],x.nrp||"",x.pengguna||"",x.alasan||""]);
   const sub=`Periode: ${kxPeriod(y)}  |  ${bg?kxLabel(bg):"Keseluruhan"}${k?"  |  Kategori: "+KELUAR[k][0]:""}  |  Dicetak: ${fmt(todayISO())}`;
   const sheets=[]; const c=(g,kk)=>g.filter(x=>x.kat===kk).length;
   sheets.push({name:"Ringkasan",title:"LAPORAN PEMAKAIAN & ITEM KELUAR KOTAK P3K",sub,head:["Bagian","Penempatan","Kotak","Terpakai","Hilang","Ditarik","Jumlah"],widths:[4.5,4.5,5,2,2,2,2],
@@ -5412,6 +5412,8 @@ document.addEventListener("click",ev=>{ const t=ev.target;
 document.addEventListener("change",ev=>{ if(ev.target.id!=="restoreMissFile"||!ev.target.files[0]) return; const f=ev.target.files[0]; ev.target.value=""; const fr=new FileReader();
   fr.onload=()=>{ let p; try{ p=JSON.parse(fr.result); }catch(e){ toast("File tidak dapat dibaca."); return; } if(!p||!p.data){ toast("File ini bukan file backup K3 Dewasutratex."); return; } dlgRestoreMissing(p.data,"file "+f.name+(p.dibuat?" ("+fmt(String(p.dibuat).slice(0,10))+")":"")); }; fr.readAsText(f); });
 
+// tanggal terpakai: kosong bila tidak diisi (data lama yang otomatis memakai tanggal pemeriksaan tanpa NRP/pengguna dianggap kosong)
+function pakaiRaw(x){ if(!x||!x.tglPakai) return ""; if(x.tglPakai===x.tgl&&!String(x.nrp||"").trim()&&!String(x.pengguna||"").trim()) return ""; return x.tglPakai; }
 // ---------- konfirmasi saat scan item yang seharusnya ditarik ----------
 function tarikPerlu(x){ if(!x||!x.exp) return false; const e=expSt(x.exp); return e.cls==="red"||e.cls==="amber"; }
 function tarikTxt(x){ if(!x||!x.exp) return ""; const e=expSt(x.exp), d=daysBetween(todayISO(),x.exp); return e.cls==="red"?`sudah kadaluarsa sejak ${fmt(x.exp)}`:`kadaluarsa ${fmt(x.exp)} (${d} hari lagi, sudah masuk masa tarik H-6 bulan)`; }
