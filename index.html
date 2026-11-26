@@ -752,6 +752,7 @@ body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a
  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
  body.laproute #bnav,body.lvpend #bnav,body.lvpic #bnav,body.printing #bnav{display:none} nav.side .qsbtn{display:none}body.laproute,body.lvpend,body.lvpic{padding-bottom:0} }
 .linkbtn.kxc{font-size:13px;color:var(--muted)}.linkbtn.kxc.on{color:var(--green);font-weight:700}
+.sypend{font-size:12.5px;margin-top:4px;max-height:120px;overflow:auto}
 </style>
 </head>
 <body>
@@ -1037,7 +1038,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.3 · 26/11/2026 (penyimpanan kembali ke sistem semula & penanda cetak laporan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.4 · 26/11/2026 (diagnosa data belum terkirim)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
@@ -6030,6 +6031,7 @@ function syRestoreNik(r,l){ if(Array.isArray(r)&&Array.isArray(l)){ return r.map
   if(r&&l&&typeof r==="object"&&typeof l==="object"){ const o=Object.assign({},r); for(const k in l){ if(/^nik$/i.test(k)&&!(k in r)) o[k]=l[k]; } for(const k in r) if(l[k]!==undefined) o[k]=syRestoreNik(r[k],l[k]); return o; } return r; }
 // ---- status
 function syDirty(){ const keys=new Set([...syncKeys(),...Object.keys(SY.meta.base)]); let n=0; keys.forEach(k=>{ if((syLevel()==="pic"&&!k.startsWith("respon/"))||syLevel()==="observer") return; if(syLocalJson(k)!==(SY.meta.base[k]??null)) n++; }); return n; }
+function syPendingKeys(){ const keys=new Set([...syncKeys(),...Object.keys(SY.meta.base)]), out=[]; keys.forEach(k=>{ if((syLevel()==="pic"&&!k.startsWith("respon/"))||syLevel()==="observer") return; if(syLocalJson(k)!==(SY.meta.base[k]??null)) out.push(k); }); return out; }
 function syOnline(){ return navigator.onLine&&Object.values(SY.live).some(Boolean); }
 function syState(){ if(!SY.user) return {c:"gray",t:SY.loaded?"Belum masuk":"Mode lokal"}; if(!SY.meta.joined) return {c:"gray",t:"Pilih sumber data"}; const n=syDirty();
   if(!navigator.onLine||!syOnline()) return {c:"red",t:"Offline"+(n?" · "+n+" menunggu":"")}; if(n||SY.busy) return {c:"amber",t:"Mengirim"+(n?" "+n:"")+"…"}; return {c:"green",t:"Online"}; }
@@ -6056,7 +6058,7 @@ function syErrText(e){ const c=(e&&e.code)||"", m=(e&&e.message)||String(e||"");
 function syUnsub(){ SY.unsub.forEach(f=>{ try{f();}catch(e){} }); SY.unsub=[]; SY.live={}; SY.ready={}; }
 function sySubscribe(){ syUnsub(); if(!SY.db||!SY.user||!SY.meta.joined||syLevel()==="pending") return;
   [...SYNC_COLS,"pengaturan"].forEach(col=>{ if((col==="track"||col==="penanda")&&!syTrackOK()){ SY.ready[col]=true; return; } if(syLevel()==="observer"&&(col==="karyawan"||col==="pembagian")){ SY.ready[col]=true; return; } const since=Math.max(0,(SY.meta.seen[col]||0)-120000); let q=SY.db.collection(col); if(since) q=q.where("_t",">",SY.fb.firestore.Timestamp.fromMillis(since));
-    const un=q.onSnapshot({includeMetadataChanges:true},async snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) await syApply(col,ch.map(c=>c.doc)); if(!snap.metadata.fromCache&&!SY.ready[col]){ SY.ready[col]=true; syKick(); } syBadge(); },err=>{ SY.err=err.message; SY.live[col]=false; syBadge(); });
+    const un=q.onSnapshot({includeMetadataChanges:true},async snap=>{ SY.live[col]=!snap.metadata.fromCache; const ch=snap.docChanges().filter(c=>c.type!=="removed"&&!c.doc.metadata.hasPendingWrites); if(ch.length) await syApply(col,ch.map(c=>c.doc)); if(!snap.metadata.fromCache&&!SY.ready[col]){ SY.ready[col]=true; syKick(); } syBadge(); },err=>{ SY.err="Tidak bisa membaca data "+col+" dari server: "+err.message+" — periksa Rules Firestore."; SY.colErr=Object.assign(SY.colErr||{},{[col]:err.message}); SY.live[col]=false; syBadge(); });
     SY.unsub.push(un); });
   syKick(); }
 const SY_PENDING=[];
@@ -6088,7 +6090,7 @@ async function syPush(){ if(!SY.db||!SY.user||!SY.meta.joined||!navigator.onLine
         if(lj.length>950000){ SY.err="Data "+k+" terlalu besar untuk disinkronkan"; return; }
         const hs=new Set(); syExt(syStrip(STORE[k]),hs); for(const h of hs) await syPutBlob(h);
         await SY.db.collection(col).doc(id).set({j:lj,_t:SY.fb.firestore.FieldValue.serverTimestamp(),_by:SY.dev}); SY.meta.base[k]=lj; })();
-      await Promise.race([work,new Promise(r=>setTimeout(r,20000))]).catch(e=>{ SY.err=e.message||String(e); }); delete SY.inflight[k]; n++; if(n%20===0){ syMetaSave(); syBadge(); } }
+      await Promise.race([work,new Promise(r=>setTimeout(r,20000))]).catch(e=>{ SY.err=(e.message||String(e))+" ("+k+")"; SY.failKey=Object.assign(SY.failKey||{},{[k]:e.message||String(e)}); }); delete SY.inflight[k]; n++; if(n%20===0){ syMetaSave(); syBadge(); } }
     if(refetch.size){ refetch.forEach(c=>{ delete SY.meta.seen[c]; }); SY.err="Data lokal yang hilang diambil ulang dari server ("+[...refetch].join(", ")+")."; setTimeout(()=>{ if(SY.db&&SY.user) sySubscribe(); },300); }
     syMetaSave(); if(SY_PENDING.length){ const p=SY_PENDING.splice(0); for(const [col,d] of p) await syApply(col,[d]); }
     if(!syDirty()){ SY.lastOk=new Date().toTimeString().slice(0,5); if(SY.force&&[...SYNC_COLS,"pengaturan"].every(c=>SY.ready[c])){ SY.force=false; toast("Data server sudah disamakan dengan perangkat ini."); } }
@@ -6120,7 +6122,7 @@ async function syJoin(m){ if(m==="up"&&!syIsAdmin()) m="down";
   SY.meta.joined=m; SY.meta.v=SY_VER; syMetaSave(); syRole(); sySubscribe(); toast(m==="down"?"Mengambil data dari server…":"Mengirim data ke server…"); }
 function dlgSync(){ const s=syState(), n=syDirty();
   openDlg(`<header><h2>Sinkronisasi online</h2></header><div class="body"><p style="margin:0 0 10px"><span class="syncb ${s.c}" style="display:inline-flex"><i></i><span>${esc(s.t)}</span></span></p>
-   <dl class="kv"><dt>Akun</dt><dd>${SY.user?esc(SY.user.email||""):"belum masuk"}</dd><dt>Internet</dt><dd>${navigator.onLine?"tersambung":"tidak ada"}</dd><dt>Belum terkirim</dt><dd>${n} data</dd><dt>Sinkron terakhir</dt><dd>${esc(SY.lastOk||"–")}</dd><dt>Nama</dt><dd>${esc(akMyName()||"–")} ${SY.user?`<button type="button" class="linkbtn" data-act="ak-name">ubah</button>`:""}</dd><dt>Level akses</dt><dd>${SY.user?esc(akLevelName(syLevel())):"–"}</dd><dt>Peran perangkat</dt><dd>${SY.meta.joined==="up"?"perangkat utama":SY.meta.joined==="down"?"perangkat tim":"–"}</dd></dl>
+   <dl class="kv"><dt>Akun</dt><dd>${SY.user?esc(SY.user.email||""):"belum masuk"}</dd><dt>Internet</dt><dd>${navigator.onLine?"tersambung":"tidak ada"}</dd><dt>Belum terkirim</dt><dd>${n} data${n&&n<=30?`<div class="sypend">${syPendingKeys().map(k=>{ const c=k.split("/")[0]; return `<div><span class="num">${esc(k)}</span> <span class="muted">${!SY.ready[c]?`— menunggu data ${esc(c)} dari server${SY.colErr&&SY.colErr[c]?" (ditolak server)":""}`:SY.failKey&&SY.failKey[k]?"— "+esc(SY.failKey[k]):""}</span></div>`; }).join("")}</div>`:""}</dd><dt>Sinkron terakhir</dt><dd>${esc(SY.lastOk||"–")}</dd><dt>Nama</dt><dd>${esc(akMyName()||"–")} ${SY.user?`<button type="button" class="linkbtn" data-act="ak-name">ubah</button>`:""}</dd><dt>Level akses</dt><dd>${SY.user?esc(akLevelName(syLevel())):"–"}</dd><dt>Peran perangkat</dt><dd>${SY.meta.joined==="up"?"perangkat utama":SY.meta.joined==="down"?"perangkat tim":"–"}</dd></dl>
    ${SY.err?`<p class="hint" style="color:var(--amber);margin:8px 0 0">Catatan: ${esc(SY.err)}</p>`:""}
    <p class="hint" style="margin:10px 0 0">Yang disinkronkan: karyawan & kartu APD (tanpa NIK), pembagian APD, kotak P3K, APAR, peta, HIRADC, kecelakaan & investigasi. NIK tidak pernah dikirim; track proses hanya tersinkron antar perangkat utama milik Akses Level III. Saat offline, program tetap bisa dipakai dan perubahan dikirim otomatis begitu internet kembali.</p>
    <div class="row" style="margin-top:12px;gap:6px">${SY.user?`<button type="button" class="btn" data-act="sy-now">Sinkronkan sekarang</button><button type="button" class="btn" data-act="sy-role">Ganti peran perangkat</button><button type="button" class="btn" data-act="sy-out">Keluar</button>`:`<button type="button" class="btn primary" data-act="sy-in">Masuk</button>`}</div>
