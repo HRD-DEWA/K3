@@ -753,6 +753,7 @@ body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a
  body.laproute #bnav,body.lvpend #bnav,body.lvpic #bnav,body.printing #bnav{display:none} nav.side .qsbtn{display:none}body.laproute,body.lvpend,body.lvpic{padding-bottom:0} }
 .linkbtn.kxc{font-size:13px;color:var(--muted)}.linkbtn.kxc.on{color:var(--green);font-weight:700}
 .sypend{font-size:12.5px;margin-top:4px;max-height:120px;overflow:auto}
+.itmout td{opacity:.85}.itmout td:first-child{text-decoration:line-through;text-decoration-color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1038,7 +1039,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.5 · 26/11/2026 (tanggal expire item ditarik ditampilkan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.6 · 27/11/2026 (item ditarik tampil di master item)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
@@ -4306,13 +4307,20 @@ function dlgIsiEdit(box,bc){ const b=S.kotak.get(box), x=b&&(b.isi||[]).find(y=>
     await S.db.doc("kotak/"+box).set(d); toast("Data "+nb+" disimpan."); });
 }
 document.addEventListener("click",ev=>{ const t=ev.target.closest('[data-act="isi-edit"]'); if(!t) return; dlgIsiEdit(t.dataset.box,t.dataset.bc); });
-function itemBcSection(kode){ const it=itemOf(kode), rows=[]; boxList().forEach(b=>(b.isi||[]).forEach(x=>{ if(x.kode===kode) rows.push({b,x}); }));
-  if(!rows.length) return ""; rows.sort((a,c)=>(a.x.exp||"9999").localeCompare(c.x.exp||"9999")||(a.b.urut||999)-(c.b.urut||999));
-  return `<section class="panel" style="padding:12px 12px 4px"><h2>Barcode ${esc(it.nama)} di semua kotak (${rows.length})</h2><p class="hint" style="margin:0 0 8px">Diurutkan dari tanggal kadaluarsa terdekat. Klik Ubah untuk memperbaiki barcode atau tanggal kadaluarsa.</p>
-   <div class="tablewrap"><table><thead><tr><th>Barcode</th><th>Kotak</th><th>Bagian · penempatan</th><th>Exp.</th><th>Masuk</th>${S.canWrite?"<th></th>":""}</tr></thead><tbody>
-   ${rows.map(({b,x})=>{ const e=expSt(x.exp); return `<tr><td class="num">${esc(x.bc)}</td><td class="num"><button class="linkbtn tpn" data-gobox="${esc(b.kode)}">${esc(b.kode)}</button></td><td>${esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–")}</td>
-    <td>${e?`<span class="chip ${e.cls}">${e.cls==="green"?fmt(x.exp):e.txt+" · "+fmt(x.exp)}</span>`:(it.exp?`<span class="chip amber">Belum diisi</span>`:"–")}</td><td class="num">${x.masuk?fmt(x.masuk):"–"}</td>
-    ${S.canWrite?`<td><button class="btn small" data-act="isi-edit" data-box="${esc(b.kode)}" data-bc="${esc(x.bc)}">Ubah</button></td>`:""}</tr>`; }).join("")}</tbody></table></div></section>`; }
+function itemBcSection(kode){ const it=itemOf(kode), rows=[], out=[], F=S.itmF||"tarik"; boxList().forEach(b=>{ (b.isi||[]).forEach(x=>{ if(x.kode===kode) rows.push({b,x}); }); (b.keluar||[]).forEach(x=>{ if(x.kode===kode) out.push({b,x}); }); });
+  if(!rows.length&&!out.length) return ""; rows.sort((a,c)=>(a.x.exp||"9999").localeCompare(c.x.exp||"9999")||(a.b.urut||999)-(c.b.urut||999));
+  const outF=out.filter(({x})=>F==="semua"?true:F==="isi"?false:x.kat==="exp").sort((a,c)=>(c.x.tgl||"").localeCompare(a.x.tgl||"")||(a.x.exp||"9999").localeCompare(c.x.exp||"9999"));
+  const showIsi=F!=="tarikonly", nT=out.filter(o=>o.x.kat==="exp").length;
+  const expCell=x=>{ const e=expSt(x.exp); return e?`<span class="chip ${e.cls}">${e.cls==="green"?fmt(x.exp):e.txt+" · "+fmt(x.exp)}</span>`:(it.exp?`<span class="chip amber">Belum diisi</span>`:"–"); };
+  return `<section class="panel" style="padding:12px 12px 4px"><div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start"><div><h2 style="margin:0">Barcode ${esc(it.nama)} (${rows.length} di kotak${nT?`, ${nT} sudah ditarik`:""})</h2><p class="hint" style="margin:4px 0 8px">Item di kotak diurutkan dari tanggal kadaluarsa terdekat; item yang sudah ditarik tetap ditampilkan dengan tanggal kadaluarsa dan tanggal penarikannya.</p></div>
+   <select data-itmf aria-label="Tampilkan"><option value="tarik" ${F==="tarik"?"selected":""}>Di kotak + sudah ditarik</option><option value="isi" ${F==="isi"?"selected":""}>Hanya yang di kotak</option><option value="tarikonly" ${F==="tarikonly"?"selected":""}>Hanya yang sudah ditarik</option><option value="semua" ${F==="semua"?"selected":""}>Semua (termasuk terpakai / hilang)</option></select></div>
+   <div class="tablewrap"><table><thead><tr><th>Barcode</th><th>Kotak</th><th>Bagian · penempatan</th><th>Status</th><th>Exp.</th><th>Masuk / tgl. keluar</th>${S.canWrite?"<th></th>":""}</tr></thead><tbody>
+   ${showIsi?rows.map(({b,x})=>`<tr><td class="num">${esc(x.bc)}</td><td class="num"><button class="linkbtn tpn" data-gobox="${esc(b.kode)}">${esc(b.kode)}</button></td><td>${esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–")}</td><td><span class="chip green">Di kotak</span></td>
+    <td>${expCell(x)}</td><td class="num">${x.masuk?"masuk "+fmt(x.masuk):"–"}</td>${S.canWrite?`<td><button class="btn small" data-act="isi-edit" data-box="${esc(b.kode)}" data-bc="${esc(x.bc)}">Ubah</button></td>`:""}</tr>`).join(""):""}
+   ${outF.map(({b,x})=>`<tr class="itmout"><td class="num">${esc(x.bc)}</td><td class="num"><button class="linkbtn tpn" data-gobox="${esc(b.kode)}">${esc(b.kode)}</button></td><td>${esc([b.bagian,b.penempatan].filter(Boolean).join(" · ")||"–")}</td><td><span class="chip ${KELUAR[x.kat][1]}">${esc(x.kat==="exp"?"Sudah ditarik":KELUAR[x.kat][0])}</span></td>
+    <td>${x.exp?`<span class="chip gray">${fmt(x.exp)}</span>`:"–"}</td><td class="num">${x.kat==="exp"?"ditarik ":"keluar "}${fmt(x.tgl)}</td>${S.canWrite?"<td></td>":""}</tr>`).join("")}
+   ${(showIsi?rows.length:0)+outF.length?"":`<tr><td colspan="7" class="empty">Tidak ada data untuk pilihan ini.</td></tr>`}</tbody></table></div></section>`; }
+document.addEventListener("change",ev=>{ if(ev.target.matches&&ev.target.matches("[data-itmf]")){ S.itmF=ev.target.value; render(); } });
 S.isiOpen={}; document.addEventListener("toggle",ev=>{ const d=ev.target; if(d&&d.dataset&&d.dataset.isiopen) S.isiOpen[d.dataset.isiopen]=d.open; },true);
 
 // ---------- Peta / layout perusahaan: titik APAR, hydrant, kotak P3K, eyewash, dll ----------
