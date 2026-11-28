@@ -754,6 +754,21 @@ body.lvpend nav.side .navgrp,body.lvpend nav.side .navsub,body.lvpend nav.side>a
 .linkbtn.kxc{font-size:13px;color:var(--muted)}.linkbtn.kxc.on{color:var(--green);font-weight:700}
 .sypend{font-size:12.5px;margin-top:4px;max-height:120px;overflow:auto}
 .itmout td{opacity:.85}.itmout td:first-child{text-decoration:line-through;text-decoration-color:var(--muted)}
+
+/* V11.7 pemeriksaan kotak P3K */
+.lkrow.out.hl{background:var(--red-bg)}
+.lkrow.out.hl .lktick,.lkrow.out.hl .lkmark{background:var(--red);border-color:var(--red);color:#fff}
+.cktab tr.out.hl td{background:var(--red-bg)}
+.ckmk{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:5px;color:#fff;font-weight:700;font-size:14px;line-height:1}
+.ckmk.rd{background:var(--red)}.ckmk.am{background:var(--amber)}
+.gcnt{display:flex;flex-wrap:wrap;gap:1px 9px;font-size:11.5px;line-height:1.35;margin:0 0 2px;font-weight:600}
+.gcnt i{font-style:normal;white-space:nowrap}
+.gcnt .g{color:var(--green)}.gcnt .r{color:var(--red)}.gcnt .a{color:var(--amber)}.gcnt .z{color:var(--muted);font-weight:400;opacity:.75}
+.lknote{grid-column:2/-1}
+.lknote textarea,.cktab textarea.ckn{min-height:34px;line-height:1.35;width:100%;resize:vertical;font-family:inherit;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:7px;padding:6px 8px;font-size:14px;background:var(--surface);color:var(--text)}
+.lknote.sl textarea,.cktab textarea.cknsl{border-color:var(--amber);border-width:1.5px}
+.linkbtn.lknadd{font-size:12.5px;padding:0}
+.lkgrp{flex-wrap:wrap;row-gap:2px}.lkgrp>.gcnt{flex:1 0 100%;margin:0}
 </style>
 </head>
 <body>
@@ -1039,7 +1054,7 @@ function backupReminder(){
 function viewBackup(){
   const lb=lastBackup(); const n=S.list.size;
   const nr=[...S.list.values()].reduce((a,k)=>a+(k.riwayat||[]).length,0), ni=S.inc.size;
-  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.6 · 27/11/2026 (item ditarik tampil di master item)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
+  return `<h1>Backup data</h1><p class="muted" style="margin:-6px 0 12px;font-size:13px">Versi program: <b>V11.7 · 28/11/2026 (perbaikan pemeriksaan kotak P3K: ketik NRP, catatan item, salah penempatan, bingkai scan)</b></p><p class="sub">Semua data tersimpan di komputer ini (${esc(STORAGE_LABEL)}). Simpan salinannya secara rutin.</p>
    <section class="panel"><h2>Simpan backup</h2>
     <p style="margin-top:0">${n} karyawan, ${nr} catatan penerimaan APD, ${ni} kejadian kecelakaan kerja, ${S.kotak.size} kotak P3K. Backup terakhir: <b>${lb?fmt(lb.slice(0,10)):"belum pernah"}</b>.</p>
     <p class="muted">File backup (.json) berisi seluruh data. Simpan di flashdisk atau folder bersama, minimal seminggu sekali.</p>${lb&&daysBetween(lb.slice(0,10),todayISO())>7?`<div class="banner" style="margin:0 0 10px">File backup terakhir sudah ${daysBetween(lb.slice(0,10),todayISO())} hari lalu. Sebaiknya simpan backup baru sekarang.</div>`:""}
@@ -2057,7 +2072,7 @@ const P3K_DEFAULT=[
  {kode:"AQ001",nama:"AQUADES 100ML",std:1,satuan:"BH",exp:true},{kode:"PV001",nama:"POVIDON IODIN (60 ML)",std:1,satuan:"BH",exp:true},
  {kode:"AL001",nama:"ALKOHOL 70%",std:1,satuan:"BH",exp:true},{kode:"BK001",nama:"BUKU PANDUAN",std:1,satuan:"BH",exp:false},
  {kode:"BK002",nama:"BUKU CATATAN",std:1,satuan:"BH",exp:false}];
-const KELUAR={terpakai:["Terpakai","amber"],hilang:["Hilang","red"],exp:["Ditarik (exp. / H-6 bulan)","gray"]};
+const KELUAR={terpakai:["Terpakai","amber"],hilang:["Hilang","red"],exp:["Ditarik (exp. / H-6 bulan)","amber"]};
 function p3kItems(){ const src=(S.p3k&&S.p3k.items&&S.p3k.items.length)?S.p3k.items:P3K_DEFAULT; if(S._p3kSrt!==src){ S._p3kSrt=src; S._p3kSorted=[...src].sort((a,b)=>(a.nama||a.kode).localeCompare(b.nama||b.kode,"id",{sensitivity:"base",numeric:true})||a.kode.localeCompare(b.kode)); } return S._p3kSorted; }
 function p3kInterval(){ return (S.p3k&&+S.p3k.interval)||30; }
 function itemOf(kode){ return p3kItems().find(i=>i.kode===kode)||{kode,nama:kode||"Item tidak dikenal",std:0,satuan:"BH"}; }
@@ -2165,12 +2180,12 @@ function viewCek(route){
   const show=isi.filter(x=>ck.show==="semua"||(ck.show==="belum"&&!stOf(x))||(ck.show==="keluar"&&KELUAR[stOf(x)]));
   let last=""; const rows=show.map(x=>{ const v=ck.st[x.bc]||{}, s=stOf(x), e=expSt(x.exp), it=itemOf(x.kode); let h="";
     if(x.kode!==last){ last=x.kode; const g=isi.filter(y=>y.kode===x.kode), gd=g.filter(y=>stOf(y)).length;
-      h=`<tr class="grp"><td colspan="5"><div class="row" style="justify-content:space-between"><span><b>${esc(it.nama)}</b> <span class="muted">· ${esc(x.kode)} · ${g.length} dari std ${it.std} · diperiksa ${gd}/${g.length}</span></span>${S.canWrite?grpBtns("ckgrp",x.kode,g.map(stOf)):""}</div></td></tr>`; }
+      h=`<tr class="grp"><td colspan="5"><div class="row" style="justify-content:space-between"><span>${grpCnt(g.map(stOf))}<b>${esc(it.nama)}</b> <span class="muted">· ${esc(x.kode)} · ${g.length} dari std ${it.std} · diperiksa ${gd}/${g.length}</span></span>${S.canWrite?grpBtns("ckgrp",x.kode,g.map(stOf)):""}</div></td></tr>`; }
     const sel=`<select data-ck="${esc(x.bc)}" aria-label="Kondisi ${esc(x.bc)}"><option value="">– belum diperiksa –</option><option value="ada" ${s==="ada"?"selected":""}>Ada${ck.scan&&ck.scan[x.bc]?" (di-scan)":""}</option>${Object.entries(KELUAR).map(([k,[l]])=>`<option value="${k}" ${s===k?"selected":""}>${l}</option>`).join("")}</select>`;
-    return h+`<tr class="${KELUAR[s]?"out":s==="ada"?"okrow":"todo"}" id="ck-${esc(x.bc)}"><td class="c"><input type="checkbox" class="ckbox" data-ckok="${esc(x.bc)}" ${s==="ada"?"checked":""} aria-label="${esc(x.bc)} ada"></td><td class="num">${esc(x.bc)}</td><td>${e?`<span class="chip ${e.cls}">${e.cls==="green"?fmt(x.exp):e.txt+" · "+fmt(x.exp)}</span>`:"–"}</td>
+    return h+`<tr class="${KELUAR[s]?"out"+(s==="hilang"?" hl":""):s==="ada"?"okrow":"todo"}" id="ck-${esc(x.bc)}"><td class="c">${KELUAR[s]?`<span class="ckmk ${s==="hilang"?"rd":"am"}" title="${esc(KELUAR[s][0])}">${s==="hilang"?"✗":"!"}</span>`:`<input type="checkbox" class="ckbox" data-ckok="${esc(x.bc)}" ${s==="ada"?"checked":""} aria-label="${esc(x.bc)} ada">`}</td><td class="num">${esc(x.bc)}</td><td>${e?`<span class="chip ${e.cls}">${e.cls==="green"?fmt(x.exp):e.txt+" · "+fmt(x.exp)}</span>`:"–"}</td>
      <td style="min-width:200px">${sel}</td>
      <td>${s==="terpakai"?`<div class="ckuse"><div class="pick"><input type="search" data-pick="cku-${esc(x.bc)}" value="${esc(v.nrp||"")}" placeholder="NRP pengguna" autocomplete="off" aria-label="NRP pengguna"><div class="picklist" hidden></div></div><input type="text" data-cku="${esc(x.bc)}" data-f="nama" value="${esc(v.nama||"")}" placeholder="Nama pengguna" aria-label="Nama pengguna"><input type="text" data-cku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Alasan penggunaan (opsional)" aria-label="Alasan"><label class="cktgl"><span>Tgl. terpakai</span><input type="date" data-cku="${esc(x.bc)}" data-f="tglPakai" value="${esc(v.tglPakai||"")}" max="${todayISO()}" aria-label="Tanggal terpakai"></label></div>`
-       :KELUAR[s]?`<input type="text" data-cku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Keterangan (opsional)" aria-label="Keterangan">`:""}</td></tr>`; }).join("");
+       :KELUAR[s]?`<input type="text" data-cku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Keterangan (opsional)" aria-label="Keterangan">`:s==="ada"?`<textarea class="ckn${v.sl?" cknsl":""}" data-cku="${esc(x.bc)}" data-f="catatan" rows="${String(v.catatan||"").length>60?2:1}" placeholder="Catatan (opsional), misal: hampir habis" aria-label="Catatan ${esc(x.bc)}">${esc(v.catatan||"")}</textarea>`:""}</td></tr>`; }).join("");
   return `<button class="back" data-go="box-${esc(kode)}">‹ ${esc(kode)}</button>${ck.fix?`<div class="banner fixban"><b>Mode perbaikan pemeriksaan ${fmt(ck.tgl)}</b> · semua item yang sudah diperiksa tetap ditampilkan dengan hasil sebelumnya. Ubah hanya yang keliru, misalnya item hilang yang ternyata ditemukan (ubah ke Ada), lalu klik <b>Simpan perbaikan</b>.</div>`:""}<div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h1 style="margin:0">${ck.fix?"Perbaiki pemeriksaan":"Pemeriksaan"} ${esc(kode)}</h1><button type="button" class="btn" data-rwbox="${esc(kode)}">🕘 Riwayat pemeriksaan${(b.pemeriksaan||[]).length?" ("+(b.pemeriksaan||[]).length+")":""}</button></div><p class="sub">${esc(b.bagian)} · ${esc(b.penempatan)} · ${isi.length} item tercatat di kotak</p>${liveBanner(kode)}
    <section class="panel"><div class="grid3"><label class="f"><span>Tanggal pemeriksaan</span><input type="date" id="ckTgl" value="${ck.tgl}" max="${todayISO()}"></label>
     <span></span><span></span>
@@ -2210,7 +2225,7 @@ function ckSave(force){
     const d=clone(b); delete d._id; const ids=new Set(keluar.map(x=>x.bc));
     d.isi=(d.isi||[]).filter(x=>!ids.has(x.bc)); d.keluar=(d.keluar||[]).concat(keluar);
     (d.pemeriksaan=d.pemeriksaan||[]).push({id:pid,tgl:ck.tgl,petugas:S.uid,sebelum:(b.isi||[]).length,scan:Object.keys(ck.scan).length,diperiksa:(b.isi||[]).length,keluar:keluar.map(x=>({bc:x.bc,kat:x.kat})),catatan:ck.catatan.trim(),pemeriksa:ck.pem.trim(),pemNrp:ck.pemNrp.trim(),pic:ck.pic.trim(),picNrp:ck.picNrp.trim()});
-    { const tm=tmCollect(ck.baru,ck.tgl,pid), pmx=d.pemeriksaan[d.pemeriksaan.length-1]; if(tm.length){ d.temuan=(d.temuan||[]).concat(tm); pmx.temuan=tm.length; pmx.temuanList=tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan})); } const sl=slCollect("ck"); if(sl.length) pmx.salah=sl; }
+    { const tm=tmCollect(ck.baru,ck.tgl,pid), pmx=d.pemeriksaan[d.pemeriksaan.length-1]; if(tm.length){ d.temuan=(d.temuan||[]).concat(tm); pmx.temuan=tm.length; pmx.temuanList=tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan})); } const sl=slCollect("ck"); if(sl.length) pmx.salah=sl; const ic=itemCatCollect(ck,b.isi||[],bc=>ckSt(ck,bc)); if(ic.length) pmx.itemCat=ic; }
     if(ck.pic.trim()){ d.picNama=ck.pic.trim(); d.picNrp=ck.picNrp.trim(); }
     await S.db.doc("kotak/"+ck.kode).set(d); const k=ck.kode; liveDone(k); S.ck=null; toast("Pemeriksaan "+k+" disimpan."); go("box-"+k); });
 }
@@ -2446,7 +2461,7 @@ document.addEventListener("input",ev=>{ const el=ev.target;
 });
 document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.dataset&&el.dataset.ckok!=null&&S.ck){ const bc=el.dataset.ckok; if(el.checked) S.ck.st[bc]={k:"ada"}; else { delete S.ck.st[bc]; delete S.ck.scan[bc]; } const y=window.scrollY; render(); window.scrollTo(0,y); return; }
-  if(el.dataset&&el.dataset.ck&&S.ck){ const bc=el.dataset.ck; if(el.value) S.ck.st[bc]=Object.assign(el.value==="ada"?{}:(S.ck.st[bc]||{}),{k:el.value}); else { delete S.ck.st[bc]; delete S.ck.scan[bc]; } const y=window.scrollY; render(); window.scrollTo(0,y); const n=document.querySelector(`[data-ck="${CSS.escape(bc)}"]`); if(n) n.focus({preventScroll:true}); return; }
+  if(el.dataset&&el.dataset.ck&&S.ck){ const bc=el.dataset.ck; if(el.value) S.ck.st[bc]=Object.assign(el.value==="ada"?{catatan:(S.ck.st[bc]||{}).catatan||""}:(S.ck.st[bc]||{}),{k:el.value}); else { delete S.ck.st[bc]; delete S.ck.scan[bc]; } const y=window.scrollY; render(); window.scrollTo(0,y); const n=document.querySelector(`[data-ck="${CSS.escape(bc)}"]`); if(n) n.focus({preventScroll:true}); return; }
   if(el.id==="ckTgl"&&S.ck){ S.ck.tgl=el.value||todayISO(); return; }
   if(el.id==="ckShow"&&S.ck){ S.ck.show=el.value; render(); return; }
   if(el.name==="prMode"&&S.pr){ S.pr.mode=el.value; $("#prPrev").innerHTML=printHtml(S.pr.kode); return; }
@@ -3257,13 +3272,13 @@ function viewLapBox(route){
   const show=isi.filter(x=>lk.show==="semua"||(lk.show==="belum"&&!st(x))||(lk.show==="keluar"&&KELUAR[st(x)]));
   let last=""; const rows=show.map(x=>{ const v=lk.st[x.bc]||{}, s=st(x), e=expSt(x.exp), it=itemOf(x.kode); let h="";
     if(x.kode!==last){ last=x.kode; const g=isi.filter(y=>y.kode===x.kode), gd=g.filter(y=>st(y)).length;
-      h=`<div class="lkgrp"><span><b>${esc(it.nama)}</b> <span class="muted">${gd}/${g.length} diperiksa · std ${it.std}</span></span>${grpBtns("lkgrp",x.kode,g.map(st))}</div>`; }
-    const cls=KELUAR[s]?"out":s==="ada"?"ok":"todo";
-    return h+`<div class="lkrow ${cls}" id="lk-${esc(x.bc)}"><button type="button" class="lktick" data-lkok="${esc(x.bc)}" aria-pressed="${s==="ada"}" aria-label="${esc(x.bc)} ada">${s==="ada"?"✓":KELUAR[s]?"!":""}</button>
-      <div class="lkb"><span class="num">${esc(x.bc)}</span>${lk.scan[x.bc]&&s==="ada"?`<span class="muted" style="font-size:12px">di-scan</span>`:""}${e?`<span class="chip ${e.cls}">${e.cls==="green"?fmt(x.exp):e.txt}</span>`:""}</div>
+      h=`<div class="lkgrp">${grpCnt(g.map(st))}<span><b>${esc(it.nama)}</b> <span class="muted">${gd}/${g.length} diperiksa · std ${it.std}</span></span>${grpBtns("lkgrp",x.kode,g.map(st))}</div>`; }
+    const cls=KELUAR[s]?"out"+(s==="hilang"?" hl":""):s==="ada"?"ok":"todo";
+    return h+`<div class="lkrow ${cls}" id="lk-${esc(x.bc)}"><button type="button" class="lktick" data-lkok="${esc(x.bc)}" aria-pressed="${s==="ada"}" aria-label="${esc(x.bc)} ada">${s==="ada"?"✓":s==="hilang"?"✗":KELUAR[s]?"!":""}</button>
+      <div class="lkb"><span class="num">${esc(x.bc)}</span>${lk.scan[x.bc]&&s==="ada"?`<span class="muted" style="font-size:12px">di-scan</span>`:""}${s==="ada"&&!v.catatan&&lk._nOpen!==x.bc?`<button type="button" class="linkbtn lknadd" data-lknote="${esc(x.bc)}">+ catatan</button>`:""}${e?`<span class="chip ${e.cls}">${e.cls==="green"?fmt(x.exp):e.txt+" · "+fmt(x.exp)}</span>`:""}</div>
       <select data-lk="${esc(x.bc)}" aria-label="Kondisi ${esc(x.bc)}"><option value="">– belum –</option><option value="ada" ${s==="ada"?"selected":""}>Ada</option>${Object.entries(KELUAR).map(([k,[l]])=>`<option value="${k}" ${s===k?"selected":""}>${k==="exp"?"Ditarik":l}</option>`).join("")}</select>
       ${s==="terpakai"?`<div class="lkuse">${picker("lku-"+x.bc,"NRP pengguna",v.nrp||"")}<label class="f"><span>Nama pengguna</span><input type="text" data-lku="${esc(x.bc)}" data-f="nama" value="${esc(v.nama||"")}"></label><label class="f"><span>Tanggal terpakai</span><input type="date" data-lku="${esc(x.bc)}" data-f="tglPakai" value="${esc(v.tglPakai||"")}" max="${todayISO()}"></label><label class="f"><span>Alasan penggunaan</span><input type="text" data-lku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Opsional"></label></div>`
-        :KELUAR[s]?`<div class="lkuse"><label class="f lkfull"><span>Keterangan</span><input type="text" data-lku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Opsional"></label></div>`:""}</div>`; }).join("");
+        :KELUAR[s]?`<div class="lkuse"><label class="f lkfull"><span>Keterangan</span><input type="text" data-lku="${esc(x.bc)}" data-f="alasan" value="${esc(v.alasan||"")}" placeholder="Opsional"></label></div>`:s==="ada"&&(v.catatan||lk._nOpen===x.bc)?`<div class="lknote${v.sl?" sl":""}"><textarea data-lku="${esc(x.bc)}" data-f="catatan" rows="${String(v.catatan||"").length>40?3:1}" placeholder="Catatan, misal: hampir habis" aria-label="Catatan ${esc(x.bc)}">${esc(v.catatan||"")}</textarea></div>`:""}</div>`; }).join("");
   const pct=isi.length?Math.round(nDone/isi.length*100):0;
   return `<div class="lkhead"><button class="back" data-go="lapangan">‹ Daftar kotak</button><div class="row" style="justify-content:space-between;align-items:baseline"><h1 style="margin:0;display:flex;align-items:center;gap:8px">${esc(kode)}<button type="button" class="btn small" data-rwbox="${esc(kode)}" aria-label="Riwayat pemeriksaan">🕘 Riwayat</button></h1><span class="num"><b>${nDone}</b><span class="muted">/${isi.length} diperiksa</span></span></div>
     <p class="muted" style="margin:0 0 8px">${esc(b.bagian||"")}${b.penempatan?" · "+esc(b.penempatan):""}</p>${liveBanner(kode)}<div class="life lkprog"><i style="width:${pct}%"></i></div>
@@ -3296,7 +3311,7 @@ function lkSave(force){
    <p style="margin-bottom:0">${out.length?`${out.length} item dikeluarkan: terpakai ${c("terpakai")}, hilang ${c("hilang")}, ditarik ${c("exp")}.`:"Semua item ada."}</p></div>${foot("Simpan")}`, async ()=>{
     const pid=uidGen("pm"), keluar=out.map(x=>{ const v=lk.st[x.bc]; return {bc:x.bc,kode:x.kode,exp:x.exp||"",kat:v.k,nrp:v.k==="terpakai"?(v.nrp||"").trim():"",pengguna:v.k==="terpakai"?(v.nama||"").trim():"",alasan:(v.alasan||"").trim(),tgl:lk.tgl,tglPakai:v.k==="terpakai"?(v.tglPakai||""):"",pid,petugas:S.uid}; });
     const pm={id:pid,tgl:lk.tgl,petugas:S.uid,sebelum:isi.length,scan:nScan,keluar:keluar.map(x=>({bc:x.bc,kat:x.kat})),catatan:lk.catatan.trim(),pemeriksa:lk.pem.trim(),pemNrp:lk.pemNrp.trim(),pic:lk.pic.trim(),picNrp:lk.picNrp.trim(),lapangan:true,diperiksa:isi.length};
-    const tm=tmCollect(lk.baru,lk.tgl,pid); if(tm.length) pm.temuan=tm.length; const sl=slCollect("lk"); if(sl.length) pm.salah=sl; if(tm.length) pm.temuanList=tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}));
+    { const ic=itemCatCollect(lk,isi,lkStOf); if(ic.length) pm.itemCat=ic; } const tm=tmCollect(lk.baru,lk.tgl,pid); if(tm.length) pm.temuan=tm.length; const sl=slCollect("lk"); if(sl.length) pm.salah=sl; if(tm.length) pm.temuanList=tm.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}));
     const d=STORE["kotak/"+lk.kode]; if(tm.length) d.temuan=(d.temuan||[]).concat(tm); lapApplyRemove(d,{keluar}); d.keluar=(d.keluar||[]).concat(keluar); (d.pemeriksaan=d.pemeriksaan||[]).push(pm); if(pm.pic){ d.picNama=pm.pic; d.picNrp=pm.picNrp; }
     if(lapRole()==="hp") STORE["lapangan/"+pid]={id:pid,kode:lk.kode,tgl:lk.tgl,keluar,temuan:tm,pemeriksaan:pm,pic:pm.pic,picNrp:pm.picNrp,dibuat:new Date().toISOString()};
     try{ localStorage.setItem("k3.lapPem",JSON.stringify({pem:pm.pemeriksa,pemNrp:pm.pemNrp})); }catch(e){}
@@ -3317,7 +3332,7 @@ function lkMsg(r,bc){ const [t,v]=r.split(":"); if(t==="ok") return {ok:true,txt
 let LAP_CAM=null;
 async function lapCamOpen(mode){
   const det=lapDet(); if(!det){ toast("Pemindaian kamera tidak tersedia."); return; }
-  const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="camres" hidden></div><div class="cambar"><span class="cammsg">${mode==="box"?"Arahkan kamera ke barcode kode kotak":"Arahkan kamera ke barcode item"}</span><span class="camcnt"></span><button class="btn" data-act="cam-close">Selesai</button></div>`;
+  const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="camres" hidden></div><div class="cambar"><span class="cammsg">${mode==="box"?"Masukkan barcode kode kotak ke dalam bingkai":"Masukkan barcode item ke dalam bingkai"}</span><span class="camcnt"></span><button class="btn" data-act="cam-close">Selesai</button></div>`;
   document.body.appendChild(ov); const video=ov.querySelector("video"), msg=ov.querySelector(".cammsg"), cnt=ov.querySelector(".camcnt"), card=ov.querySelector(".camres"); scanSound(true);
   let stream; try{ let pref=""; try{ pref=localStorage.getItem("k3.camId")||""; }catch(e){} stream=await camPickStream(pref); }
   catch(e){ ov.remove(); toast(e&&e.name==="NotAllowedError"?"Izin kamera ditolak. Gunakan Foto barcode atau ketik barcode.":"Kamera tidak bisa dibuka di tampilan ini. Gunakan Foto barcode atau ketik barcode."); return; }
@@ -3325,7 +3340,7 @@ async function lapCamOpen(mode){
   const st={on:true,last:"",lastT:0}; LAP_CAM={ov,stream,st}; LAP_CAM.redraw=camControls(ov,video);
   const upd=()=>{ if(S.lk){ const b=S.kotak.get(S.lk.kode), n=(b.isi||[]).filter(x=>lkStOf(x.bc)).length; cnt.textContent=n+"/"+(b.isi||[]).length+" diperiksa"; } }; upd();
   const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=st.pause?[]:await det.detect(video); const now=Date.now();
-        for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v||(v===st.last&&now-st.lastT<1800)) continue; st.last=v; st.lastT=now;
+        for(const r of res){ if(!camInFrame(ov,video,r)) continue; const v=String(r.rawValue||"").trim(); if(!v||(v===st.last&&now-st.lastT<1800)) continue; st.last=v; st.lastT=now;
           if(mode==="box"){ const kb=v.toUpperCase(); if(S.kotak.has(kb)){ lapBeep(true); lapCamClose(); go("lap-"+kb); return; } lapBeep(false); msg.textContent=v+" bukan kode kotak"; msg.className="cammsg bad"; continue; }
           const s=scanInfo(lkMark(v),v,S.lk&&S.lk.kode); if(S.lk) S.lk.lastScan=s; lapBeep(s.ok); scanSound(s.ok); card.className="camres "+s.cls; card.innerHTML=`<b>${s.cls==="dup"?"↻ ":s.ok?"✓ ":s.cls==="warn"||s.cls==="temu"?"! ":"✗ "}${esc(s.title)}</b>${s.sub?`<span>${esc(s.sub)}</span>`:""}`; card.hidden=false;
           msg.textContent="Lanjutkan scan item berikutnya"; msg.className="cammsg"; upd(); } } }catch(e){}
@@ -3365,13 +3380,13 @@ document.addEventListener("change",ev=>{ const el=ev.target;
   if(el.id==="lapFile"&&el.files[0]){ const fr=new FileReader(); fr.onload=()=>{ let p; try{ p=JSON.parse(fr.result); }catch(x){ toast("File tidak dapat dibaca."); return; }
       if(p.jenis==="paket-lapangan") lapImportPaket(p); else if(p.jenis==="hasil-lapangan") lapImportHasil(p); else toast("Pilih file paket lapangan atau file hasil pemeriksaan dari HP."); }; fr.readAsText(el.files[0]); el.value=""; return; }
   if(el.id==="lkPhoto"&&el.files[0]){ const f=el.files[0]; el.value=""; lkPhoto(f); return; }
-  if(el.dataset&&el.dataset.lk&&S.lk){ const bc=el.dataset.lk; if(el.value) S.lk.st[bc]=Object.assign({},el.value==="ada"?{}:(S.lk.st[bc]||{}),{k:el.value}); else { delete S.lk.st[bc]; delete S.lk.scan[bc]; } lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); return; }
+  if(el.dataset&&el.dataset.lk&&S.lk){ const bc=el.dataset.lk; if(el.value) S.lk.st[bc]=Object.assign({},el.value==="ada"?{catatan:(S.lk.st[bc]||{}).catatan||""}:(S.lk.st[bc]||{}),{k:el.value}); else { delete S.lk.st[bc]; delete S.lk.scan[bc]; } lapDraftSave(); const y=window.scrollY; render(); window.scrollTo(0,y); return; }
   if(el.dataset&&el.dataset.lkf&&S.lk){ S.lk[el.dataset.lkf]=el.value; lapDraftSave(); return; }
 });
 document.addEventListener("input",ev=>{ const el=ev.target;
   if(el.id==="lapQ"){ S.lapQ=el.value; const pos=el.selectionStart; render(); const q=$("#lapQ"); if(q){ q.focus(); try{q.setSelectionRange(pos,pos);}catch(e){} } return; }
   if(el.dataset&&el.dataset.lkf&&S.lk){ S.lk[el.dataset.lkf]=el.value; lapDraftSave(); return; }
-  if(el.dataset&&el.dataset.lku&&S.lk){ const v=S.lk.st[el.dataset.lku]; if(v){ v[el.dataset.f]=el.value; lapDraftSave(); } }
+  if(el.dataset&&el.dataset.lku&&S.lk){ let v=S.lk.st[el.dataset.lku]; if(!v&&lkStOf(el.dataset.lku)==="ada") v=S.lk.st[el.dataset.lku]={k:"ada"}; if(v){ v[el.dataset.f]=el.value; lapDraftSave(); } }
 });
 window.addEventListener("hashchange",()=>{ if(LAP_CAM) lapCamClose(); const h=(location.hash||"").slice(1); if(S.lk&&h!=="lap-"+S.lk.kode) S.lk=null; });
 
@@ -3447,9 +3462,9 @@ function liveAttach(kind,o){ if(!o||!liveOn()) return; if(LV.o===o&&LV.un) retur
       LV_ARR.forEach(a=>{ const ex=new Set((r[a]||[]).map(x=>String(x.bc||""))); const extra=(o[a]||[]).filter(x=>x.bc&&!ex.has(String(x.bc))); if(extra.length){ r[a]=(r[a]||[]).concat(extra); add[a]=r[a]; } });
       if(Object.keys(add).length) ref.set(Object.assign(add,{diubah:FV.serverTimestamp(),diubahOleh:akMyName()}),{merge:true}).catch(()=>{});
       if(SY.user&&!(LV.peserta[SY.user.uid])) liveBeat(); if(Object.keys(LV.peserta).length>(LV.peserta[SY.user.uid]?1:0)) toast("Melanjutkan pemeriksaan "+o.kode+" bersama "+(LV.mulaiOleh||"rekan")+"."); }
-    const ae=document.activeElement, editing=ae&&ae.closest&&ae.closest("main")&&(ae.tagName==="TEXTAREA"||(ae.tagName==="INPUT"&&ae.type!=="checkbox"&&!["lkBc","ckBc"].includes(ae.id)&&!ae.dataset.pick));
-    o.st=Object.assign({},r.st||{}); o.scan=Object.assign({},r.scan||{}); LV_ARR.forEach(a=>o[a]=(r[a]||[]).slice());
-    LV_SCALAR.forEach(f=>{ if(r[f]===undefined) return; const fe=editing&&(ae.dataset.lkf===f||ae.dataset.ckf===f||(f==="catatan"&&ae.id==="ckCat")||(f==="tgl"&&ae.id==="ckTgl")); if(!fe) o[f]=r[f]; });
+    const ae=document.activeElement, editing=ae&&ae.closest&&ae.closest("main")&&(ae.tagName==="TEXTAREA"||(ae.tagName==="INPUT"&&ae.type!=="checkbox"&&!["lkBc","ckBc"].includes(ae.id)));
+    const stLoc=o.st||{}; o.st=Object.assign({},r.st||{}); { const eb=editing&&(ae.dataset.lku||ae.dataset.cku||((ae.dataset.pick||"").match(/^(?:lku|cku)-(.+)$/)||[])[1]); if(eb&&stLoc[eb]) o.st[eb]=stLoc[eb]; } o.scan=Object.assign({},r.scan||{}); LV_ARR.forEach(a=>o[a]=(r[a]||[]).slice());
+    LV_SCALAR.forEach(f=>{ if(r[f]===undefined) return; const fe=editing&&((ae.dataset.pick&&ae.dataset.pick.replace(/^(lk|ck)-/,"")+"Nrp"===f)||ae.dataset.lkf===f||ae.dataset.ckf===f||(f==="catatan"&&ae.id==="ckCat")||(f==="tgl"&&ae.id==="ckTgl")); if(!fe) o[f]=r[f]; });
     LV.base=JSON.stringify(liveFields(o)); if(kind==="lk") lapDraftSaveLocal();
     if(editing) LV.pendRender=true; else liveRerender(); },()=>{});
   LV.hb=setInterval(liveBeat,60000); }
@@ -3475,7 +3490,7 @@ document.addEventListener("click",ev=>{ if(!ev.target.closest('[data-act="live-r
 function ckIsi(b){ const base=(b&&b.isi)||[]; if(S.ck&&S.ck.fix&&b&&S.ck.kode===b.kode){ const have=new Set(base.map(x=>x.bc)); return base.concat(S.ck.fix.extra.filter(x=>!have.has(x.bc))); } return base; }
 function ckStartFix(box,pid){ const b=S.kotak.get(box); if(!b) return; const p=(b.pemeriksaan||[]).find(x=>x.id===pid); if(!p){ toast("Pemeriksaan tidak ditemukan."); return; }
   const kel=(b.keluar||[]).filter(k=>k.pid===pid), st={}, orig={};
-  (b.isi||[]).forEach(x=>{ st[x.bc]={k:"ada"}; orig[x.bc]={k:"ada"}; });
+  const icm=new Map((p.itemCat||[]).map(c=>[c.bc,c.catatan])); (b.isi||[]).forEach(x=>{ st[x.bc]=icm.has(x.bc)?{k:"ada",catatan:icm.get(x.bc)}:{k:"ada"}; orig[x.bc]={k:"ada"}; });
   kel.forEach(k=>{ const v={k:k.kat,nrp:k.nrp||"",nama:k.pengguna||"",alasan:k.alasan||"",tglPakai:k.tglPakai||""}; st[k.bc]=Object.assign({},v); orig[k.bc]=Object.assign({},v); });
   S.ck={kode:box,tgl:p.tgl,st,scan:{},catatan:p.catatan||"",show:"semua",pem:p.pemeriksa||"",pemNrp:p.pemNrp||"",pic:p.pic||"",picNrp:p.picNrp||"",
     baru:(b.temuan||[]).filter(t=>t.pid===pid).map(t=>({bc:t.bc||"",kode:t.kode||(t.nama?"_lain":""),nama:t.nama||"",exp:t.exp||"",catatan:t.catatan||"",_id:t.id})),
@@ -3498,6 +3513,7 @@ async function ckFixSave(){ const ck=S.ck, fx=ck.fix, b=S.kotak.get(ck.kode); if
     const now2=(d.temuan||[]).filter(t=>t.pid===fx.pid); p.temuan=now2.length; p.temuanList=now2.map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan}));
     changes.push("Item belum tercatat diperbarui ("+nOld+" → "+now2.length+" item)"); }
   const sl=slCollect("ck"); if(JSON.stringify(ck.salah||[])!==fx.origSl){ const n0=JSON.parse(fx.origSl||"[]").length; p.salah=sl; changes.push("Item salah penempatan diperbarui ("+n0+" → "+sl.length+" item)"); }
+  { const ic=itemCatCollect(ck,rows,bc=>ckSt(ck,bc)); if(JSON.stringify(ic.map(c=>[c.bc,c.catatan]))!==JSON.stringify((p.itemCat||[]).map(c=>[c.bc,c.catatan]))){ if(ic.length) p.itemCat=ic; else delete p.itemCat; changes.push("Catatan item diperbarui ("+ic.length+" item)"); } }
   if(!changes.length){ toast("Tidak ada perubahan."); return; }
   openDlg(`<header><h2>Simpan perbaikan pemeriksaan ${fmt(p.tgl)}?</h2></header><div class="body"><ul style="margin:0;padding-left:18px">${changes.map(c=>`<li>${esc(c)}</li>`).join("")}</ul><p class="hint" style="margin:10px 0 0">Perbaikan dicatat di riwayat pemeriksaan beserta nama pemeriksa yang memperbaiki.</p></div>${foot("Simpan perbaikan")}`, async ()=>{
     p.keluar=(d.keluar||[]).filter(k=>k.pid===fx.pid).map(k=>({bc:k.bc,kode:k.kode,kat:k.kat}));
@@ -3835,8 +3851,8 @@ function kxRows(){ const y=S.p3kLogY||todayISO().slice(0,7), k=S.p3kLogK||"", bg
 function kxPeriod(y){ return y==="semua"?"Semua periode":BULAN[+y.slice(5)-1]+" "+y.slice(0,4); }
 function kxNotes(){ const {y,bg}=kxRows(), out=[]; S.kotak.forEach(b=>{ const bag=b.bagian||"(tanpa bagian)", grp=bag+(b.penempatan?" – "+b.penempatan:""); (b.pemeriksaan||[]).forEach(p=>{ if(!(y==="semua"||(p.tgl||"").startsWith(y))) return; if(!kxMatch({_bag:bag,_grp:grp},bg)) return;
     const tl=p.temuanList||(b.temuan||[]).filter(t=>t.pid===p.id).map(t=>({bc:t.bc,nama:t.nama||(t.kode?itemOf(t.kode).nama:""),catatan:t.catatan})), sl=p.salah||[];
-    if(p.catatan||tl.length||sl.length) out.push({b,p,tl,sl,grp}); }); }); return out.sort((a,c)=>a.grp.localeCompare(c.grp,"id")||(a.p.tgl||"").localeCompare(c.p.tgl||"")); }
-function kxNotesTxt(n){ return [n.p.catatan?"Catatan: "+n.p.catatan:"",n.tl.length?"Item belum tercatat: "+n.tl.map(t=>[t.bc,t.nama].filter(Boolean).join(" ")+(t.catatan?" ("+t.catatan+")":"")).join("; "):"",n.sl.length?"Item salah penempatan: "+n.sl.map(s=>s.bc+(s.nama?" "+s.nama:"")+" milik "+s.asal+(s.bagianAsal?" ("+s.bagianAsal+")":"")+(s.catatan?" – "+s.catatan:"")).join("; "):""].filter(Boolean); }
+    const ic=p.itemCat||[]; if(p.catatan||tl.length||sl.length||ic.length) out.push({b,p,tl,sl,ic,grp}); }); }); return out.sort((a,c)=>a.grp.localeCompare(c.grp,"id")||(a.p.tgl||"").localeCompare(c.p.tgl||"")); }
+function kxNotesTxt(n){ return [n.p.catatan?"Catatan: "+n.p.catatan:"",(n.ic||[]).length?"Catatan item: "+n.ic.map(c=>c.bc+(c.nama?" "+c.nama:"")+" – "+c.catatan).join("; "):"",n.tl.length?"Item belum tercatat: "+n.tl.map(t=>[t.bc,t.nama].filter(Boolean).join(" ")+(t.catatan?" ("+t.catatan+")":"")).join("; "):"",n.sl.length?"Item salah penempatan: "+n.sl.map(s=>s.bc+(s.nama?" "+s.nama:"")+" milik "+s.asal+(s.bagianAsal?" ("+s.bagianAsal+")":"")+(s.catatan?" – "+s.catatan:"")).join("; "):""].filter(Boolean); }
 function viewP3kLog(){
   const {all,rows,y,k,bg}=kxRows();
   const months=[...new Set([todayISO().slice(0,7),...all.map(x=>(x.tgl||"").slice(0,7)).filter(Boolean)])].sort().reverse();
@@ -3911,7 +3927,7 @@ function kxOds(){ const {rows,y,k,bg}=kxRows(), list=rows.slice().reverse(); let
   if(bg&&groups.size<=1) sheets.push({name:kxLabel(bg),title:"RINCIAN ITEM KELUAR – "+kxLabel(bg),sub,head,widths:wid,rows:dr(list)});
   else { if(bg) sheets[0].title+=" – "+kxLabel(bg); sheets.push({name:bg?"Semua":"Semua bagian",title:"RINCIAN ITEM KELUAR – "+(bg?kxLabel(bg):"KESELURUHAN"),sub,head,widths:wid,rows:dr(list)}); groups.forEach((g,n)=>sheets.push({name:n,title:"RINCIAN ITEM KELUAR – "+n,sub,head,widths:wid,rows:dr(g)})); }
   { const N=kxNotes(); if(N.length) sheets.push({name:"Catatan pemeriksaan",title:"CATATAN PEMERIKSAAN KOTAK P3K",sub,head:["No","Tgl. pemeriksaan","Kotak","Bagian · penempatan","Pemeriksa","Catatan","Item belum tercatat","Item salah penempatan"],widths:[0.9,2.4,2.4,5,3.5,6,6,7],
-    rows:N.map((n,i)=>[i+1,fmt(n.p.tgl),n.b.kode,n.grp,n.p.pemeriksa||"",n.p.catatan||"",n.tl.map(t=>[t.bc,t.nama].filter(Boolean).join(" ")+(t.catatan?" ("+t.catatan+")":"")).join("; "),n.sl.map(s=>s.bc+(s.nama?" "+s.nama:"")+" milik "+s.asal+(s.bagianAsal?" ("+s.bagianAsal+")":"")+(s.catatan?" – "+s.catatan:"")).join("; ")])}); }
+    rows:N.map((n,i)=>[i+1,fmt(n.p.tgl),n.b.kode,n.grp,n.p.pemeriksa||"",[n.p.catatan||"",...(n.ic||[]).map(c=>c.bc+(c.nama?" "+c.nama:"")+": "+c.catatan)].filter(Boolean).join("; "),n.tl.map(t=>[t.bc,t.nama].filter(Boolean).join(" ")+(t.catatan?" ("+t.catatan+")":"")).join("; "),n.sl.map(s=>s.bc+(s.nama?" "+s.nama:"")+" milik "+s.asal+(s.bagianAsal?" ("+s.bagianAsal+")":"")+(s.catatan?" – "+s.catatan:"")).join("; ")])}); }
   return buildSimpleOds(sheets); }
 function buildSimpleOds(sheets){ const NS=`xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" office:version="1.2"`;
   const bd=`fo:border="0.5pt solid #000000"`, used=new Set();
@@ -4733,7 +4749,7 @@ async function camScanOnce(cb,label){ const det=lapDet(); if(!det) return; const
   const ov=document.createElement("div"); ov.className="camov"; ov.innerHTML=`<video playsinline muted></video><div class="camframe"></div><div class="cambar"><span class="cammsg">${esc(label||"Arahkan kamera ke barcode")}</span><button type="button" class="btn" data-act="cam-close">Tutup</button></div>`;
   host.appendChild(ov); let stream; try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}); }catch(e){ ov.remove(); toast("Kamera tidak bisa dibuka. Ketik barcode secara manual."); return; }
   const video=ov.querySelector("video"); video.srcObject=stream; await video.play().catch(()=>{}); LAP_CAM={ov,stream,st:{on:true}}; const st=LAP_CAM.st;
-  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=st.pause?[]:await det.detect(video); for(const r of res){ const v=String(r.rawValue||"").trim(); if(!v) continue; lapCamClose(); cb(v); return; } } }catch(e){} setTimeout(loop,200); }; loop(); }
+  const loop=async()=>{ if(!st.on) return; try{ if(video.readyState>=2){ const res=st.pause?[]:await det.detect(video); for(const r of res){ if(!camInFrame(ov,video,r)) continue; const v=String(r.rawValue||"").trim(); if(!v) continue; lapCamClose(); cb(v); return; } } }catch(e){} setTimeout(loop,200); }; loop(); }
 
 // ---------- Saran barcode saat diketik (APAR & item kotak P3K) ----------
 function bcSugSource(kind){
@@ -5775,10 +5791,10 @@ function rwAgo(t){ if(!t) return ""; const d=daysBetween(t,todayISO()); return d
 function dlgBoxHist(kode){ const b=S.kotak.get(kode); if(!b) return; const pem=(b.pemeriksaan||[]).slice().sort((x,y)=>(y.tgl||"").localeCompare(x.tgl||"")||(y.dibuat||"").localeCompare(x.dibuat||"")), last=pem[0];
   const kel=pid=>(b.keluar||[]).filter(k=>k.pid===pid), tem=pid=>(b.temuan||[]).filter(t=>t.pid===pid);
   const card=(p,i)=>{ const ks=kel(p.id), ts=tem(p.id), c=k=>ks.filter(x=>x.kat===k).length;
-    return `<details class="rwc" ${i===0?"open":""}><summary><b>${fmt(p.tgl)}</b> <span class="muted">${esc(rwAgo(p.tgl))}</span><span class="rwchips">${c("terpakai")?`<span class="chip amber">${c("terpakai")} terpakai</span>`:""}${c("hilang")?`<span class="chip red">${c("hilang")} hilang</span>`:""}${c("exp")?`<span class="chip gray">${c("exp")} ditarik</span>`:""}${!ks.length?`<span class="chip green">Lengkap</span>`:""}</span></summary>
+    return `<details class="rwc" ${i===0?"open":""}><summary><b>${fmt(p.tgl)}</b> <span class="muted">${esc(rwAgo(p.tgl))}</span><span class="rwchips">${c("terpakai")?`<span class="chip amber">${c("terpakai")} terpakai</span>`:""}${c("hilang")?`<span class="chip red">${c("hilang")} hilang</span>`:""}${c("exp")?`<span class="chip amber">${c("exp")} ditarik</span>`:""}${!ks.length?`<span class="chip green">Lengkap</span>`:""}</span></summary>
      <div class="rwb"><div class="muted" style="font-size:13px">Pemeriksa: <b>${esc(p.pemeriksa||petugasName(p.petugas)||"–")}</b>${p.pic?" · PIC: "+esc(p.pic):""}${p.sebelum!=null?" · isi sebelum: "+p.sebelum:""}${p.sumber==="HP"||p.lapangan?" · dari HP":""}${p.updP3k?" · sudah di Program P3K":""}</div>
      ${ks.length?`<table class="rwt"><thead><tr><th>Barcode</th><th>Item</th><th>Kondisi</th><th>Pengguna / ket.</th></tr></thead><tbody>${ks.map(k=>`<tr><td class="num">${esc(k.bc)}</td><td>${esc(itemOf(k.kode).nama)}</td><td>${esc((KELUAR[k.kat]||[k.kat])[0])}</td><td>${esc([k.pengguna,k.alasan].filter(Boolean).join(" · ")||"–")}</td></tr>`).join("")}</tbody></table>`:`<p class="muted" style="margin:6px 0 0">Tidak ada item yang dikeluarkan.</p>`}
-     ${ts.length?`<p style="margin:6px 0 0;font-size:13px"><b>Item temuan:</b> ${ts.map(t=>esc((t.bc||"")+" "+(t.nama||itemOf(t.kode).nama||""))).join(", ")}</p>`:""}${p.catatan?`<p style="margin:6px 0 0;font-size:13px"><b>Catatan:</b> ${esc(p.catatan)}</p>`:""}${(p.revisi||[]).length?`<p class="muted" style="margin:6px 0 0;font-size:12.5px">Diperbaiki ${(p.revisi||[]).length}×, terakhir oleh ${esc(p.revisi[p.revisi.length-1].oleh||"")}: ${esc((p.revisi[p.revisi.length-1].perubahan||[]).join("; "))}</p>`:""}</div></details>`; };
+     ${ts.length?`<p style="margin:6px 0 0;font-size:13px"><b>Item temuan:</b> ${ts.map(t=>esc((t.bc||"")+" "+(t.nama||itemOf(t.kode).nama||""))).join(", ")}</p>`:""}${p.catatan?`<p style="margin:6px 0 0;font-size:13px"><b>Catatan:</b> ${esc(p.catatan)}</p>`:""}${(p.itemCat||[]).length?`<p style="margin:6px 0 0;font-size:13px"><b>Catatan item:</b> ${p.itemCat.map(c=>esc(c.bc+(c.nama?" "+c.nama:"")+" – "+c.catatan)).join("; ")}</p>`:""}${(p.revisi||[]).length?`<p class="muted" style="margin:6px 0 0;font-size:12.5px">Diperbaiki ${(p.revisi||[]).length}×, terakhir oleh ${esc(p.revisi[p.revisi.length-1].oleh||"")}: ${esc((p.revisi[p.revisi.length-1].perubahan||[]).join("; "))}</p>`:""}</div></details>`; };
   openDlg(`<header><h2>Riwayat pemeriksaan ${esc(kode)}</h2><p class="hint" style="margin:4px 0 0">${esc([b.bagian,b.penempatan,last?"terakhir diperiksa "+fmt(last.tgl)+" ("+rwAgo(last.tgl)+")":"belum pernah diperiksa"].filter(Boolean).join(" · "))}</p></header>
    <div class="body rwbody">${pem.length?pem.slice(0,12).map(card).join(""):`<p class="muted" style="margin:0">Belum ada riwayat pemeriksaan untuk kotak ini.</p>`}${pem.length>12?`<p class="hint">Menampilkan 12 pemeriksaan terakhir dari ${pem.length}.</p>`:""}</div>
    <footer><button class="btn primary" value="cancel">Kembali ke pemeriksaan</button></footer>`, async ()=>{}); }
@@ -6270,6 +6286,57 @@ function doRestore(file){
   };
   rd.readAsText(file); $("#restoreFile").value="";
 }
+
+// ---------- V11.7: perbaikan pemeriksaan kotak P3K (komputer & lapangan) ----------
+// hitungan per jenis item (ada / hilang / terpakai / ditarik) di atas judul item
+function grpCnt(sts){ const c=k=>sts.filter(s=>s===k).length, a=c("ada"), h=c("hilang"), t=c("terpakai"), x=c("exp");
+  return `<span class="gcnt"><i class="${a?"g":"z"}">✓ ${a} ada</i><i class="${h?"r":"z"}">✗ ${h} hilang</i><i class="${t?"a":"z"}">${t} terpakai</i><i class="${x?"a":"z"}">${x} ditarik</i></span>`; }
+// catatan untuk item yang ada (misal: alkohol ada tetapi hampir habis)
+function itemCatCollect(o,isi,stf){ return (isi||[]).filter(x=>stf(x.bc)==="ada"&&o.st&&o.st[x.bc]&&String(o.st[x.bc].catatan||"").trim()).map(x=>{ const v=o.st[x.bc], r={bc:x.bc,kode:x.kode||"",nama:itemOf(x.kode).nama,catatan:String(v.catatan).trim()}; if(v.sl) r.salahDi=v.sl; return r; }); }
+document.addEventListener("click",ev=>{ const t=ev.target.closest&&ev.target.closest("[data-lknote]"); if(!t||!S.lk) return; const bc=t.dataset.lknote; S.lk._nOpen=bc; const y=window.scrollY; render(); window.scrollTo(0,y);
+  const n=document.querySelector(`[data-lku="${CSS.escape(bc)}"][data-f="catatan"]`); if(n) n.focus(); });
+// kamera: hanya barcode yang titik tengahnya berada di dalam bingkai putih yang dibaca
+function camInFrame(ov,video,r){ try{ const bb=r&&r.boundingBox, fr=ov&&ov.querySelector(".camframe"); if(!bb||!fr||!bb.width||!bb.height) return true;
+  const vw=video.videoWidth, vh=video.videoHeight; if(!vw||!vh) return true;
+  const vr=video.getBoundingClientRect(), f=fr.getBoundingClientRect(), sc=Math.max(vr.width/vw,vr.height/vh), ox=vr.left+(vr.width-vw*sc)/2, oy=vr.top+(vr.height-vh*sc)/2;
+  const cx=ox+(bb.x+bb.width/2)*sc, cy=oy+(bb.y+bb.height/2)*sc, m=4;
+  return cx>=f.left-m&&cx<=f.right+m&&cy>=f.top-m&&cy<=f.bottom+m; }catch(e){ return true; } }
+// item salah penempatan: ikut tercatat "ada" di ceklis kotak asalnya, dengan catatan lokasi
+function devId(){ try{ let d=localStorage.getItem("k3.devId"); if(!d){ d=uidGen("dv"); localStorage.setItem("k3.devId",d); } return d; }catch(e){ return "dv"; } }
+function slSources(home){ const out=new Map(), hb=S.kotak.get(home); if(!hb) return out;
+  const lastB=(hb.pemeriksaan||[]).map(p=>p.tgl||"").sort().pop()||"", isiB=new Set((hb.isi||[]).map(i=>String(i.bc).toUpperCase()));
+  const add=(r,dari,tgl)=>{ if(!r||r.asal!==home||!dari||dari===home) return; const bc=String(r.bc||"").toUpperCase(); if(!isiB.has(bc)) return; const o=out.get(bc); if(!o||(tgl||"")>(o.tgl||"")) out.set(bc,{dari,tgl:tgl||""}); };
+  S.kotak.forEach(b=>{ if(b.kode===home) return; (b.pemeriksaan||[]).forEach(p=>{ if((p.tgl||"")>lastB) (p.salah||[]).forEach(r=>add(r,b.kode,p.tgl)); }); });
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(!k||!k.startsWith("k3.lapDraft.")) continue; const kode=k.slice(12); if(kode===home||(S.lk&&S.lk.kode===kode)) continue; const d=JSON.parse(localStorage.getItem(k)||"null"); if(d) (d.salah||[]).forEach(r=>add(r,kode,d.tgl)); } }catch(e){}
+  [S.ck,S.lk].forEach(o=>{ if(o&&o.kode&&o.kode!==home&&!o.fix) (o.salah||[]).forEach(r=>add(r,o.kode,o.tgl)); });
+  return out; }
+function slNote(s){ const b=S.kotak.get(s.dari)||{}, loc=[b.bagian,b.penempatan].filter(Boolean).join(" · ");
+  return "Ada, tetapi berada di kotak yang salah: kotak "+s.dari+(loc?" ("+loc+")":"")+(s.tgl?", ditemukan "+fmt(s.tgl):""); }
+function slSync(o){ if(!o||o.fix||!o.kode) return false; const b=S.kotak.get(o.kode); if(!b) return false; o.st=o.st||{};
+  const src=slSources(o.kode), me=devId(), skip=o.slSkip||[]; let ch=false;
+  Object.keys(o.st).forEach(bc=>{ const v=o.st[bc]; if(v&&v.sl&&v.slBy===me&&!src.has(String(bc).toUpperCase())){ delete o.st[bc]; ch=true; } });
+  src.forEach((s,BC)=>{ const x=(b.isi||[]).find(i=>String(i.bc).toUpperCase()===BC); if(!x||skip.includes(x.bc)) return; const cur=o.st[x.bc], txt=slNote(s);
+    if(cur&&cur.sl){ if(cur.sl!==s.dari||cur.catatan!==txt||cur.k!=="ada"){ Object.assign(cur,{k:"ada",sl:s.dari,catatan:txt}); ch=true; } return; }
+    if(cur&&cur.k&&cur.k!=="hilang") return; if(!cur&&o.scan&&o.scan[x.bc]) return;
+    o.st[x.bc]={k:"ada",catatan:txt,sl:s.dari,slBy:me}; ch=true; });
+  return ch; }
+function slMarkSkip(o,bc){ if(!o||!o.st||!bc) return; const v=o.st[bc]; if(v&&v.sl){ delete v.sl; delete v.slBy; o.slSkip=o.slSkip||[]; if(!o.slSkip.includes(bc)) o.slSkip.push(bc); } }
+{ const _vCek=viewCek; viewCek=function(route){ try{ const k=String(route).slice(4); if(S.kotak.get(k)){ const o=ckLoad(k); if(slSync(o)&&typeof LV!=="undefined"&&LV.kind==="ck") setTimeout(()=>{ try{ livePush(); }catch(e){} },50); } }catch(e){} return _vCek.apply(this,arguments); }; }
+{ const _vLap=viewLapBox; viewLapBox=function(route){ try{ const k=String(route).slice(4); if(S.kotak.get(k)){ lkLoad(k); if(slSync(S.lk)){ lapDraftSaveLocal(); setTimeout(()=>{ try{ livePush(); }catch(e){} },50); } } }catch(e){} return _vLap.apply(this,arguments); }; }
+{ const _ckClr=ckClearGroup; ckClearGroup=function(k,kode){ try{ const o=ckObj(k), b=o&&S.kotak.get(o.kode); if(b) (b.isi||[]).forEach(x=>{ if(!kode||x.kode===kode) slMarkSkip(o,x.bc); }); }catch(e){} return _ckClr.apply(this,arguments); }; }
+// perubahan manual oleh pemeriksa mengalahkan isian otomatis
+document.addEventListener("change",ev=>{ const el=ev.target, d=el&&el.dataset; if(!d) return;
+  if(d.lk!=null&&S.lk) slMarkSkip(S.lk,d.lk); if(d.ck!=null&&S.ck) slMarkSkip(S.ck,d.ck); if(d.ckok!=null&&S.ck) slMarkSkip(S.ck,d.ckok); },true);
+document.addEventListener("click",ev=>{ const t=ev.target.closest&&ev.target.closest("[data-lkok]"); if(t&&S.lk) slMarkSkip(S.lk,t.dataset.lkok); },true);
+// jangan render ulang halaman pemeriksaan selama sedang mengetik (keyboard HP & daftar saran NRP tetap terbuka)
+(function(){ const _r=render; let pend=false, down=false;
+  function typing(){ const ae=document.activeElement; if(!ae||!ae.closest||!/^(cek|lap)-/.test(S.route||"")||!ae.closest("main")) return false;
+    if(ae.tagName==="TEXTAREA") return true; if(ae.tagName!=="INPUT") return false; if(!/^(text|search|tel|number|email)?$/.test(ae.type||"")) return false; return !["lkBc","ckBc"].includes(ae.id); }
+  render=function(){ if(typing()){ pend=true; return; } pend=false; return _r.apply(this,arguments); };
+  const flush=()=>{ if(!pend) return; if(down){ setTimeout(flush,150); return; } if(typing()) return; pend=false; const y=window.scrollY; render(); window.scrollTo(0,y); };
+  document.addEventListener("pointerdown",()=>{ down=true; },true); document.addEventListener("pointerup",()=>setTimeout(()=>{ down=false; },80),true); document.addEventListener("pointercancel",()=>{ down=false; },true);
+  document.addEventListener("focusout",()=>setTimeout(flush,250));
+  window.addEventListener("hashchange",()=>{ if(pend) setTimeout(flush,0); }); })();
 
 // ---------- boot ----------
 S.route=readRoute(); render();
